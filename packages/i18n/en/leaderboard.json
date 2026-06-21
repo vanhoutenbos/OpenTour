@@ -1,0 +1,17 @@
+{
+  "title": "Leaderboard",
+  "position": "Pos.",
+  "player": "Player",
+  "flight": "Flight",
+  "holes": "Holes",
+  "score": "Score",
+  "total": "Total",
+  "points": "Points",
+  "live": "LIVE",
+  "updated_at": "Updated at",
+  "no_scores": "No scores entered yet",
+  "filter": {
+    "all": "All flights",
+    "flight": "Flight"
+  }
+}
