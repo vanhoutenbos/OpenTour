@@ -1,0 +1,11 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "network": "No internet connection. Scores are saved locally.",
+  "rate_limit": "Too many attempts. Please try again in 5 minutes.",
+  "code_invalid": "Code invalid or expired. Ask the organizer for a new code.",
+  "code_expired": "Your code has expired. Ask the tournament desk for a new code.",
+  "magic_link_expired": "Your link has expired. Request a new one via the login page.",
+  "tournament_finished": "This tournament has ended. No more scores can be entered.",
+  "tournament_paused": "This tournament is temporarily paused. Score entry is blocked.",
+  "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes."
+}
