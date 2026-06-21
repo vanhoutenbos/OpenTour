@@ -1,0 +1,17 @@
+{
+  "title": "Leaderboard",
+  "position": "Pos.",
+  "player": "Speler",
+  "flight": "Flight",
+  "holes": "Holes",
+  "score": "Score",
+  "total": "Totaal",
+  "points": "Punten",
+  "live": "LIVE",
+  "updated_at": "Bijgewerkt om",
+  "no_scores": "Nog geen scores ingevoerd",
+  "filter": {
+    "all": "Alle flights",
+    "flight": "Flight"
+  }
+}
