@@ -1,0 +1,20 @@
+# OpenTour — Cloudflare Worker configuratie
+name = "opentour-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets worden ingesteld via: wrangler secret put SUPABASE_URL
+# SUPABASE_URL
+# SUPABASE_ANON_KEY
+# ALLOWED_ORIGINS
+
+[[routes]]
+pattern = "api.opentour.nl/*"
+zone_name = "opentour.nl"
+
+[observability]
+enabled = true
