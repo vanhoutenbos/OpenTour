@@ -1,0 +1,45 @@
+{
+  "create": {
+    "title": "Nieuw toernooi",
+    "name": "Naam toernooi",
+    "date": "Datum",
+    "course": "Golfbaan",
+    "format": "Spelformat",
+    "rounds": "Aantal rondes",
+    "submit": "Toernooi aanmaken"
+  },
+  "format": {
+    "stroke": "Stroke play",
+    "stableford": "Stableford",
+    "match": "Matchplay"
+  },
+  "scoring": {
+    "gross": "Bruto",
+    "net": "Netto"
+  },
+  "status": {
+    "draft": "Concept",
+    "active": "Actief",
+    "paused": "Gepauzeerd",
+    "finished": "Afgelopen"
+  },
+  "player_status": {
+    "registered": "Aangemeld",
+    "confirmed": "Bevestigd",
+    "withdrawn": "Afgemeld",
+    "dns": "DNS",
+    "dnf": "DNF",
+    "dsq": "DSQ"
+  },
+  "pause": {
+    "banner": "Toernooi gepauzeerd",
+    "reason_label": "Reden"
+  },
+  "actions": {
+    "start": "Toernooi starten",
+    "pause": "Pauzeren",
+    "resume": "Hervatten",
+    "finish": "Afsluiten",
+    "reopen": "Heropenen"
+  }
+}
