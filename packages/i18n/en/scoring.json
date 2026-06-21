@@ -1,0 +1,21 @@
+{
+  "hole": "Hole",
+  "par": "Par",
+  "stroke_index": "Stroke index",
+  "strokes": "Strokes",
+  "score": "Score",
+  "enter_score": "Enter score",
+  "confirm_score": "Confirm score",
+  "high_score_warning": "Are you sure this is the correct score?",
+  "sync": {
+    "synced": "Synced",
+    "syncing": "Syncing...",
+    "offline": "Offline — scores saved locally",
+    "error": "Sync error — please try again"
+  },
+  "submit": {
+    "title": "Submit scorecard",
+    "confirm": "Submit final",
+    "success": "Scorecard submitted ✅"
+  }
+}
