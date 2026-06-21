@@ -1,0 +1,45 @@
+{
+  "create": {
+    "title": "New tournament",
+    "name": "Tournament name",
+    "date": "Date",
+    "course": "Golf course",
+    "format": "Scoring format",
+    "rounds": "Number of rounds",
+    "submit": "Create tournament"
+  },
+  "format": {
+    "stroke": "Stroke play",
+    "stableford": "Stableford",
+    "match": "Matchplay"
+  },
+  "scoring": {
+    "gross": "Gross",
+    "net": "Net"
+  },
+  "status": {
+    "draft": "Draft",
+    "active": "Active",
+    "paused": "Paused",
+    "finished": "Finished"
+  },
+  "player_status": {
+    "registered": "Registered",
+    "confirmed": "Confirmed",
+    "withdrawn": "Withdrawn",
+    "dns": "DNS",
+    "dnf": "DNF",
+    "dsq": "DSQ"
+  },
+  "pause": {
+    "banner": "Tournament paused",
+    "reason_label": "Reason"
+  },
+  "actions": {
+    "start": "Start tournament",
+    "pause": "Pause",
+    "resume": "Resume",
+    "finish": "Close",
+    "reopen": "Reopen"
+  }
+}
