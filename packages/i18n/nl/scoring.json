@@ -1,0 +1,21 @@
+{
+  "hole": "Hole",
+  "par": "Par",
+  "stroke_index": "Slagindex",
+  "strokes": "Slagen",
+  "score": "Score",
+  "enter_score": "Score invoeren",
+  "confirm_score": "Score bevestigen",
+  "high_score_warning": "Weet je zeker dat dit de juiste score is?",
+  "sync": {
+    "synced": "Gesynchroniseerd",
+    "syncing": "Synchroniseren...",
+    "offline": "Offline — scores bewaard",
+    "error": "Fout bij sync — probeer opnieuw"
+  },
+  "submit": {
+    "title": "Scorekaart indienen",
+    "confirm": "Definitief indienen",
+    "success": "Scorekaart ingediend ✅"
+  }
+}
