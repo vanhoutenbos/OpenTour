@@ -1,0 +1,11 @@
+{
+  "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+  "network": "Geen internetverbinding. Scores worden lokaal bewaard.",
+  "rate_limit": "Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.",
+  "code_invalid": "Code ongeldig of verlopen. Vraag een nieuwe code aan bij de organisator.",
+  "code_expired": "Je code is verlopen. Vraag een nieuwe code aan bij de wedstrijdcommissie.",
+  "magic_link_expired": "Je link is verlopen. Vraag een nieuwe aan via de inlogpagina.",
+  "tournament_finished": "Dit toernooi is afgesloten. Scores kunnen niet meer worden ingevoerd.",
+  "tournament_paused": "Dit toernooi is tijdelijk gepauzeerd. Scores invoeren is geblokkeerd.",
+  "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw."
+}
