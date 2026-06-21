@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "home": "Home",
+    "tournaments": "Tournaments",
+    "dashboard": "Dashboard",
+    "login": "Log in",
+    "logout": "Log out"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "generate": "Generate",
+    "copy": "Copy",
+    "share": "Share"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success!",
+    "saved": "Saved"
+  }
+}
