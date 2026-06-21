@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "home": "Home",
+    "tournaments": "Toernooien",
+    "dashboard": "Dashboard",
+    "login": "Inloggen",
+    "logout": "Uitloggen"
+  },
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "back": "Terug",
+    "next": "Volgende",
+    "submit": "Indienen",
+    "generate": "Genereren",
+    "copy": "Kopiëren",
+    "share": "Delen"
+  },
+  "status": {
+    "loading": "Laden...",
+    "error": "Er is een fout opgetreden",
+    "success": "Gelukt!",
+    "saved": "Opgeslagen"
+  }
+}
