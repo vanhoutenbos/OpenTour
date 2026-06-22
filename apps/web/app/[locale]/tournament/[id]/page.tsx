@@ -1,51 +1,57 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
-import { createServerClient } from '@opentour/supabase';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { PauseBanner } from '@/components/leaderboard/PauseBanner';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
-import type { Tournament } from '@opentour/types';
 
 interface Props {
   params: { locale: string; id: string };
 }
 
+interface TournamentRow {
+  id: string;
+  name: string;
+  description: string | null;
+  format: string;
+  scoring_type: string;
+  status: string;
+  pause_reason: string | null;
+  is_public: boolean;
+  rounds: number;
+  start_date: string | null;
+  end_date: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+async function getTournament(id: string): Promise<TournamentRow | null> {
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tournaments?id=eq.${id}&is_public=eq.true&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+    },
+    next: { revalidate: 30 },
+  });
+
+  if (!res.ok) return null;
+  const rows: TournamentRow[] = await res.json();
+  return rows[0] ?? null;
+}
+
 export async function generateMetadata({ params }: Props) {
-  const supabase = createServerClient();
-  const { data } = await supabase
-    .from('tournaments')
-    .select('name, description')
-    .eq('id', params.id)
-    .single();
-
-  // data is null als toernooi niet gevonden — veilig destructuren
-  const name = data?.name ?? null;
-  const description = data?.description ?? null;
-
+  const tournament = await getTournament(params.id);
   return {
-    title: name ? `${name} — OpenTour` : 'Leaderboard — OpenTour',
-    description: description ?? 'Live golf leaderboard',
+    title: tournament ? `${tournament.name} — OpenTour` : 'Leaderboard — OpenTour',
+    description: tournament?.description ?? 'Live golf leaderboard',
   };
 }
 
 export default async function LeaderboardPage({ params }: Props) {
-  const t = await getTranslations('leaderboard');
-  const supabase = createServerClient();
+  const tournament = await getTournament(params.id);
 
-  const { data: tournament, error } = await supabase
-    .from('tournaments')
-    .select('*')
-    .eq('id', params.id)
-    .eq('is_public', true)
-    .single();
-
-  if (error || !tournament) {
-    notFound();
-  }
-
-  // TypeScript weet na de notFound() check zeker dat tournament niet null is
-  const safeToernooi = tournament as Tournament;
+  if (!tournament) notFound();
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
@@ -53,18 +59,18 @@ export default async function LeaderboardPage({ params }: Props) {
       <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">{safeToernooi.name}</h1>
+            <h1 className="text-xl font-bold text-white">{tournament.name}</h1>
             <p className="text-sm text-gray-400">
-              {safeToernooi.format} · {safeToernooi.scoring_type}
+              {tournament.format} · {tournament.scoring_type}
             </p>
           </div>
-          {safeToernooi.status === 'active' && <LiveBadge />}
+          {tournament.status === 'active' && <LiveBadge />}
         </div>
       </div>
 
       {/* Pauzebanner */}
-      {safeToernooi.status === 'paused' && safeToernooi.pause_reason && (
-        <PauseBanner reason={safeToernooi.pause_reason} />
+      {tournament.status === 'paused' && tournament.pause_reason && (
+        <PauseBanner reason={tournament.pause_reason} />
       )}
 
       {/* Leaderboard */}
@@ -72,8 +78,10 @@ export default async function LeaderboardPage({ params }: Props) {
         <Suspense fallback={<LeaderboardSkeleton />}>
           <LeaderboardClient
             tournamentId={params.id}
-            tournament={safeToernooi}
-            isActive={safeToernooi.status === 'active'}
+            tournamentName={tournament.name}
+            format={tournament.format}
+            scoringType={tournament.scoring_type}
+            isActive={tournament.status === 'active'}
           />
         </Suspense>
       </div>
