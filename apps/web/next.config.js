@@ -1,3 +1,4 @@
+const path = require('path');
 const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
@@ -6,7 +7,8 @@ const withPWA = require('next-pwa')({
 });
 
 const createNextIntlPlugin = require('next-intl/plugin');
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
+// Absoluut pad zodat het werkt ongeacht working directory
+const withNextIntl = createNextIntlPlugin(path.resolve(__dirname, 'i18n.ts'));
 
 const securityHeaders = [
   {
@@ -15,7 +17,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      `connect-src 'self' https://ygewcjsrpewwhiqgcmyn.supabase.co`,
+      "connect-src 'self' https://ygewcjsrpewwhiqgcmyn.supabase.co",
       "img-src 'self' data: blob:",
       "font-src 'self'",
       "frame-ancestors 'none'",
