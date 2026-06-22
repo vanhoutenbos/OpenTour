@@ -1,26 +1,45 @@
 'use client';
 
-/**
- * LeaderboardClient — polling + weergave
- * Poll elke 30 seconden via Cloudflare Worker (gecached)
- * Fallback naar Supabase direct als Worker niet beschikbaar is
- */
-
 import { useState, useEffect, useCallback } from 'react';
-import { fetchLeaderboard } from '@opentour/supabase';
 import { LeaderboardTable } from './LeaderboardTable';
-import type { LeaderboardEntry, Tournament } from '@opentour/types';
 
 interface Props {
   tournamentId: string;
-  tournament: Tournament;
+  tournamentName: string;
+  format: string;
+  scoringType: string;
   isActive: boolean;
 }
 
 const POLL_INTERVAL_MS = 30_000;
 
-export function LeaderboardClient({ tournamentId, tournament, isActive }: Props) {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+async function fetchLeaderboard(tournamentId: string) {
+  const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL;
+
+  // Via Cloudflare Worker (gecached)
+  if (workerUrl) {
+    try {
+      const res = await fetch(`${workerUrl}/api/leaderboard/${tournamentId}`);
+      if (res.ok) return res.json();
+    } catch {
+      // fallthrough naar Supabase direct
+    }
+  }
+
+  // Fallback: Supabase direct
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tournament_leaderboard?tournament_id=eq.${tournamentId}&order=position.asc`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+    },
+  });
+  if (!res.ok) throw new Error('Leaderboard ophalen mislukt');
+  return res.json();
+}
+
+export function LeaderboardClient({ tournamentId, format, scoringType, isActive }: Props) {
+  const [entries, setEntries] = useState<any[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +57,6 @@ export function LeaderboardClient({ tournamentId, tournament, isActive }: Props)
   useEffect(() => {
     poll();
     if (!isActive) return;
-
     const interval = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [poll, isActive]);
@@ -59,7 +77,7 @@ export function LeaderboardClient({ tournamentId, tournament, isActive }: Props)
 
   return (
     <div>
-      <LeaderboardTable entries={entries} format={tournament.format} scoringType={tournament.scoring_type} />
+      <LeaderboardTable entries={entries} format={format} scoringType={scoringType} />
       {lastUpdated && (
         <p className="text-xs text-gray-500 text-right mt-4">
           Bijgewerkt om {lastUpdated.toLocaleTimeString('nl-NL')}
