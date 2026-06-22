@@ -1,5 +1,3 @@
-# OpenTour — Release naar productie
-# Draait bij elke merge naar main
 name: Release
 
 on:
@@ -15,8 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+      - name: Install Worker dependencies
+        run: npm install
+        working-directory: workers/api
       - name: Deploy Worker
         run: npx wrangler deploy
         working-directory: workers/api
@@ -32,10 +31,10 @@ jobs:
         with:
           version: latest
       - name: Push migraties naar productie
-        run: supabase db push
+        run: |
+          supabase db push \
+            --project-ref ygewcjsrpewwhiqgcmyn \
+            --password "$SUPABASE_DB_PASSWORD"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-  # Website deploy via Vercel GitHub integratie (automatisch bij merge naar main)
-  # Geen aparte job nodig — Vercel detecteert de push zelf
