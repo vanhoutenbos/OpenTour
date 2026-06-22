@@ -1,13 +1,3 @@
-/**
- * OpenTour — Publiek leaderboard
- * Route: /[locale]/tournament/[id]
- *
- * - Geen authenticatie vereist
- * - Polling elke 30 seconden via Cloudflare Worker (cache 30s)
- * - Responsive: 360px telefoon t/m 4K TV
- * - Pauzebanner als toernooi status = 'paused'
- */
-
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -23,15 +13,19 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const supabase = createServerClient();
-  const { data: tournament } = await supabase
+  const { data } = await supabase
     .from('tournaments')
     .select('name, description')
     .eq('id', params.id)
     .single();
 
+  // data is null als toernooi niet gevonden — veilig destructuren
+  const name = data?.name ?? null;
+  const description = data?.description ?? null;
+
   return {
-    title: tournament ? `${tournament.name} — OpenTour` : 'Leaderboard — OpenTour',
-    description: tournament?.description ?? 'Live golf leaderboard',
+    title: name ? `${name} — OpenTour` : 'Leaderboard — OpenTour',
+    description: description ?? 'Live golf leaderboard',
   };
 }
 
@@ -50,33 +44,36 @@ export default async function LeaderboardPage({ params }: Props) {
     notFound();
   }
 
+  // TypeScript weet na de notFound() check zeker dat tournament niet null is
+  const safeToernooi = tournament as Tournament;
+
   return (
     <main className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">{tournament.name}</h1>
+            <h1 className="text-xl font-bold text-white">{safeToernooi.name}</h1>
             <p className="text-sm text-gray-400">
-              {t(`format.${tournament.format}`)} · {t(`scoring.${tournament.scoring_type}`)}
+              {safeToernooi.format} · {safeToernooi.scoring_type}
             </p>
           </div>
-          {tournament.status === 'active' && <LiveBadge />}
+          {safeToernooi.status === 'active' && <LiveBadge />}
         </div>
       </div>
 
       {/* Pauzebanner */}
-      {tournament.status === 'paused' && tournament.pause_reason && (
-        <PauseBanner reason={tournament.pause_reason} />
+      {safeToernooi.status === 'paused' && safeToernooi.pause_reason && (
+        <PauseBanner reason={safeToernooi.pause_reason} />
       )}
 
-      {/* Leaderboard — client component voor polling */}
+      {/* Leaderboard */}
       <div className="max-w-6xl mx-auto px-4 py-6">
         <Suspense fallback={<LeaderboardSkeleton />}>
           <LeaderboardClient
             tournamentId={params.id}
-            tournament={tournament as Tournament}
-            isActive={tournament.status === 'active'}
+            tournament={safeToernooi}
+            isActive={safeToernooi.status === 'active'}
           />
         </Suspense>
       </div>
