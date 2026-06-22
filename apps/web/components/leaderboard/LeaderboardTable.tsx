@@ -1,19 +1,31 @@
 'use client';
 
-import type { LeaderboardEntry, TournamentFormat, ScoringType } from '@opentour/types';
+interface LeaderboardEntry {
+  player_id: string;
+  player_name: string;
+  handicap?: number;
+  player_status: string;
+  flight_name?: string;
+  holes_played: number;
+  total_strokes?: number;
+  score_to_par?: number;
+  total_net_strokes?: number;
+  net_score_to_par?: number;
+  gross_stableford_points?: number;
+  net_stableford_points?: number;
+  position: number;
+}
 
 interface Props {
   entries: LeaderboardEntry[];
-  format: TournamentFormat;
-  scoringType: ScoringType;
+  format: string;
+  scoringType: string;
 }
 
 const INACTIVE_STATUSES = ['dns', 'dnf', 'dsq'];
 
-function getScoreDisplay(entry: LeaderboardEntry, format: TournamentFormat, scoringType: ScoringType): string {
-  if (INACTIVE_STATUSES.includes(entry.player_status)) {
-    return entry.player_status.toUpperCase();
-  }
+function getScoreDisplay(entry: LeaderboardEntry, format: string, scoringType: string): string {
+  if (INACTIVE_STATUSES.includes(entry.player_status)) return entry.player_status.toUpperCase();
   if (entry.holes_played === 0) return '-';
 
   if (format === 'stableford') {
@@ -27,11 +39,11 @@ function getScoreDisplay(entry: LeaderboardEntry, format: TournamentFormat, scor
   return par > 0 ? `+${par}` : `${par}`;
 }
 
-function getScoreClass(entry: LeaderboardEntry, format: TournamentFormat, scoringType: ScoringType): string {
+function getScoreClass(entry: LeaderboardEntry, format: string, scoringType: string): string {
   if (INACTIVE_STATUSES.includes(entry.player_status)) return 'text-gray-500';
   if (format === 'stableford') return 'text-green-400 font-bold';
   const par = scoringType === 'net' ? entry.net_score_to_par : entry.score_to_par;
-  if (!par) return 'text-white';
+  if (par === null || par === undefined) return 'text-white';
   if (par < 0) return 'text-red-400 font-bold';
   if (par === 0) return 'text-green-400 font-bold';
   return 'text-gray-300';
@@ -64,7 +76,7 @@ export function LeaderboardTable({ entries, format, scoringType }: Props) {
             return (
               <tr
                 key={entry.player_id}
-                className={`py-2 ${isInactive ? 'opacity-50' : 'hover:bg-gray-900'}`}
+                className={`${isInactive ? 'opacity-50' : 'hover:bg-gray-900'}`}
               >
                 <td className="py-3 text-center text-gray-400 font-mono">
                   {isInactive ? '—' : entry.position}
