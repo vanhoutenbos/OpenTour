@@ -1,0 +1,124 @@
+{
+  "common": {
+    "nav": {
+      "home": "Home",
+      "tournaments": "Toernooien",
+      "dashboard": "Dashboard",
+      "login": "Inloggen",
+      "logout": "Uitloggen"
+    },
+    "actions": {
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "confirm": "Bevestigen",
+      "delete": "Verwijderen",
+      "edit": "Bewerken",
+      "back": "Terug",
+      "next": "Volgende",
+      "submit": "Indienen",
+      "generate": "Genereren",
+      "copy": "Kopiëren",
+      "share": "Delen"
+    },
+    "status": {
+      "loading": "Laden...",
+      "error": "Er is een fout opgetreden",
+      "success": "Gelukt!",
+      "saved": "Opgeslagen"
+    }
+  },
+  "tournament": {
+    "create": {
+      "title": "Nieuw toernooi",
+      "name": "Naam toernooi",
+      "date": "Datum",
+      "course": "Golfbaan",
+      "format": "Spelformat",
+      "rounds": "Aantal rondes",
+      "submit": "Toernooi aanmaken"
+    },
+    "format": {
+      "stroke": "Stroke play",
+      "stableford": "Stableford",
+      "match": "Matchplay"
+    },
+    "scoring": {
+      "gross": "Bruto",
+      "net": "Netto"
+    },
+    "status": {
+      "draft": "Concept",
+      "active": "Actief",
+      "paused": "Gepauzeerd",
+      "finished": "Afgelopen"
+    },
+    "player_status": {
+      "registered": "Aangemeld",
+      "confirmed": "Bevestigd",
+      "withdrawn": "Afgemeld",
+      "dns": "DNS",
+      "dnf": "DNF",
+      "dsq": "DSQ"
+    },
+    "pause": {
+      "banner": "Toernooi gepauzeerd",
+      "reason_label": "Reden"
+    },
+    "actions": {
+      "start": "Toernooi starten",
+      "pause": "Pauzeren",
+      "resume": "Hervatten",
+      "finish": "Afsluiten",
+      "reopen": "Heropenen"
+    }
+  },
+  "scoring": {
+    "hole": "Hole",
+    "par": "Par",
+    "stroke_index": "Slagindex",
+    "strokes": "Slagen",
+    "score": "Score",
+    "enter_score": "Score invoeren",
+    "confirm_score": "Score bevestigen",
+    "high_score_warning": "Weet je zeker dat dit de juiste score is?",
+    "sync": {
+      "synced": "Gesynchroniseerd",
+      "syncing": "Synchroniseren...",
+      "offline": "Offline — scores bewaard",
+      "error": "Fout bij sync — probeer opnieuw"
+    },
+    "submit": {
+      "title": "Scorekaart indienen",
+      "confirm": "Definitief indienen",
+      "success": "Scorekaart ingediend ✅"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "position": "Pos.",
+    "player": "Speler",
+    "flight": "Flight",
+    "holes": "Holes",
+    "score": "Score",
+    "total": "Totaal",
+    "points": "Punten",
+    "live": "LIVE",
+    "updated_at": "Bijgewerkt om",
+    "no_scores": "Nog geen scores ingevoerd",
+    "filter": {
+      "all": "Alle flights",
+      "flight": "Flight"
+    }
+  },
+  "errors": {
+    "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+    "network": "Geen internetverbinding. Scores worden lokaal bewaard.",
+    "rate_limit": "Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.",
+    "code_invalid": "Code ongeldig of verlopen. Vraag een nieuwe code aan bij de organisator.",
+    "code_expired": "Je code is verlopen. Vraag een nieuwe code aan bij de wedstrijdcommissie.",
+    "magic_link_expired": "Je link is verlopen. Vraag een nieuwe aan via de inlogpagina.",
+    "tournament_finished": "Dit toernooi is afgesloten. Scores kunnen niet meer worden ingevoerd.",
+    "tournament_paused": "Dit toernooi is tijdelijk gepauzeerd. Scores invoeren is geblokkeerd.",
+    "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw."
+  }
+}
