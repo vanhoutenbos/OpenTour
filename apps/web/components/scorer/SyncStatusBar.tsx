@@ -1,6 +1,6 @@
 'use client';
 
-import type { SyncStatus } from '@opentour/types';
+type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 
 interface Props {
   status: SyncStatus;
@@ -8,9 +8,9 @@ interface Props {
 }
 
 const CONFIG: Record<SyncStatus, { icon: string; label: string; className: string }> = {
-  synced:  { icon: '✅', label: 'Gesynchroniseerd',             className: 'bg-green-900/40 text-green-300 border-green-800' },
-  syncing: { icon: '🔄', label: 'Synchroniseren...',            className: 'bg-blue-900/40 text-blue-300 border-blue-800' },
-  offline: { icon: '📴', label: 'Offline — scores bewaard',     className: 'bg-yellow-900/40 text-yellow-300 border-yellow-800' },
+  synced:  { icon: '✅', label: 'Gesynchroniseerd',              className: 'bg-green-900/40 text-green-300 border-green-800' },
+  syncing: { icon: '🔄', label: 'Synchroniseren...',             className: 'bg-blue-900/40 text-blue-300 border-blue-800' },
+  offline: { icon: '📴', label: 'Offline — scores bewaard',      className: 'bg-yellow-900/40 text-yellow-300 border-yellow-800' },
   error:   { icon: '❌', label: 'Fout bij sync — probeer opnieuw', className: 'bg-red-900/40 text-red-300 border-red-800' },
 };
 
