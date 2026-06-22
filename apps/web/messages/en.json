@@ -1,0 +1,124 @@
+{
+  "common": {
+    "nav": {
+      "home": "Home",
+      "tournaments": "Tournaments",
+      "dashboard": "Dashboard",
+      "login": "Log in",
+      "logout": "Log out"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "edit": "Edit",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit",
+      "generate": "Generate",
+      "copy": "Copy",
+      "share": "Share"
+    },
+    "status": {
+      "loading": "Loading...",
+      "error": "An error occurred",
+      "success": "Success!",
+      "saved": "Saved"
+    }
+  },
+  "tournament": {
+    "create": {
+      "title": "New tournament",
+      "name": "Tournament name",
+      "date": "Date",
+      "course": "Golf course",
+      "format": "Scoring format",
+      "rounds": "Number of rounds",
+      "submit": "Create tournament"
+    },
+    "format": {
+      "stroke": "Stroke play",
+      "stableford": "Stableford",
+      "match": "Matchplay"
+    },
+    "scoring": {
+      "gross": "Gross",
+      "net": "Net"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "paused": "Paused",
+      "finished": "Finished"
+    },
+    "player_status": {
+      "registered": "Registered",
+      "confirmed": "Confirmed",
+      "withdrawn": "Withdrawn",
+      "dns": "DNS",
+      "dnf": "DNF",
+      "dsq": "DSQ"
+    },
+    "pause": {
+      "banner": "Tournament paused",
+      "reason_label": "Reason"
+    },
+    "actions": {
+      "start": "Start tournament",
+      "pause": "Pause",
+      "resume": "Resume",
+      "finish": "Close",
+      "reopen": "Reopen"
+    }
+  },
+  "scoring": {
+    "hole": "Hole",
+    "par": "Par",
+    "stroke_index": "Stroke index",
+    "strokes": "Strokes",
+    "score": "Score",
+    "enter_score": "Enter score",
+    "confirm_score": "Confirm score",
+    "high_score_warning": "Are you sure this is the correct score?",
+    "sync": {
+      "synced": "Synced",
+      "syncing": "Syncing...",
+      "offline": "Offline — scores saved locally",
+      "error": "Sync error — please try again"
+    },
+    "submit": {
+      "title": "Submit scorecard",
+      "confirm": "Submit final",
+      "success": "Scorecard submitted ✅"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "position": "Pos.",
+    "player": "Player",
+    "flight": "Flight",
+    "holes": "Holes",
+    "score": "Score",
+    "total": "Total",
+    "points": "Points",
+    "live": "LIVE",
+    "updated_at": "Updated at",
+    "no_scores": "No scores entered yet",
+    "filter": {
+      "all": "All flights",
+      "flight": "Flight"
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "No internet connection. Scores are saved locally.",
+    "rate_limit": "Too many attempts. Please try again in 5 minutes.",
+    "code_invalid": "Code invalid or expired. Ask the organizer for a new code.",
+    "code_expired": "Your code has expired. Ask the tournament desk for a new code.",
+    "magic_link_expired": "Your link has expired. Request a new one via the login page.",
+    "tournament_finished": "This tournament has ended. No more scores can be entered.",
+    "tournament_paused": "This tournament is temporarily paused. Score entry is blocked.",
+    "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes."
+  }
+}
