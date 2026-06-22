@@ -1,13 +1,17 @@
-/**
- * POST /api/validate-code
- * Valideert een toegangscode en start een recorder sessie.
- * Rate limiting wordt afgedwongen door de Cloudflare Worker.
- * Bij directe aanroep (zonder Worker): limiet op applicatieniveau via Supabase.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@opentour/supabase';
-import type { RecorderSession } from '@opentour/types';
+
+interface AccessCodeRow {
+  id: string;
+  tournament_id: string;
+  expires_at: string;
+  is_active: boolean;
+}
+
+interface RecorderSession {
+  tournamentId: string;
+  accessCodeId: string;
+  expiresAt: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,20 +22,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Ongeldige code — voer 8 tekens in' }, { status: 400 });
     }
 
-    const supabase = createServerClient();
+    // Directe fetch naar Supabase REST API — geen typed client
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/access_codes?code=eq.${code}&is_active=eq.true&select=id,tournament_id,expires_at,is_active&limit=1`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      },
+    });
 
-    const { data: accessCodes, error } = await supabase
-      .from('access_codes')
-      .select('id, tournament_id, expires_at, is_active')
-      .eq('code', code)
-      .eq('is_active', true)
-      .limit(1);
+    if (!res.ok) {
+      return NextResponse.json({ error: 'Validatie mislukt' }, { status: 500 });
+    }
 
-    if (error || !accessCodes?.length) {
+    const rows: AccessCodeRow[] = await res.json();
+
+    if (!rows.length) {
       return NextResponse.json({ error: 'Code ongeldig of verlopen' }, { status: 401 });
     }
 
-    const accessCode = accessCodes[0]!;
+    const accessCode = rows[0]!;
 
     if (new Date(accessCode.expires_at) < new Date()) {
       return NextResponse.json(
@@ -40,9 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sessie opslaan in cookie (httpOnly, secure)
     const session: RecorderSession = {
-      supabaseUserId: 'anonymous', // Wordt vervangen door echte auth flow
       tournamentId: accessCode.tournament_id,
       accessCodeId: accessCode.id,
       expiresAt: accessCode.expires_at,
