@@ -136,6 +136,62 @@
       "success": "Scorecard submitted ✅"
     }
   },
+  "scorer": {
+    "page_title": "Enter scores",
+    "code_title": "Access code",
+    "code_description": "Enter the 8-character code you received from the organizer.",
+    "code_placeholder": "XXXX XXXX",
+    "code_hint": "Only letters A-HJ-NP-Z and numbers 2-9",
+    "start_scoring": "Start scoring →",
+    "invalid_code": "Invalid code",
+    "expired_code": "Code expired",
+    "network_error": "No internet connection. Please try again.",
+    "other_code": "← Other code",
+    "back_to_flights": "← Flights",
+    "no_flights": "No flights yet",
+    "no_flights_desc": "No flights have been created for this tournament yet.",
+    "players": "players",
+    "holes": "holes",
+    "submit_final": "Submit final",
+    "submit_title": "Submit scorecard",
+    "submit_confirm": "Are you sure all scores are correct? After submitting, scores cannot be changed.",
+    "submit_cancel": "Cancel",
+    "submit_processing": "Submitting...",
+    "submit_error": "Submission failed. Please try again.",
+    "tournament_not_found": "Tournament not found",
+    "data_not_found": "Data not found",
+    "load_error": "An error occurred while loading.",
+    "load_error_generic": "An error occurred.",
+    "retry": "Try again",
+    "access_code": {
+      "enter": "Enter your access code",
+      "submit": "Login with code",
+      "validating": "Validating..."
+    },
+    "flight": {
+      "select": "Choose a flight",
+      "no_flights": "No flights found for this tournament",
+      "players_count": "{count} players"
+    },
+    "hole_nav": {
+      "grid": "Hole overview",
+      "completed": "Completed",
+      "empty": "Not yet filled",
+      "verified": "Verified"
+    },
+    "auto_advance": {
+      "next_hole": "Next hole",
+      "finished": "Round completed"
+    },
+    "mode": {
+      "follow_flight": "Walk with flight",
+      "holes_per_flight": "Enter by hole"
+    },
+    "hole_per_flight": {
+      "select_hole": "Choose a hole",
+      "enter_all": "Enter scores for all players"
+    }
+  },
   "leaderboard": {
     "title": "Leaderboard",
     "position": "Pos.",
@@ -193,7 +249,8 @@
     "hole_nav": {
       "grid": "Hole overview",
       "completed": "Completed",
-      "empty": "Not yet entered"
+      "empty": "Not yet entered",
+      "verified": "Verified"
     },
     "auto_advance": {
       "next_hole": "Next hole",
