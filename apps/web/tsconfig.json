@@ -2,19 +2,45 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "@opentour/types": ["../../packages/types/src/index.ts"],
-      "@opentour/supabase": ["../../packages/supabase/src/index.ts"],
-      "@opentour/i18n": ["../../packages/i18n"]
-    }
+      "@/*": [
+        "./*"
+      ],
+      "@opentour/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@opentour/supabase": [
+        "../../packages/supabase/src/index.ts"
+      ],
+      "@opentour/i18n": [
+        "../../packages/i18n"
+      ]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "isolatedModules": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
