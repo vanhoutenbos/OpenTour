@@ -15,8 +15,15 @@ export default function AuthCallbackPage() {
       try {
         const supabase = getSupabaseBrowser();
         
-        // Laat Supabase de URL parameters verwerken
-        const { error: authError } = await supabase.auth.exchangeCodeForSession();
+        // PKCE flow: haal de code op uit de URL en wissel in voor een sessie
+        const code = new URLSearchParams(window.location.search).get('code');
+        if (!code) {
+          setError('Geen inlogcode gevonden in de link');
+          setLoading(false);
+          setTimeout(() => router.push('/nl/login'), 3000);
+          return;
+        }
+        const { error: authError } = await supabase.auth.exchangeCodeForSession(code);
         
         if (authError) {
           console.error('Auth error:', authError);
