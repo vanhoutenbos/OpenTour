@@ -18,7 +18,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/nl/dashboard`,
+        // Redirect naar callback page, niet direct naar dashboard
+        // Dit laat Supabase de token verwerken
+        emailRedirectTo: `${window.location.origin}/nl/auth/callback`,
       },
     });
 
