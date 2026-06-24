@@ -23,24 +23,43 @@ export default function DashboardPage() {
   useEffect(() => {
     const supabase = getSupabaseBrowser();
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        router.replace('/nl/login');
-        return;
-      }
-      setUser({ email: data.user.email ?? undefined });
-
-      // Toernooien ophalen
-      supabase
+    const loadDashboard = async (userId: string, email: string | undefined) => {
+      setUser({ email });
+      const { data: rows } = await supabase
         .from('tournaments')
         .select('id, name, status, format, start_date, created_at')
-        .eq('created_by', data.user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data: rows }) => {
-          setTournaments((rows as Tournament[]) ?? []);
-          setLoading(false);
-        });
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+      setTournaments((rows as Tournament[]) ?? []);
+      setLoading(false);
+    };
+
+    // Luister op auth state changes - vangt ook sessie op die net via cookie binnenkwam
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION' && !session) {
+        router.replace('/nl/login');
+      }
     });
+
+    // Check ook direct de huidige sessie
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else {
+        // Geen sessie gevonden - wacht even op onAuthStateChange
+        // als die ook niets geeft, redirect naar login
+        setTimeout(() => {
+          setLoading((prev) => {
+            if (prev) router.replace('/nl/login');
+            return prev;
+          });
+        }, 2000);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleLogout = async () => {
@@ -65,7 +84,6 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-bold text-white">
@@ -84,7 +102,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Acties */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
           <Link
@@ -96,7 +113,6 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Toernooilijst */}
         {tournaments.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
             <span className="text-5xl">🏌️</span>
