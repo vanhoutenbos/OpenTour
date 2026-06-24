@@ -3,11 +3,17 @@
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dev-only state
+  const [devLink, setDevLink] = useState<string | null>(null);
+  const [devLoading, setDevLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email) return;
@@ -29,6 +35,27 @@ export default function LoginPage() {
       setSent(true);
     }
     setLoading(false);
+  };
+
+  const handleDevLink = async () => {
+    if (!email) return;
+    setDevLoading(true);
+    setDevLink(null);
+    setError(null);
+
+    const res = await fetch('/api/dev-magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+
+    if (data.link) {
+      setDevLink(data.link);
+    } else {
+      setError(data.error ?? 'Dev link genereren mislukt');
+    }
+    setDevLoading(false);
   };
 
   return (
@@ -89,6 +116,33 @@ export default function LoginPage() {
               >
                 {loading ? 'Versturen...' : 'Stuur inloglink →'}
               </button>
+
+              {/* Dev-only: genereer link zonder e-mail */}
+              {IS_DEV && (
+                <div className="pt-4 border-t border-gray-700">
+                  <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
+                  <button
+                    onClick={handleDevLink}
+                    disabled={devLoading || !email}
+                    className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
+                               text-white text-sm font-medium rounded-xl transition-colors"
+                  >
+                    {devLoading ? 'Genereren...' : 'Genereer magic link (geen e-mail)'}
+                  </button>
+
+                  {devLink && (
+                    <div className="mt-3 p-3 bg-gray-800 rounded-xl">
+                      <p className="text-xs text-gray-400 mb-2">Klik om in te loggen:</p>
+                      <a
+                        href={devLink}
+                        className="text-xs text-green-400 break-all hover:underline"
+                      >
+                        {devLink}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
