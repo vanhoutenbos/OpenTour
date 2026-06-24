@@ -18,7 +18,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'https://open-tour-web-vanhoutenbos-projects.vercel.app/nl/auth/callback',
+        emailRedirectTo: 'https://open-tour-web.vercel.app/nl/auth/callback',
       },
     });
 
