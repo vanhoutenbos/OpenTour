@@ -1,15 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const PRODUCTION_URL = 'https://open-tour-web.vercel.app';
+const DEV_PASSWORD = 'dev-password-opentour-2025';
 
 export async function POST(request: NextRequest) {
-  if (process.env.ENABLE_DEV_MAGIC_LINK !== 'true') {
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK !== 'true') {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY ontbreekt' }, { status: 500 });
   }
 
   let email: string;
@@ -27,27 +23,43 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+    // Create user if not exists (email_confirm: true + dev password)
+    const { error: createError } = await supabase.auth.admin.createUser({
       email,
-      options: { redirectTo: `${PRODUCTION_URL}/auth/callback` },
+      password: DEV_PASSWORD,
+      email_confirm: true,
+      user_metadata: { display_name: email.split('@')[0] },
     });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (createError && !createError.message.includes('already exists')) {
+      throw new Error(`User aanmaken mislukt: ${createError.message}`);
     }
 
-    // Supabase geeft 'hashed_token' terug, niet 'token_hash'
-    const hashed_token = data.properties.hashed_token;
-    const type = data.properties.verification_type ?? 'magiclink';
+    // Sign in with password — the client will use these tokens to set session
+    const anonSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const link = `${PRODUCTION_URL}/auth/callback?token_hash=${hashed_token}&type=${type}`;
-    return NextResponse.json({ link });
+    const { data, error: signInError } = await anonSupabase.auth.signInWithPassword({
+      email,
+      password: DEV_PASSWORD,
+    });
 
+    if (signInError || !data.session) {
+      throw new Error(`Inloggen mislukt: ${signInError?.message ?? 'Geen session'}`);
+    }
+
+    return NextResponse.json({
+      success: true,
+      email,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Onbekende fout';
     return NextResponse.json({ error: message }, { status: 500 });

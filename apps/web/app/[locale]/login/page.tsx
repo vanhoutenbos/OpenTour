@@ -11,8 +11,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Dev-only state
-  const [devLink, setDevLink] = useState<string | null>(null);
   const [devLoading, setDevLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -42,7 +40,6 @@ export default function LoginPage() {
   const handleDevLink = async () => {
     if (!email) return;
     setDevLoading(true);
-    setDevLink(null);
     setError(null);
 
     const res = await fetch('/api/dev-magic-link', {
@@ -52,10 +49,19 @@ export default function LoginPage() {
     });
     const data = await res.json();
 
-    if (data.link) {
-      setDevLink(data.link);
+    if (data.success) {
+      const supabase = getSupabaseBrowser();
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (sessionError) {
+        setError(`Session instellen mislukt: ${sessionError.message}`);
+      } else {
+        window.location.href = '/nl/dashboard';
+      }
     } else {
-      setError(data.error ?? 'Dev link genereren mislukt');
+      setError(data.error ?? 'Dev login mislukt');
     }
     setDevLoading(false);
   };
@@ -119,7 +125,7 @@ export default function LoginPage() {
                 {loading ? 'Versturen...' : 'Stuur inloglink →'}
               </button>
 
-              {/* Dev-only: genereer link zonder e-mail */}
+              {/* Dev-only: direct inloggen zonder e-mail */}
               {IS_DEV && (
                 <div className="pt-4 border-t border-gray-700">
                   <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
@@ -129,20 +135,8 @@ export default function LoginPage() {
                     className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
                                text-white text-sm font-medium rounded-xl transition-colors"
                   >
-                    {devLoading ? 'Genereren...' : 'Genereer magic link (geen e-mail)'}
+                    {devLoading ? 'Bezig met inloggen...' : 'Direct inloggen (geen e-mail)'}
                   </button>
-
-                  {devLink && (
-                    <div className="mt-3 p-3 bg-gray-800 rounded-xl">
-                      <p className="text-xs text-gray-400 mb-2">Klik om in te loggen:</p>
-                      <a
-                        href={devLink}
-                        className="text-xs text-green-400 break-all hover:underline"
-                      >
-                        {devLink}
-                      </a>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
