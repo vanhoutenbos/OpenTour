@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import createIntlMiddleware from 'next-intl/middleware';
-import { type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createIntlMiddleware({
   locales: ['nl', 'en'],
@@ -8,10 +8,17 @@ const intlMiddleware = createIntlMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
-  const response = intlMiddleware(request);
   const { pathname } = request.nextUrl;
 
-  // Alleen sessie verversen op beschermde paden
+  // Auth callback volledig doorgeven — geen locale redirect, geen sessie check
+  if (pathname.startsWith('/auth/')) {
+    return NextResponse.next();
+  }
+
+  // Intl middleware voor alle andere routes
+  const response = intlMiddleware(request);
+
+  // Sessie verversen alleen op beschermde paden
   const needsAuth = pathname.includes('/dashboard') || pathname.includes('/manage');
 
   if (needsAuth) {
@@ -40,6 +47,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Sluit /auth, statische bestanden en Next.js internals uit
-  matcher: ['/((?!auth|api|_next|_vercel|.*\\..*).*)', ],
+  // Verwerk alle routes behalve statische bestanden en Next.js internals
+  // /auth wordt hierboven al vroeg afgehandeld via NextResponse.next()
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', ],
 };
