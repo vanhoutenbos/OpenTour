@@ -25,6 +25,20 @@ interface Player {
   name: string;
   handicap: number | null;
   gender: string | null;
+  initials: string | null;
+  call_name: string | null;
+  prefix: string | null;
+  last_name: string | null;
+  date_of_birth: string | null;
+  street: string | null;
+  house_number: string | null;
+  house_number_addition: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string | null;
+  email: string | null;
+  phone: string | null;
+  ngf_number: string | null;
   status: string;
   flight_id: string | null;
   category_id: string | null;
@@ -71,6 +85,20 @@ interface Flight {
 
 type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'codes';
 
+function InputField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+      />
+    </div>
+  );
+}
+
 export default function ManageTournamentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const supabase = getSupabaseBrowser();
@@ -102,9 +130,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   const [editSuccess, setEditSuccess] = useState(false);
 
   // Add player
-  const [addPlayerName, setAddPlayerName] = useState('');
-  const [addPlayerHandicap, setAddPlayerHandicap] = useState('');
-  const [addPlayerGender, setAddPlayerGender] = useState('');
+  const [playerForm, setPlayerForm] = useState({
+    name: '', handicap: '', gender: '',
+    initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
+    street: '', houseNumber: '', houseNumberAddition: '',
+    postalCode: '', city: '', country: 'Nederland',
+    email: '', phone: '', ngfNumber: '',
+  });
+  const [showPlayerDetails, setShowPlayerDetails] = useState(false);
 
   // Categories
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -154,7 +187,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
 
     const { data: p } = await supabase
       .from('tournament_players')
-      .select('id, name, handicap, gender, status, flight_id, category_id')
+      .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id')
       .eq('tournament_id', params.id)
       .order('name');
     setPlayers((p as Player[]) ?? []);
@@ -228,17 +261,36 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
 
   // ---- Add player ----
   const addPlayer = async () => {
-    if (!addPlayerName.trim()) return;
+    if (!playerForm.name.trim()) return;
     await supabase.from('tournament_players').insert({
       tournament_id: params.id,
-      name: addPlayerName.trim(),
-      handicap: addPlayerHandicap ? parseFloat(addPlayerHandicap) : null,
-      gender: addPlayerGender || null,
+      name: playerForm.name.trim(),
+      handicap: playerForm.handicap ? parseFloat(playerForm.handicap) : null,
+      gender: playerForm.gender || null,
+      initials: playerForm.initials || null,
+      call_name: playerForm.callName || null,
+      prefix: playerForm.prefix || null,
+      last_name: playerForm.lastName || null,
+      date_of_birth: playerForm.dateOfBirth || null,
+      street: playerForm.street || null,
+      house_number: playerForm.houseNumber || null,
+      house_number_addition: playerForm.houseNumberAddition || null,
+      postal_code: playerForm.postalCode || null,
+      city: playerForm.city || null,
+      country: playerForm.country || null,
+      email: playerForm.email || null,
+      phone: playerForm.phone || null,
+      ngf_number: playerForm.ngfNumber || null,
       status: 'registered',
     });
-    setAddPlayerName('');
-    setAddPlayerHandicap('');
-    setAddPlayerGender('');
+    setPlayerForm({
+      name: '', handicap: '', gender: '',
+      initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
+      street: '', houseNumber: '', houseNumberAddition: '',
+      postalCode: '', city: '', country: 'Nederland',
+      email: '', phone: '', ngfNumber: '',
+    });
+    setShowPlayerDetails(false);
     await loadData();
   };
 
@@ -378,7 +430,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     );
   }
 
-  const sc = statusConfig[tournament.status] ?? statusConfig['draft'];
+  const sc = statusConfig[tournament.status] ?? statusConfig['draft']!;
   const courseName = courses.find(c => c.id === tournament.course_id)?.name ?? 'Niet gekozen';
 
   const tabs: { key: Tab; label: string }[] = [
@@ -621,39 +673,82 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
           <div className="space-y-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <h3 className="text-sm font-medium text-white mb-3">Speler toevoegen</h3>
-              <div className="flex flex-wrap gap-2">
+
+              {/* Required fields row */}
+              <div className="flex flex-wrap gap-2 mb-3">
                 <input
                   type="text"
-                  value={addPlayerName}
-                  onChange={e => setAddPlayerName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addPlayer()}
-                  placeholder="Naam speler"
+                  value={playerForm.name}
+                  onChange={e => setPlayerForm(f => ({ ...f, name: e.target.value }))}
+                  onKeyDown={e => e.key === 'Enter' && !showPlayerDetails && addPlayer()}
+                  placeholder="Naam *"
                   className="flex-1 min-w-[160px] px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
                 />
                 <input
                   type="number"
-                  value={addPlayerHandicap}
-                  onChange={e => setAddPlayerHandicap(e.target.value)}
-                  placeholder="HCP"
-                  className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  value={playerForm.handicap}
+                  onChange={e => setPlayerForm(f => ({ ...f, handicap: e.target.value }))}
+                  placeholder="HCP *"
+                  className="w-24 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
                 />
                 <select
-                  value={addPlayerGender}
-                  onChange={e => setAddPlayerGender(e.target.value)}
+                  value={playerForm.gender}
+                  onChange={e => setPlayerForm(f => ({ ...f, gender: e.target.value }))}
                   className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
                 >
                   <option value="">Geslacht</option>
                   <option value="male">Man</option>
                   <option value="female">Vrouw</option>
+                  <option value="unknown">Onbekend</option>
                 </select>
-                <button
-                  onClick={addPlayer}
-                  disabled={!addPlayerName.trim()}
-                  className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
-                >
-                  + Toevoegen
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPlayerDetails(!showPlayerDetails)}
+                    className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
+                      showPlayerDetails
+                        ? 'border-green-600 text-green-400 bg-green-900/20'
+                        : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                    }`}
+                  >
+                    {showPlayerDetails ? '− Details' : '+ Details'}
+                  </button>
+                  <button
+                    onClick={addPlayer}
+                    disabled={!playerForm.name.trim()}
+                    className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                  >
+                    + Toevoegen
+                  </button>
+                </div>
               </div>
+
+              {/* Expandable details section */}
+              {showPlayerDetails && (
+                <div className="border-t border-gray-800 pt-4 mt-2 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <InputField label="Voorletters" value={playerForm.initials} onChange={v => setPlayerForm(f => ({ ...f, initials: v }))} />
+                    <InputField label="Roepnaam" value={playerForm.callName} onChange={v => setPlayerForm(f => ({ ...f, callName: v }))} />
+                    <InputField label="Tussenvoegsel" value={playerForm.prefix} onChange={v => setPlayerForm(f => ({ ...f, prefix: v }))} />
+                    <InputField label="Achternaam" value={playerForm.lastName} onChange={v => setPlayerForm(f => ({ ...f, lastName: v }))} />
+                    <InputField label="Geboortedatum" type="date" value={playerForm.dateOfBirth} onChange={v => setPlayerForm(f => ({ ...f, dateOfBirth: v }))} />
+                    <InputField label="E-mailadres" type="email" value={playerForm.email} onChange={v => setPlayerForm(f => ({ ...f, email: v }))} />
+                    <InputField label="Mobiel" value={playerForm.phone} onChange={v => setPlayerForm(f => ({ ...f, phone: v }))} />
+                    <InputField label="NGF nummer" value={playerForm.ngfNumber} onChange={v => setPlayerForm(f => ({ ...f, ngfNumber: v }))} />
+                  </div>
+                  <div className="border-t border-gray-800 pt-4">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Adres</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <InputField label="Straat" value={playerForm.street} onChange={v => setPlayerForm(f => ({ ...f, street: v }))} />
+                      <InputField label="Huisnummer" value={playerForm.houseNumber} onChange={v => setPlayerForm(f => ({ ...f, houseNumber: v }))} />
+                      <InputField label="Toevoeging" value={playerForm.houseNumberAddition} onChange={v => setPlayerForm(f => ({ ...f, houseNumberAddition: v }))} />
+                      <InputField label="Postcode" value={playerForm.postalCode} onChange={v => setPlayerForm(f => ({ ...f, postalCode: v }))} />
+                      <InputField label="Plaats" value={playerForm.city} onChange={v => setPlayerForm(f => ({ ...f, city: v }))} />
+                      <InputField label="Land" value={playerForm.country} onChange={v => setPlayerForm(f => ({ ...f, country: v }))} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {players.length === 0 ? (
