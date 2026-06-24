@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Alleen beschikbaar in development
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'Alleen beschikbaar in development' }, { status: 403 });
+  // Zet ENABLE_DEV_MAGIC_LINK=false in Vercel om deze route uit te schakelen
+  if (process.env.ENABLE_DEV_MAGIC_LINK !== 'true') {
+    return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 
   const { email } = await request.json();
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email verplicht' }, { status: 400 });
   }
 
-  // Admin client — service_role_key, nooit client-side gebruiken
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

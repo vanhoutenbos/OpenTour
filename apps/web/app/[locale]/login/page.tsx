@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+const IS_DEV = process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
