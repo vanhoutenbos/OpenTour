@@ -41,27 +41,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Log alle beschikbare properties zodat we zien wat Supabase teruggeeft
-    const props = data.properties;
-    console.log('action_link:', props.action_link);
-    console.log('properties keys:', Object.keys(props));
-
-    // Gebruik de action_link direct — die bevat alles wat nodig is
-    // Vervang alleen de base URL naar onze productie URL
-    const rawUrl = new URL(props.action_link);
-    
-    // Kopieer alle params naar onze eigen callback URL
+    const rawUrl = new URL(data.properties.action_link);
     const callbackUrl = new URL(`${PRODUCTION_URL}/auth/callback`);
     rawUrl.searchParams.forEach((value, key) => {
       callbackUrl.searchParams.set(key, value);
     });
 
-    return NextResponse.json({ 
-      link: callbackUrl.toString(),
-      // Stuur ook de raw link terug voor debugging
-      debug_raw: props.action_link,
-      debug_params: Object.fromEntries(rawUrl.searchParams),
-    });
+    return NextResponse.json({ link: callbackUrl.toString() });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Onbekende fout';
