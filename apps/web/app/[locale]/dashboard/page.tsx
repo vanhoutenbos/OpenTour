@@ -28,7 +28,7 @@ export default function DashboardPage() {
         router.replace('/nl/login');
         return;
       }
-      setUser({ email: data.user.email });
+      setUser({ email: data.user.email ?? undefined });
 
       // Toernooien ophalen
       supabase
