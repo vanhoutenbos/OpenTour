@@ -7,32 +7,46 @@ const intlMiddleware = createIntlMiddleware({
   defaultLocale: 'nl',
 });
 
+// Paden waar we geen sessie hoeven te verversen
+const PUBLIC_PATHS = [
+  '/auth/callback',
+  '/login',
+  '/tournament', // publiek leaderboard
+];
+
 export async function middleware(request: NextRequest) {
   const response = intlMiddleware(request);
+  const { pathname } = request.nextUrl;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
+  // Alleen sessie verversen op beschermde paden
+  const needsAuth = pathname.includes('/dashboard') || pathname.includes('/manage');
 
-  await supabase.auth.getUser();
+  if (needsAuth) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value);
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
+
+    await supabase.auth.getUser();
+  }
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', ],
+  // Sluit statische bestanden, _next internals en API routes uit
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };
