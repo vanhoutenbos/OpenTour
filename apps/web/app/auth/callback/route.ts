@@ -2,8 +2,12 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Hardcoded productie URL — nooit afhankelijk van request origin
+// zodat Vercel preview deployments niet de verkeerde kant opsturen
+const PRODUCTION_URL = 'https://open-tour-web.vercel.app';
+
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type');
@@ -27,23 +31,26 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  // PKCE flow (code)
+  // PKCE flow (code parameter)
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL('/nl/dashboard', origin));
+      return NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
     }
     console.error('PKCE fout:', error.message);
   }
 
-  // OTP / token_hash flow (alternatief als PKCE code_verifier ontbreekt)
+  // token_hash flow (dev magic link + email OTP)
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as 'email' });
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as 'email',
+    });
     if (!error) {
-      return NextResponse.redirect(new URL('/nl/dashboard', origin));
+      return NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
     }
-    console.error('OTP verify fout:', error.message);
+    console.error('token_hash fout:', error.message);
   }
 
-  return NextResponse.redirect(new URL('/nl/login?error=auth', origin));
+  return NextResponse.redirect(`${PRODUCTION_URL}/nl/login?error=auth`);
 }
