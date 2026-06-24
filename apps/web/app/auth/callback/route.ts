@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
       cookies: {
         getAll() { return cookieStore.getAll(); },
         setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         },
       },
     }
@@ -39,7 +39,12 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.session) {
       console.log('✅ PKCE succesvol - redirect naar dashboard');
-      return NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
+      const response = NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
+      // Zorg dat cookies naar client worden gestuurd
+      cookieStore.getAll().forEach(cookie => {
+        response.cookies.set(cookie.name, cookie.value, { path: '/' });
+      });
+      return response;
     }
   }
 
@@ -60,7 +65,12 @@ export async function GET(request: NextRequest) {
     
     if (!error && data?.session) {
       console.log('✅ OTP succesvol - redirect naar dashboard');
-      return NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
+      const response = NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
+      // Zorg dat cookies naar client worden gestuurd
+      cookieStore.getAll().forEach(cookie => {
+        response.cookies.set(cookie.name, cookie.value, { path: '/' });
+      });
+      return response;
     }
     
     if (error) {
