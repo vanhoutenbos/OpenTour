@@ -27,16 +27,28 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Create user if not exists (email_confirm: true + dev password)
-    const { error: createError } = await supabase.auth.admin.createUser({
-      email,
-      password: DEV_PASSWORD,
-      email_confirm: true,
-      user_metadata: { display_name: email.split('@')[0] },
-    });
+    // Create user if not exists, or update password if already exists
+    const { data: userList } = await supabase.auth.admin.listUsers();
+    const existingUser = userList?.users.find((u) => u.email === email);
 
-    if (createError && !createError.message.includes('already exists')) {
-      throw new Error(`User aanmaken mislukt: ${createError.message}`);
+    if (existingUser) {
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        existingUser.id,
+        { password: DEV_PASSWORD }
+      );
+      if (updateError) {
+        throw new Error(`Password updaten mislukt: ${updateError.message}`);
+      }
+    } else {
+      const { error: createError } = await supabase.auth.admin.createUser({
+        email,
+        password: DEV_PASSWORD,
+        email_confirm: true,
+        user_metadata: { display_name: email.split('@')[0] },
+      });
+      if (createError) {
+        throw new Error(`User aanmaken mislukt: ${createError.message}`);
+      }
     }
 
     // Sign in with password — the client will use these tokens to set session

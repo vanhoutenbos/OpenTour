@@ -20,22 +20,52 @@ export default function NewTournamentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
+  const STORAGE_KEY = 'opentour-tournament-new';
+
+  const defaultForm = {
     name: '',
     start_date: '',
     course_id: '',
     format: 'stableford' as 'stroke' | 'stableford' | 'match',
     scoring_type: 'gross' as 'gross' | 'net',
     rounds: 1,
-  });
+    multi_rounds: false,
+  };
+
+  const [form, setForm] = useState({ ...defaultForm });
+
+  const saveToSession = (updated: typeof defaultForm) => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  };
+
+  const updateForm = (patch: Partial<typeof defaultForm>) => {
+    setForm((prev) => {
+      const next = { ...prev, ...patch };
+      saveToSession(next);
+      return next;
+    });
+  };
+
+  const clearForm = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setForm({ ...defaultForm });
+  };
 
   useEffect(() => {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.multi_rounds) parsed.rounds = 1;
+        setForm((prev) => ({ ...prev, ...parsed }));
+      } catch {}
+    }
+
     const supabase = getSupabaseBrowser();
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) router.replace('/nl/login');
     });
 
-    // Banen ophalen
     supabase
       .from('courses')
       .select('id, name, location, holes_count')
@@ -90,7 +120,13 @@ export default function NewTournamentPage() {
           >
             ← Terug
           </button>
-          <h1 className="text-lg font-semibold text-white">Nieuw toernooi</h1>
+          <h1 className="text-lg font-semibold text-white flex-1">Nieuw toernooi</h1>
+          <button
+            onClick={clearForm}
+            className="text-sm text-gray-500 hover:text-red-400 transition-colors"
+          >
+            Wis
+          </button>
         </div>
       </div>
 
@@ -122,7 +158,7 @@ export default function NewTournamentPage() {
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => updateForm({ name: e.target.value })}
                 placeholder="bijv. Clubkampioenschap 2026"
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
                            placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
@@ -135,29 +171,48 @@ export default function NewTournamentPage() {
               <input
                 type="date"
                 value={form.start_date}
-                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                onChange={(e) => updateForm({ start_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
                            focus:outline-none focus:border-green-600 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Aantal rondes</label>
-              <div className="flex gap-3">
-                {[1, 2, 3].map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setForm({ ...form, rounds: r })}
-                    className={`flex-1 py-3 rounded-xl border font-medium transition-colors ${
-                      form.rounds === r
-                        ? 'bg-green-700 border-green-600 text-white'
-                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    {r} {r === 1 ? 'ronde' : 'rondes'}
-                  </button>
-                ))}
-              </div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => updateForm({
+                    multi_rounds: !form.multi_rounds,
+                    rounds: form.multi_rounds ? 1 : (form.rounds < 2 ? 2 : form.rounds),
+                  })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${
+                    form.multi_rounds ? 'bg-green-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    form.multi_rounds ? 'translate-x-6' : 'translate-x-0.5'
+                  }`} />
+                </button>
+                <span className="text-sm text-gray-300">Meerdere rondes</span>
+              </label>
+
+              {form.multi_rounds && (
+                <div className="mt-3">
+                  <label className="block text-sm text-gray-400 mb-1.5">Aantal rondes</label>
+                  <input
+                    type="number"
+                    min={2}
+                    max={99}
+                    value={form.rounds}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      updateForm({ rounds: isNaN(v) ? 2 : Math.max(2, Math.min(99, v)) });
+                    }}
+                    className="w-24 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
+                               placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
+                  />
+                </div>
+              )}
             </div>
 
             <button
@@ -182,7 +237,7 @@ export default function NewTournamentPage() {
             {courses.length > 0 ? (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 <button
-                  onClick={() => setForm({ ...form, course_id: '' })}
+                  onClick={() => updateForm({ course_id: '' })}
                   className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                     form.course_id === ''
                       ? 'bg-green-900/30 border-green-600 text-white'
@@ -195,7 +250,7 @@ export default function NewTournamentPage() {
                 {courses.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => setForm({ ...form, course_id: c.id })}
+                    onClick={() => updateForm({ course_id: c.id })}
                     className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                       form.course_id === c.id
                         ? 'bg-green-900/30 border-green-600 text-white'
@@ -249,7 +304,7 @@ export default function NewTournamentPage() {
                 ].map((f) => (
                   <button
                     key={f.value}
-                    onClick={() => setForm({ ...form, format: f.value as typeof form.format })}
+                    onClick={() => updateForm({ format: f.value as typeof form.format })}
                     className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                       form.format === f.value
                         ? 'bg-green-900/30 border-green-600 text-white'
@@ -272,7 +327,7 @@ export default function NewTournamentPage() {
                 ].map((s) => (
                   <button
                     key={s.value}
-                    onClick={() => setForm({ ...form, scoring_type: s.value as typeof form.scoring_type })}
+                    onClick={() => updateForm({ scoring_type: s.value as typeof form.scoring_type })}
                     className={`flex-1 py-3 px-4 rounded-xl border transition-colors text-left ${
                       form.scoring_type === s.value
                         ? 'bg-green-900/30 border-green-600 text-white'
@@ -311,7 +366,7 @@ export default function NewTournamentPage() {
                 { label: 'Baan',       value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
                 { label: 'Format',     value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
                 { label: 'Scoring',    value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
-                { label: 'Rondes',     value: `${form.rounds}` },
+                { label: 'Rondes',     value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between px-4 py-3">
                   <span className="text-gray-400 text-sm">{label}</span>
