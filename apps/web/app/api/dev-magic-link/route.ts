@@ -8,39 +8,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 
-  const { email } = await request.json();
+  // Controleer of alle vereiste env vars aanwezig zijn
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL ontbreekt' }, { status: 500 });
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY ontbreekt in Vercel environment variables' }, { status: 500 });
+  }
+
+  let email: string;
+  try {
+    const body = await request.json();
+    email = body.email;
+  } catch {
+    return NextResponse.json({ error: 'Ongeldige request body' }, { status: 400 });
+  }
+
   if (!email) {
     return NextResponse.json({ error: 'Email verplicht' }, { status: 400 });
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
-  const { data, error } = await supabase.auth.admin.generateLink({
-    type: 'magiclink',
-    email,
-    options: { redirectTo: `${PRODUCTION_URL}/auth/callback` },
-  });
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo: `${PRODUCTION_URL}/auth/callback` },
+    });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const rawUrl = new URL(data.properties.action_link);
+    const token_hash = rawUrl.searchParams.get('token_hash');
+    const type = rawUrl.searchParams.get('type') ?? 'magiclink';
+
+    const fixedLink = `${PRODUCTION_URL}/auth/callback?token_hash=${token_hash}&type=${type}`;
+    return NextResponse.json({ link: fixedLink });
+
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Onbekende fout';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  // Gebruik de action_link direct maar vervang de base URL
-  // De action_link bevat al de juiste token_hash parameter
-  const rawLink = data.properties.action_link;
-  console.log('Raw action_link:', rawLink);
-
-  // Haal de token_hash en type op uit de action_link
-  const rawUrl = new URL(rawLink);
-  const token_hash = rawUrl.searchParams.get('token_hash');
-  const type = rawUrl.searchParams.get('type') ?? 'magiclink';
-
-  // Bouw een schone link naar onze eigen callback
-  const fixedLink = `${PRODUCTION_URL}/auth/callback?token_hash=${token_hash}&type=${type}`;
-
-  return NextResponse.json({ link: fixedLink });
 }
