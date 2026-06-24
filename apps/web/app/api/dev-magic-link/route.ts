@@ -22,20 +22,25 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: {
-      redirectTo: `${PRODUCTION_URL}/auth/callback`,
-    },
+    options: { redirectTo: `${PRODUCTION_URL}/auth/callback` },
   });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Vervang de base URL in de action_link met de productie URL
-  // zodat Supabase's eigen Site URL instelling er niet tussenzit
+  // Gebruik de action_link direct maar vervang de base URL
+  // De action_link bevat al de juiste token_hash parameter
   const rawLink = data.properties.action_link;
-  const linkUrl = new URL(rawLink);
-  const fixedLink = `${PRODUCTION_URL}/auth/callback?${linkUrl.searchParams.toString()}`;
+  console.log('Raw action_link:', rawLink);
+
+  // Haal de token_hash en type op uit de action_link
+  const rawUrl = new URL(rawLink);
+  const token_hash = rawUrl.searchParams.get('token_hash');
+  const type = rawUrl.searchParams.get('type') ?? 'magiclink';
+
+  // Bouw een schone link naar onze eigen callback
+  const fixedLink = `${PRODUCTION_URL}/auth/callback?token_hash=${token_hash}&type=${type}`;
 
   return NextResponse.json({ link: fixedLink });
 }
