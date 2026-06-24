@@ -24,7 +24,9 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError('Inloggen mislukt. Controleer je e-mailadres.');
+      setError(error.message.includes('rate limit') 
+        ? 'Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.'
+        : 'Inloggen mislukt. Controleer je e-mailadres.');
     } else {
       setSent(true);
     }

@@ -50,3 +50,4 @@ test-results/
 
 # TypeScript
 *.tsbuildinfo
+package-lock.json
