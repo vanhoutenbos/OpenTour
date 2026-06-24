@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEV_PASSWORD = 'dev-password-opentour-2025';
 
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK !== 'true') {
+  if (process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK !== 'true') {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 
