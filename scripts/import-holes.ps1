@@ -1,25 +1,15 @@
 ﻿<#
 .SYNOPSIS
-  Importeert tee's, holes, loops en loop_holes uit eGolf4u JSON naar Supabase.
+  Importeert tees, holes, loops en loop_holes uit eGolf4u JSON naar Supabase.
 
-.DESCRIPTION
-  Verwerkt de gedetailleerde baanstructuur:
-    club → courses → tees → holes
+.NOTES
+  holes in de JSON komt in twee vormen voor:
+    - Array: [{"h1":{PAR,SI,POS}}, {"h2":{...}}]
+    - Object: {"h1":{PAR,SI,POS}, "h2":{...}}
+  Beide worden ondersteund.
 
-  Elke club wordt als course (locatie) in de database verwacht
-  (eerder aangemaakt via import-clubs.ps1). Dit script vult aan:
-    - tees (afslagplaatsen)
-    - holes (individuele speelbanen)
-    - loops (lussen: full 18, front 9, back 9)
-    - loop_holes (koppeling holes aan loop in volgorde)
-
-.VEREISTEN
-  - apps/web/.env.local met NEXT_PUBLIC_SUPABASE_URL en SUPABASE_SERVICE_ROLE_KEY
-  - JSON bestand met eGolf4u club → courses → tees → holes structuur
-  - Courses (clubs) moeten al bestaan in de database
-
-.VOORBEELD
-  .\scripts\import-holes.ps1 -JsonPad .\data\egolf4u-course-details.json
+  Elke club (via import-clubs.ps1) is al een course in de database.
+  Dit script importeert de detaildata: tees, holes, loops, loop_holes.
 #>
 
 param(
@@ -35,243 +25,210 @@ foreach ($line in $envLines) {
 }
 $supabaseUrl = $envHash['NEXT_PUBLIC_SUPABASE_URL']
 $serviceRoleKey = $envHash['SUPABASE_SERVICE_ROLE_KEY']
-
 if (-not $supabaseUrl -or -not $serviceRoleKey) {
   Write-Error "Ontbrekende variabelen in apps/web/.env.local"
   exit 1
 }
-
 $headers = @{ apikey = $serviceRoleKey; Authorization = "Bearer $serviceRoleKey" }
-$contentType = "application/json; charset=utf-8"
+$ct = "application/json; charset=utf-8"
 
-$coursesUrl   = "$supabaseUrl/rest/v1/courses"
-$teesUrl      = "$supabaseUrl/rest/v1/tees"
-$holesUrl     = "$supabaseUrl/rest/v1/holes"
-$loopsUrl     = "$supabaseUrl/rest/v1/loops"
-$loopHolesUrl = "$supabaseUrl/rest/v1/loop_holes"
+$u = @{
+  courses    = "$supabaseUrl/rest/v1/courses"
+  tees       = "$supabaseUrl/rest/v1/tees"
+  holes      = "$supabaseUrl/rest/v1/holes"
+  loops      = "$supabaseUrl/rest/v1/loops"
+  loop_holes = "$supabaseUrl/rest/v1/loop_holes"
+}
 
 # === Lees JSON ===
-if (-not (Test-Path $JsonPad)) {
-  Write-Error "Bestand niet gevonden: $JsonPad"
-  exit 1
-}
+if (-not (Test-Path $JsonPad)) { Write-Error "Bestand niet gevonden: $JsonPad"; exit 1 }
 $clubs = Get-Content $JsonPad -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($clubs -isnot [array]) { $clubs = @($clubs) }
 
-$stats = @{ courses = 0; tees = 0; holes = 0; loops = 0; loop_holes = 0; errors = 0 }
+$s = @{ tees = 0; holes = 0; loops = 0; loop_holes = 0; errors = 0; skipped = 0 }
 
-function Invoke-Upsert($url, $row, $lookupQuery) {
+# === Helpers ===
+
+function Invoke-Upsert($url, $row, $lookup) {
   try {
     $body = @($row) | ConvertTo-Json -Compress
-    $result = Invoke-RestMethod -Uri $url -Method Post -Body $body -ContentType $contentType -Headers $headers -ErrorAction Stop
-    return @{ id = $result[0].id; created = $true }
+    $r = Invoke-RestMethod -Uri $url -Method Post -Body $body -ContentType $ct -Headers $headers -ErrorAction Stop
+    return @{ id = $r[0].id; created = $true }
   } catch {
-    if ($lookupQuery) {
-      try {
-        $existing = Invoke-RestMethod -Uri "$url`?$lookupQuery&select=id" -Method Get -Headers $headers -ErrorAction Stop
-        if ($existing -and $existing.Count -gt 0) {
-          $id = $existing[0].id
-          $body = @($row) | ConvertTo-Json -Compress
-          $null = Invoke-RestMethod -Uri "$url`?id=eq.$id" -Method Patch -Body $body -ContentType $contentType -Headers $headers -ErrorAction Stop
-          return @{ id = $id; created = $false }
-        }
-      } catch {}
-    }
+    if (-not $lookup) { return $null }
+    try {
+      $existing = Invoke-RestMethod -Uri "$url`?$lookup&select=id" -Method Get -Headers $headers -ErrorAction Stop
+      if ($existing -and $existing.Count -gt 0) {
+        $id = $existing[0].id
+        $body = @($row) | ConvertTo-Json -Compress
+        $null = Invoke-RestMethod -Uri "$url`?id=eq.$id" -Method Patch -Body $body -ContentType $ct -Headers $headers -ErrorAction Stop
+        return @{ id = $id; created = $false }
+      }
+    } catch {}
     return $null
   }
 }
 
-# Bepaal loop-categorie op basis van naam
-function Get-LoopType($courseName) {
-  if ($courseName -match '18') { return 'full_18' }
-  if ($courseName -match '^1e|^voorste|front') { return 'front_9' }
-  if ($courseName -match '^2e|^achterste|back') { return 'back_9' }
+# Normaliseer tee.holes naar array van {PAR,SI,POS,...} (ongeacht JSON formaat)
+function Get-HoleDataArray($holes) {
+  $result = @()
+  if (-not $holes) { return $result }
+  if ($holes -is [array]) {
+    foreach ($h in $holes) {
+      $prop = $h.PSObject.Properties | Select-Object -First 1
+      if ($prop) { $result += $prop.Value }
+    }
+  } else {
+    foreach ($prop in $holes.PSObject.Properties) {
+      $result += $prop.Value
+    }
+  }
+  return $result
+}
+
+# Bepaal loop-type op basis van layout-naam
+function Get-LoopType($name) {
+  if ($name -match '\b18\b|18.?holes') { return 'full_18' }
+  if ($name -match '^1[eE]\b|voorste|^voor-|front') { return 'front_9' }
+  if ($name -match '^2[eE]\b|achterste|^achter-|back') { return 'back_9' }
   return 'custom'
 }
 
-Write-Host "`n$($clubs.Count) club(s) gevonden in JSON`n"
+# Bepaal of een layout-naam naar een standaard 9-holes lus verwijst
+function Is-StandardLoop($name) {
+  return ($name -match '\b18\b|18.?holes|^1[eE]\b|^2[eE]\b|voorste|achterste|front|back')
+}
+
+Write-Host "`n$($clubs.Count) club(s) gevonden`n"
 
 foreach ($club in $clubs) {
   Write-Host "  $($club.club_name) ($($club.courses.Count) layout(s))" -ForegroundColor Cyan
 
-  # 1. Vind bestaande course (geimporteerd via import-clubs.ps1)
+  # 1. Vind bestaande course (club) — overgeslagen als niet gevonden
   $courseRow = $null
-  try {
-    $courseRow = Invoke-RestMethod -Uri "$coursesUrl`?external_id=eq.$($club.club_id)&select=id,name" -Method Get -Headers $headers -ErrorAction Stop
-  } catch {}
+  try { $courseRow = Invoke-RestMethod -Uri "$($u.courses)?external_id=eq.$($club.club_id)&select=id" -Method Get -Headers $headers -ErrorAction Stop } catch {}
   if (-not $courseRow -or $courseRow.Count -eq 0) {
-    Write-Host "    Course (club) niet gevonden met external_id=$($club.club_id), overslaan" -ForegroundColor Yellow
-    $stats.errors++
-    continue
+    Write-Host "    Geen course gevonden met external_id=$($club.club_id), overslaan" -ForegroundColor Yellow
+    $s.skipped++; continue
   }
   $courseId = $courseRow[0].id
-  $stats.courses++
 
-  # 2. Categoriseer layouts
-  $layouts = @{ full_18 = $null; front_9 = $null; back_9 = $null; custom = @() }
-  foreach ($c in $club.courses) {
-    $type = Get-LoopType $c.course_name
-    if ($type -eq 'custom') { $layouts.custom += $c; continue }
-    if (-not $layouts[$type]) { $layouts[$type] = $c }
-  }
-
-  # 3. Importeer tees (uniek over alle layouts)
+  # 2. Importeer tees (uniek over alle layouts)
   $allTees = @{}
   foreach ($c in $club.courses) {
     foreach ($t in $c.tees) {
       if (-not $allTees.ContainsKey($t.tee_id)) { $allTees[$t.tee_id] = $t }
     }
   }
-  $teeIds = @{}  # external_id → database UUID
+  $teeIds = @{}
   foreach ($key in $allTees.Keys) {
     $t = $allTees[$key]
-    $result = Invoke-Upsert $teesUrl @{
-      course_id   = $courseId
-      external_id = $t.tee_id
-      name        = $t.tee_name
-    } "course_id=eq.$courseId&external_id=eq.$($t.tee_id)"
-    if ($result) {
-      $teeIds[$t.tee_id] = $result.id
-      $stats.tees++
-    } else {
-      Write-Host "    Tee $($t.tee_id) mislukt" -ForegroundColor Yellow
-      $stats.errors++
-    }
+    $r = Invoke-Upsert $u.tees @{ course_id=$courseId; external_id=$t.tee_id; name=$t.tee_name } "course_id=eq.$courseId&external_id=eq.$($t.tee_id)"
+    if ($r) { $teeIds[$t.tee_id] = $r.id; $s.tees++ } else { $s.errors++ }
   }
 
-  # Bepaal default tee (laagste tee_id = dichtst bij geel/wit)
+  # Default tee = laagste tee_id (dichtst bij geel/wit)
   $defaultTeeId = $null
-  $defaultTeeKey = ($allTees.Keys | Sort-Object)[0]
-  if ($defaultTeeKey -and $teeIds.ContainsKey($defaultTeeKey)) {
-    $defaultTeeId = $teeIds[$defaultTeeKey]
+  if ($teeIds.Keys -and $teeIds.Keys.Count -gt 0) {
+    $sorted = @($teeIds.Keys) | Sort-Object
+    $defaultTeeId = $teeIds[$sorted[0]]
+  }
+
+  # 3. Verzamel alle hole data uit ALLE layouts
+  #    Elke entry: { number, par, si, sourceLayout }
+  $allHoleData = @{}  # key = holeNumber
+  $layoutHoles = @{}  # key = course_id+"|"+course_name → array van posities
+
+  foreach ($c in $club.courses) {
+    $type = Get-LoopType $c.course_name
+    $offset = if ($type -eq 'back_9') { 9 } else { 0 }
+    $tee = $c.tees[0]
+    if (-not $tee) { continue }
+
+    $holeDataArray = Get-HoleDataArray $tee.holes
+    $positions = @()
+
+    foreach ($hd in $holeDataArray) {
+      $pos = [int]$hd.POS
+      $number = $pos + $offset
+      $par = [int]$hd.PAR
+      $si = [int]$hd.SI
+      if ($par -lt 3 -or $par -gt 5 -or $si -lt 1 -or $si -gt 18) { continue }
+
+      $positions += $number
+      if (-not $allHoleData.ContainsKey($number)) {
+        $allHoleData[$number] = @{ par = $par; si = $si }
+      }
+    }
+    $layoutHoles["$($c.course_id)|$($c.course_name)"] = @{ type = $type; name = $c.course_name; positions = $positions; offset = $offset }
   }
 
   # 4. Importeer holes
-  #    Haal holes uit full_18 als beschikbaar, anders front+back
-  $holeSources = @()  # array van { startNumber, POS-offset, holes[] }
-  if ($layouts.full_18) {
-    $tee = $layouts.full_18.tees[0]
-    if ($tee) { $holeSources += @{ offset = 0; holes = $tee.holes } }
-  } else {
-    if ($layouts.front_9 -and $layouts.front_9.tees[0]) {
-      $holeSources += @{ offset = 0; holes = $layouts.front_9.tees[0].holes }
+  $holeIds = @{}
+  foreach ($num in ($allHoleData.Keys | Sort-Object)) {
+    $hd = $allHoleData[$num]
+    $r = Invoke-Upsert $u.holes @{ course_id=$courseId; number=$num; par=$hd.par; stroke_index=$hd.si } "course_id=eq.$courseId&number=eq.$num"
+    if ($r) { $holeIds[$num] = $r.id; $s.holes++ } else { $s.errors++ }
+  }
+
+  # 5. Maak loops + loop_holes
+  $stdCreated = @{}  # track welke standaard loops al zijn aangemaakt
+  $defaultLoopSet = $false
+
+  foreach ($key in $layoutHoles.Keys) {
+    $lh = $layoutHoles[$key]
+    $type = $lh.type
+    $posList = $lh.positions
+
+    if ($type -ne 'custom') {
+      # Sla standaard loop over als er al een van dit type is gemaakt
+      if ($stdCreated.ContainsKey($type)) { continue }
+      $stdCreated[$type] = $true
     }
-    if ($layouts.back_9 -and $layouts.back_9.tees[0]) {
-      $holeSources += @{ offset = 9; holes = $layouts.back_9.tees[0].holes }
-    }
-  }
 
-  $holeIds = @{}  # hole position (1-18) → database UUID
-  foreach ($source in $holeSources) {
-    foreach ($holeObj in $source.holes) {
-      $holeProp = $holeObj.PSObject.Properties | Select-Object -First 1
-      $holeData = $holeProp.Value
-      $pos = [int]$holeData.POS
-      $number = $pos + $source.offset
-      $par = [int]$holeData.PAR
-      $si = [int]$holeData.SI
+    # Alleen loops aanmaken als er holes zijn
+    if ($posList.Count -eq 0) { continue }
 
-      if ($par -lt 3 -or $par -gt 5 -or $si -lt 1 -or $si -gt 18) { continue }
+    $isDefault = (-not $defaultLoopSet) -and ($type -in ('full_18','front_9','back_9'))
+    if ($isDefault) { $defaultLoopSet = $true }
 
-      $result = Invoke-Upsert $holesUrl @{
-        course_id    = $courseId
-        number       = $number
-        par          = $par
-        stroke_index = $si
-      } "course_id=eq.$courseId&number=eq.$number"
-      if ($result) {
-        $holeIds[$number] = $result.id
-        $stats.holes++
-      }
-    }
-  }
-
-  # 5. Maak loops en loop_holes
-  $loopDefs = @()
-
-  # Helper om loop holes te bepalen
-  function Get-HoleNumbers($type, $hasFull18) {
-    if ($type -eq 'full_18') { return @(1..18) }
-    if ($type -eq 'front_9') { return @(1..9) }
-    if ($type -eq 'back_9')  { return @(10..18) }
-    return @()
-  }
-
-  $loopConfigs = @()
-  $existingHoles = $holeIds.Keys | Sort-Object
-
-  # Bepaal welke loops aangemaakt moeten worden
-  if ($existingHoles -contains 18) {
-    $loopConfigs += @{ type = 'full_18'; name = '18 holes'; holes = (1..18) }
-  }
-  if ($existingHoles -contains 9) {
-    $loopConfigs += @{ type = 'front_9'; name = 'Voorste 9'; holes = (1..9) }
-  }
-  if ($existingHoles -contains 10) {
-    $loopConfigs += @{ type = 'back_9'; name = 'Achterste 9'; holes = (10..18) }
-  }
-
-  # Custom layouts uit de JSON
-  foreach ($c in $club.courses) {
-    $type = Get-LoopType $c.course_name
-    if ($type -ne 'custom') { continue }
-    $tee = $c.tees[0]
-    if (-not $tee) { continue }
-    $holeNrs = @()
-    foreach ($holeObj in $tee.holes) {
-      $holeProp = $holeObj.PSObject.Properties | Select-Object -First 1
-      $holeNrs += [int]$holeProp.Value.POS
-    }
-    $loopConfigs += @{ type = 'custom'; name = $c.course_name; holes = $holeNrs }
-  }
-
-  # Markeer eerste loop als default
-  for ($i = 0; $i -lt $loopConfigs.Count; $i++) {
-    $cfg = $loopConfigs[$i]
-    $isDefault = ($i -eq 0)
-
-    $loopResult = Invoke-Upsert $loopsUrl @{
+    $loopResult = Invoke-Upsert $u.loops @{
       course_id   = $courseId
-      name        = $cfg.name
-      holes_count = $cfg.holes.Count
-      loop_type   = $cfg.type
+      name        = $lh.name
+      holes_count = $posList.Count
+      loop_type   = $type
       tee_id      = $defaultTeeId
       is_default  = $isDefault
-    } "course_id=eq.$courseId&name=eq.$($cfg.name)"
-    if (-not $loopResult) {
-      Write-Host "    Loop '$($cfg.name)' mislukt" -ForegroundColor Yellow
-      $stats.errors++; continue
-    }
+    } "course_id=eq.$courseId&name=eq.$($lh.name)"
+    if (-not $loopResult) { $s.errors++; continue }
     $loopId = $loopResult.id
-    $stats.loops++
+    $s.loops++
 
-    # loop_holes
     $pos = 1
-    foreach ($holeNr in $cfg.holes) {
-      if (-not $holeIds.ContainsKey($holeNr)) {
-        Write-Host "    Hole $holeNr niet gevonden in database" -ForegroundColor Yellow
+    foreach ($holeNum in $posList) {
+      if (-not $holeIds.ContainsKey($holeNum)) {
         $pos++; continue
       }
-      $holeId = $holeIds[$holeNr]
-      $lhResult = Invoke-Upsert $loopHolesUrl @{
+      $r = Invoke-Upsert $u.loop_holes @{
         loop_id  = $loopId
-        hole_id  = $holeId
+        hole_id  = $holeIds[$holeNum]
         tee_id   = $defaultTeeId
         position = $pos
       } "loop_id=eq.$loopId&position=eq.$pos"
-      if ($lhResult) { $stats.loop_holes++ } else { $stats.errors++ }
+      if ($r) { $s.loop_holes++ } else { $s.errors++ }
       $pos++
     }
-
-    Write-Host "    Loop: $($cfg.name) ($($cfg.holes.Count) holes)" -ForegroundColor Green
   }
+
+  Write-Host "    T=$($teeIds.Count) H=$($holeIds.Count) L=$($layoutHoles.Count)" -ForegroundColor Green
 }
 
 Write-Host "`n" + ("=" * 50)
 Write-Host "Import voltooid:" -ForegroundColor Green
-Write-Host "  Courses:   $($stats.courses)"
-Write-Host "  Tees:      $($stats.tees)"
-Write-Host "  Holes:     $($stats.holes)"
-Write-Host "  Loops:     $($stats.loops)"
-Write-Host "  Loop holes: $($stats.loop_holes)"
-if ($stats.errors -gt 0) { Write-Host "  Fouten:    $($stats.errors)" -ForegroundColor Yellow }
+Write-Host "  Courses gevonden: $($clubs.Count - $s.skipped)"
+Write-Host "  Overgeslagen:     $($s.skipped) (geen course match)"
+Write-Host "  Tees:             $($s.tees)"
+Write-Host "  Holes:            $($s.holes)"
+Write-Host "  Loops:            $($s.loops)"
+Write-Host "  Loop holes:       $($s.loop_holes)"
+if ($s.errors -gt 0) { Write-Host "  Fouten:           $($s.errors)" -ForegroundColor Yellow }

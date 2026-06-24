@@ -8,10 +8,12 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 interface Tournament {
   id: string;
   name: string;
-  status: string;
+  description: string | null;
+  course_id: string | null;
   format: string;
   scoring_type: string;
   rounds: number;
+  status: string;
   start_date: string | null;
   pause_reason: string | null;
   is_public: boolean;
@@ -22,8 +24,10 @@ interface Player {
   id: string;
   name: string;
   handicap: number | null;
+  gender: string | null;
   status: string;
   flight_id: string | null;
+  category_id: string | null;
 }
 
 interface AccessCode {
@@ -33,20 +37,97 @@ interface AccessCode {
   is_active: boolean;
 }
 
+interface Course {
+  id: string;
+  name: string;
+  location: string | null;
+}
+
+interface Tee {
+  id: string;
+  name: string | null;
+  color: string | null;
+}
+
+interface TournamentCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  gender: string | null;
+  handicap_min: number | null;
+  handicap_max: number | null;
+  tee_id: string | null;
+  sort_order: number;
+}
+
+interface Flight {
+  id: string;
+  name: string;
+  start_time: string | null;
+  tee_number: number;
+  category_id: string | null;
+  max_players: number;
+}
+
+type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'codes';
+
 export default function ManageTournamentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const supabase = getSupabaseBrowser();
+
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [codes, setCodes] = useState<AccessCode[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [tees, setTees] = useState<Tee[]>([]);
+  const [categories, setCategories] = useState<TournamentCategory[]>([]);
+  const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'players' | 'codes'>('overview');
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [pauseReason, setPauseReason] = useState('');
   const [showPauseModal, setShowPauseModal] = useState(false);
-  const [addPlayerName, setAddPlayerName] = useState('');
-  const [addPlayerHandicap, setAddPlayerHandicap] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
-  const supabase = getSupabaseBrowser();
+  // Edit form
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    course_id: '',
+    format: 'stableford',
+    scoring_type: 'gross',
+    rounds: 1,
+    start_date: '',
+  });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  // Add player
+  const [addPlayerName, setAddPlayerName] = useState('');
+  const [addPlayerHandicap, setAddPlayerHandicap] = useState('');
+  const [addPlayerGender, setAddPlayerGender] = useState('');
+
+  // Categories
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    description: '',
+    gender: '',
+    handicap_min: '',
+    handicap_max: '',
+    tee_id: '',
+  });
+  const [categorySaving, setCategorySaving] = useState(false);
+
+  // Flight generation
+  const [flightForm, setFlightForm] = useState({
+    start_time: '',
+    start_holes: [1, 10] as number[],
+    interval_minutes: 8,
+    max_players: 4,
+  });
+  const [flightGenerating, setFlightGenerating] = useState(false);
+  const [flightError, setFlightError] = useState<string | null>(null);
 
   const loadData = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -61,10 +142,19 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
 
     if (!t) { router.replace('/nl/dashboard'); return; }
     setTournament(t as Tournament);
+    setEditForm({
+      name: t.name ?? '',
+      description: t.description ?? '',
+      course_id: t.course_id ?? '',
+      format: t.format,
+      scoring_type: t.scoring_type,
+      rounds: t.rounds,
+      start_date: t.start_date ? t.start_date.slice(0, 10) : '',
+    });
 
     const { data: p } = await supabase
       .from('tournament_players')
-      .select('id, name, handicap, status, flight_id')
+      .select('id, name, handicap, gender, status, flight_id, category_id')
       .eq('tournament_id', params.id)
       .order('name');
     setPlayers((p as Player[]) ?? []);
@@ -76,24 +166,171 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       .order('created_at', { ascending: false });
     setCodes((c as AccessCode[]) ?? []);
 
+    const { data: co } = await supabase
+      .from('courses')
+      .select('id, name, location')
+      .order('name');
+    setCourses((co as Course[]) ?? []);
+
+    const { data: cat } = await supabase
+      .from('tournament_categories')
+      .select('*')
+      .eq('tournament_id', params.id)
+      .order('sort_order');
+    setCategories((cat as TournamentCategory[]) ?? []);
+
+    const { data: f } = await supabase
+      .from('flights')
+      .select('id, name, start_time, tee_number, category_id, max_players')
+      .eq('tournament_id', params.id)
+      .order('start_time');
+    setFlights((f as Flight[]) ?? []);
+
+    if (t.course_id) {
+      const { data: teeData } = await supabase
+        .from('tees')
+        .select('id, name, color')
+        .eq('course_id', t.course_id)
+        .order('name');
+      setTees((teeData as Tee[]) ?? []);
+    }
+
     setLoading(false);
   };
 
   useEffect(() => { loadData(); }, [params.id]);
+
+  // ---- Tournament edit ----
+  const saveEdit = async () => {
+    setEditSaving(true);
+    setEditSuccess(false);
+    const { error } = await supabase.from('tournaments').update({
+      name: editForm.name,
+      description: editForm.description || null,
+      course_id: editForm.course_id || null,
+      format: editForm.format,
+      scoring_type: editForm.scoring_type,
+      rounds: editForm.rounds,
+      start_date: editForm.start_date || null,
+    }).eq('id', params.id);
+    setEditSaving(false);
+    if (!error) {
+      setEditSuccess(true);
+      setTimeout(() => setEditSuccess(false), 2000);
+      await loadData();
+    }
+  };
 
   const updateStatus = async (status: string, extra: Record<string, unknown> = {}) => {
     await supabase.from('tournaments').update({ status, ...extra }).eq('id', params.id);
     await loadData();
   };
 
+  // ---- Add player ----
+  const addPlayer = async () => {
+    if (!addPlayerName.trim()) return;
+    await supabase.from('tournament_players').insert({
+      tournament_id: params.id,
+      name: addPlayerName.trim(),
+      handicap: addPlayerHandicap ? parseFloat(addPlayerHandicap) : null,
+      gender: addPlayerGender || null,
+      status: 'registered',
+    });
+    setAddPlayerName('');
+    setAddPlayerHandicap('');
+    setAddPlayerGender('');
+    await loadData();
+  };
+
+  // ---- Categories ----
+  const openCategoryForm = (cat?: TournamentCategory) => {
+    if (cat) {
+      setEditingCategory(cat.id);
+      setCategoryForm({
+        name: cat.name,
+        description: cat.description ?? '',
+        gender: cat.gender ?? '',
+        handicap_min: cat.handicap_min?.toString() ?? '',
+        handicap_max: cat.handicap_max?.toString() ?? '',
+        tee_id: cat.tee_id ?? '',
+      });
+    } else {
+      setEditingCategory(null);
+      setCategoryForm({ name: '', description: '', gender: '', handicap_min: '', handicap_max: '', tee_id: '' });
+    }
+    setShowCategoryForm(true);
+  };
+
+  const saveCategory = async () => {
+    setCategorySaving(true);
+    const payload = {
+      tournament_id: params.id,
+      name: categoryForm.name,
+      description: categoryForm.description || null,
+      gender: categoryForm.gender || null,
+      handicap_min: categoryForm.handicap_min ? parseFloat(categoryForm.handicap_min) : null,
+      handicap_max: categoryForm.handicap_max ? parseFloat(categoryForm.handicap_max) : null,
+      tee_id: categoryForm.tee_id || null,
+      sort_order: categories.length,
+    };
+
+    if (editingCategory) {
+      await supabase.from('tournament_categories').update(payload).eq('id', editingCategory);
+    } else {
+      await supabase.from('tournament_categories').insert(payload);
+    }
+    setCategorySaving(false);
+    setShowCategoryForm(false);
+    await loadData();
+  };
+
+  const deleteCategory = async (id: string) => {
+    await supabase.from('tournament_categories').delete().eq('id', id);
+    await loadData();
+  };
+
+  // ---- Flights ----
+  const generateFlights = async () => {
+    if (!flightForm.start_time) return;
+    setFlightGenerating(true);
+    setFlightError(null);
+    const { error } = await supabase.rpc('generate_flights', {
+      p_tournament_id: params.id,
+      p_start_time: new Date(flightForm.start_time).toISOString(),
+      p_start_holes: flightForm.start_holes,
+      p_interval_minutes: flightForm.interval_minutes,
+      p_max_players_per_flight: flightForm.max_players,
+    });
+    if (error) {
+      setFlightError(error.message);
+    } else {
+      await loadData();
+    }
+    setFlightGenerating(false);
+  };
+
+  const deleteAllFlights = async () => {
+    await supabase.from('flights').delete().eq('tournament_id', params.id);
+    await supabase.from('tournament_players').update({ flight_id: null }).eq('tournament_id', params.id);
+    await loadData();
+  };
+
+  const startHoleOptions = [1, 10];
+  const toggleStartHole = (hole: number) => {
+    setFlightForm(prev => ({
+      ...prev,
+      start_holes: prev.start_holes.includes(hole)
+        ? prev.start_holes.filter(h => h !== hole)
+        : [...prev.start_holes, hole].sort(),
+    }));
+  };
+
+  // ---- Codes ----
   const generateCode = async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
-
-    // Genereer code via Postgres functie
     const { data: codeData } = await supabase.rpc('generate_access_code');
     const code = codeData as string;
-
     await supabase.from('access_codes').insert({
       code,
       tournament_id: params.id,
@@ -105,19 +342,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
 
   const deactivateCode = async (codeId: string) => {
     await supabase.from('access_codes').update({ is_active: false }).eq('id', codeId);
-    await loadData();
-  };
-
-  const addPlayer = async () => {
-    if (!addPlayerName.trim()) return;
-    await supabase.from('tournament_players').insert({
-      tournament_id: params.id,
-      name: addPlayerName.trim(),
-      handicap: addPlayerHandicap ? parseFloat(addPlayerHandicap) : null,
-      status: 'registered',
-    });
-    setAddPlayerName('');
-    setAddPlayerHandicap('');
     await loadData();
   };
 
@@ -138,6 +362,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     finished: { label: 'Afgelopen',  className: 'bg-blue-900 text-blue-300' },
   };
 
+  const genderLabel = (g: string | null) =>
+    g === 'male' ? 'Man' : g === 'female' ? 'Vrouw' : '';
+
+  const teeLabel = (teeId: string | null) => {
+    const t = tees.find(tee => tee.id === teeId);
+    return t ? `${t.color ?? ''} ${t.name ?? ''}`.trim() || 'Onbekende tee' : 'Niet gekozen';
+  };
+
   if (loading || !tournament) {
     return (
       <main className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -146,7 +378,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     );
   }
 
-  const sc = statusConfig[tournament.status] ?? statusConfig['draft']!;
+  const sc = statusConfig[tournament.status] ?? statusConfig['draft'];
+  const courseName = courses.find(c => c.id === tournament.course_id)?.name ?? 'Niet gekozen';
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'overview', label: 'Overzicht' },
+    { key: 'edit', label: 'Bewerken' },
+    { key: 'players', label: `Spelers (${players.length})` },
+    { key: 'categories', label: `Categorieën (${categories.length})` },
+    { key: 'flights', label: `Flights (${flights.length})` },
+    { key: 'codes', label: 'Toegangscodes' },
+  ];
 
   return (
     <main className="min-h-screen bg-gray-950">
@@ -162,7 +404,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
             <div>
               <h1 className="text-xl font-bold text-white">{tournament.name}</h1>
               <p className="text-sm text-gray-400">
-                {tournament.format} · {tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto'}
+                {courseName} · {tournament.format} · {tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto'}
                 {tournament.start_date && ` · ${new Date(tournament.start_date).toLocaleDateString('nl-NL')}`}
               </p>
             </div>
@@ -221,7 +463,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
             target="_blank"
             className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg"
           >
-            👁 Leaderboard bekijken
+            👁 Leaderboard
           </Link>
           <button
             onClick={() => copyToClipboard(leaderboardUrl, 'url')}
@@ -233,34 +475,34 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-800 px-4">
-        <div className="max-w-4xl mx-auto flex gap-6">
-          {(['overview', 'players', 'codes'] as const).map((tab) => (
+      <div className="border-b border-gray-800 px-4 overflow-x-auto">
+        <div className="max-w-4xl mx-auto flex gap-4 min-w-max">
+          {tabs.map(({ key, label }) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === key
                   ? 'border-green-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
-              {{ overview: 'Overzicht', players: `Spelers (${players.length})`, codes: 'Toegangscodes' }[tab]}
+              {label}
             </button>
           ))}
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Tab: Overzicht */}
+        {/* ===== TAB: Overzicht ===== */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Spelers', value: players.length },
                 { label: 'Actief', value: players.filter(p => !['withdrawn','dns','dnf','dsq'].includes(p.status)).length },
-                { label: 'Format', value: { stableford: 'Stableford', stroke: 'Stroke', match: 'Match' }[tournament.format] ?? tournament.format },
-                { label: 'Rondes', value: tournament.rounds },
+                { label: 'Categorieën', value: categories.length },
+                { label: 'Flights', value: flights.length },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-white">{value}</p>
@@ -275,58 +517,145 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                 <p className="text-yellow-200 text-sm mt-1">{tournament.pause_reason}</p>
               </div>
             )}
+          </div>
+        )}
 
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <p className="text-sm text-gray-400 mb-2">Leaderboard URL</p>
-              <div className="flex items-center gap-2">
-                <code className="text-green-400 text-xs flex-1 truncate">{leaderboardUrl}</code>
+        {/* ===== TAB: Bewerken ===== */}
+        {activeTab === 'edit' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white mb-4">Toernooi bewerken</h2>
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Naam</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Beschrijving</label>
+                  <textarea
+                    value={editForm.description}
+                    onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600 resize-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Datum</label>
+                    <input
+                      type="date"
+                      value={editForm.start_date}
+                      onChange={e => setEditForm(f => ({ ...f, start_date: e.target.value }))}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Aantal rondes</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={editForm.rounds}
+                      onChange={e => setEditForm(f => ({ ...f, rounds: parseInt(e.target.value) || 1 }))}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Golfbaan</label>
+                  <select
+                    value={editForm.course_id}
+                    onChange={e => setEditForm(f => ({ ...f, course_id: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                  >
+                    <option value="">Nog niet gekozen</option>
+                    {courses.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Format</label>
+                    <select
+                      value={editForm.format}
+                      onChange={e => setEditForm(f => ({ ...f, format: e.target.value }))}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                    >
+                      <option value="stableford">Stableford</option>
+                      <option value="stroke">Stroke play</option>
+                      <option value="match">Matchplay</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1.5">Scoring</label>
+                    <select
+                      value={editForm.scoring_type}
+                      onChange={e => setEditForm(f => ({ ...f, scoring_type: e.target.value }))}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                    >
+                      <option value="gross">Bruto</option>
+                      <option value="net">Netto</option>
+                    </select>
+                  </div>
+                </div>
                 <button
-                  onClick={() => copyToClipboard(leaderboardUrl, 'url2')}
-                  className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                  onClick={saveEdit}
+                  disabled={editSaving || !editForm.name.trim()}
+                  className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
                 >
-                  {copied === 'url2' ? '✅' : 'Kopieer'}
+                  {editSaving ? 'Opslaan...' : editSuccess ? '✓ Opgeslagen!' : 'Wijzigingen opslaan'}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab: Spelers */}
+        {/* ===== TAB: Spelers ===== */}
         {activeTab === 'players' && (
           <div className="space-y-4">
-            {/* Speler toevoegen */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <h3 className="text-sm font-medium text-white mb-3">Speler toevoegen</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   type="text"
                   value={addPlayerName}
-                  onChange={(e) => setAddPlayerName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
+                  onChange={e => setAddPlayerName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addPlayer()}
                   placeholder="Naam speler"
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white
-                             placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  className="flex-1 min-w-[160px] px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
                 />
                 <input
                   type="number"
                   value={addPlayerHandicap}
-                  onChange={(e) => setAddPlayerHandicap(e.target.value)}
+                  onChange={e => setAddPlayerHandicap(e.target.value)}
                   placeholder="HCP"
-                  className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white
-                             placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
                 />
+                <select
+                  value={addPlayerGender}
+                  onChange={e => setAddPlayerGender(e.target.value)}
+                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+                >
+                  <option value="">Geslacht</option>
+                  <option value="male">Man</option>
+                  <option value="female">Vrouw</option>
+                </select>
                 <button
                   onClick={addPlayer}
                   disabled={!addPlayerName.trim()}
-                  className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                             text-white text-sm font-medium rounded-lg"
+                  className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
                 >
                   + Toevoegen
                 </button>
               </div>
             </div>
 
-            {/* Spelerslijst */}
             {players.length === 0 ? (
               <p className="text-center text-gray-500 py-8">Nog geen spelers toegevoegd.</p>
             ) : (
@@ -341,8 +670,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                       {p.handicap !== null && (
                         <span className="text-gray-400 text-sm ml-2">HCP {p.handicap}</span>
                       )}
+                      {p.gender && (
+                        <span className="text-gray-500 text-sm ml-2">({genderLabel(p.gender)})</span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-500 capitalize">{p.status}</span>
+                    <div className="flex items-center gap-2">
+                      {p.category_id && (
+                        <span className="text-xs text-green-400">
+                          {categories.find(c => c.id === p.category_id)?.name ?? ''}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500 capitalize">{p.status}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -350,7 +689,284 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
           </div>
         )}
 
-        {/* Tab: Toegangscodes */}
+        {/* ===== TAB: Categorieën ===== */}
+        {activeTab === 'categories' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-400">
+                Categorieën bepalen hoe spelers worden gegroepeerd (bijv. geslacht, handicap).
+                Elke categorie is gekoppeld aan een tee-box.
+              </p>
+              <button
+                onClick={() => openCategoryForm()}
+                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg shrink-0"
+              >
+                + Nieuwe categorie
+              </button>
+            </div>
+
+            {categories.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">Nog geen categorieën aangemaakt.</p>
+            ) : (
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-white font-medium">{cat.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {[genderLabel(cat.gender), cat.handicap_min !== null ? `HCP ≥ ${cat.handicap_min}` : '', cat.handicap_max !== null ? `HCP ≤ ${cat.handicap_max}` : ''].filter(Boolean).join(' · ') || 'Alle spelers'}
+                        {cat.tee_id && ` · Tee: ${teeLabel(cat.tee_id)}`}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openCategoryForm(cat)}
+                        className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                      >
+                        Bewerk
+                      </button>
+                      <button
+                        onClick={() => deleteCategory(cat.id)}
+                        className="text-xs px-3 py-1.5 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-lg"
+                      >
+                        Verwijder
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Category modal */}
+            {showCategoryForm && (
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {editingCategory ? 'Categorie bewerken' : 'Nieuwe categorie'}
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Naam *</label>
+                      <input
+                        type="text"
+                        value={categoryForm.name}
+                        onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))}
+                        placeholder="bijv. Heren, Dames"
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Omschrijving</label>
+                      <input
+                        type="text"
+                        value={categoryForm.description}
+                        onChange={e => setCategoryForm(f => ({ ...f, description: e.target.value }))}
+                        placeholder="Optionele omschrijving"
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Geslacht</label>
+                      <select
+                        value={categoryForm.gender}
+                        onChange={e => setCategoryForm(f => ({ ...f, gender: e.target.value }))}
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                      >
+                        <option value="">Alle geslachten</option>
+                        <option value="male">Man</option>
+                        <option value="female">Vrouw</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">HCP min</label>
+                        <input
+                          type="number"
+                          value={categoryForm.handicap_min}
+                          onChange={e => setCategoryForm(f => ({ ...f, handicap_min: e.target.value }))}
+                          placeholder="Geen min"
+                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">HCP max</label>
+                        <input
+                          type="number"
+                          value={categoryForm.handicap_max}
+                          onChange={e => setCategoryForm(f => ({ ...f, handicap_max: e.target.value }))}
+                          placeholder="Geen max"
+                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Tee-box</label>
+                      <select
+                        value={categoryForm.tee_id}
+                        onChange={e => setCategoryForm(f => ({ ...f, tee_id: e.target.value }))}
+                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                      >
+                        <option value="">Niet gekozen</option>
+                        {tees.map(tee => (
+                          <option key={tee.id} value={tee.id}>
+                            {tee.color ?? ''} {tee.name ?? ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-5">
+                    <button
+                      onClick={() => setShowCategoryForm(false)}
+                      className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                    >
+                      Annuleren
+                    </button>
+                    <button
+                      onClick={saveCategory}
+                      disabled={categorySaving || !categoryForm.name.trim()}
+                      className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold"
+                    >
+                      {categorySaving ? 'Opslaan...' : 'Opslaan'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: Flights ===== */}
+        {activeTab === 'flights' && (
+          <div className="space-y-4">
+            {/* Flight generator */}
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <h3 className="text-sm font-medium text-white mb-3">Flights genereren</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                  <input
+                    type="datetime-local"
+                    value={flightForm.start_time}
+                    onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={flightForm.interval_minutes}
+                    onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={4}
+                    value={flightForm.max_players}
+                    onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                  <div className="flex gap-3 pt-1">
+                    {startHoleOptions.map(hole => (
+                      <label key={hole} className="flex items-center gap-2 cursor-pointer">
+                        <button
+                          type="button"
+                          onClick={() => toggleStartHole(hole)}
+                          className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
+                            flightForm.start_holes.includes(hole)
+                              ? 'bg-green-900/30 border-green-600 text-green-400'
+                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
+                        >
+                          {hole}
+                        </button>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={generateFlights}
+                  disabled={flightGenerating || !flightForm.start_time || categories.length === 0}
+                  className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
+                >
+                  {flightGenerating ? 'Genereren...' : 'Flights genereren'}
+                </button>
+                {flights.length > 0 && (
+                  <button
+                    onClick={deleteAllFlights}
+                    className="py-3 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
+                  >
+                    Alle flights verwijderen
+                  </button>
+                )}
+              </div>
+              {flightError && (
+                <p className="text-red-400 text-sm mt-3">{flightError}</p>
+              )}
+              {categories.length === 0 && (
+                <p className="text-yellow-400 text-sm mt-3">
+                  Maak eerst categorieën aan voordat je flights genereert.
+                </p>
+              )}
+            </div>
+
+            {/* Flights list */}
+            {flights.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">
+                {categories.length === 0
+                  ? 'Maak eerst categorieën aan.'
+                  : 'Nog geen flights gegenereerd.'}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {flights.map((f) => {
+                  const catName = categories.find(c => c.id === f.category_id)?.name;
+                  const playersInFlight = players.filter(p => p.flight_id === f.id);
+                  return (
+                    <div
+                      key={f.id}
+                      className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-white font-medium text-sm">{f.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                          {f.tee_number && ` · Hole ${f.tee_number}`}
+                          {catName && ` · ${catName}`}
+                          {` · ${playersInFlight.length}/${f.max_players} spelers`}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        {playersInFlight.slice(0, 4).map(pl => (
+                          <span key={pl.id} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
+                            {pl.name.split(' ')[0]}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: Toegangscodes ===== */}
         {activeTab === 'codes' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -425,10 +1041,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
             <input
               type="text"
               value={pauseReason}
-              onChange={(e) => setPauseReason(e.target.value)}
+              onChange={e => setPauseReason(e.target.value)}
               placeholder="bijv. Weersomstandigheden — hervatting om 14:30"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white
-                         placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-500 mb-4"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-500 mb-4"
               autoFocus
             />
             <div className="flex gap-3">

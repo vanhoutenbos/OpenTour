@@ -28,3 +28,16 @@ INSERT INTO holes (course_id, number, par, stroke_index) VALUES
 ('00000000-0000-0000-0000-000000000001', 16, 5, 6),
 ('00000000-0000-0000-0000-000000000001', 17, 4, 14),
 ('00000000-0000-0000-0000-000000000001', 18, 4, 10);
+
+-- Tees voor De Haar
+INSERT INTO tees (course_id, external_id, name, color) VALUES
+('00000000-0000-0000-0000-000000000001', 'white', 'Wit', 'Wit'),
+('00000000-0000-0000-0000-000000000001', 'yellow', 'Geel', 'Geel'),
+('00000000-0000-0000-0000-000000000001', 'blue', 'Blauw', 'Blauw'),
+('00000000-0000-0000-0000-000000000001', 'red', 'Rood', 'Rood');
+
+-- Loops voor De Haar
+INSERT INTO loops (course_id, name, holes_count, loop_type, is_default) VALUES
+('00000000-0000-0000-0000-000000000001', 'Volledige 18', 18, 'full_18', true),
+('00000000-0000-0000-0000-000000000001', 'Front 9', 9, 'front_9', false),
+('00000000-0000-0000-0000-000000000001', 'Back 9', 9, 'back_9', false);
