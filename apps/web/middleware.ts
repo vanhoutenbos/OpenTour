@@ -7,13 +7,6 @@ const intlMiddleware = createIntlMiddleware({
   defaultLocale: 'nl',
 });
 
-// Paden waar we geen sessie hoeven te verversen
-const PUBLIC_PATHS = [
-  '/auth/callback',
-  '/login',
-  '/tournament', // publiek leaderboard
-];
-
 export async function middleware(request: NextRequest) {
   const response = intlMiddleware(request);
   const { pathname } = request.nextUrl;
@@ -47,6 +40,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Sluit statische bestanden, _next internals en API routes uit
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  // Sluit /auth, statische bestanden en Next.js internals uit
+  matcher: ['/((?!auth|api|_next|_vercel|.*\\..*).*)', ],
 };
