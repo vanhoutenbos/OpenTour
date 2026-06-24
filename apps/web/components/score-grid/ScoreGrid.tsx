@@ -1,33 +1,4 @@
-"use client';
-
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { getSupabaseBrowser } from '@/lib/supabase-browser';
-
-interface Player {
-  id: string;
-  name: string;
-  handicap?: number;
-  status: string;
-  flight_id?: string;
-}
-
-interface Hole {
-  id: string;
-  number: number;
-  par: 3 | 4 | 5;
-  stroke_index: number;
-}
-
-interface ScoreGridProps {
-  tournamentId: string;
-  players: Player[];
-  holes: Hole[];
-  tournamentFormat: 'stroke' | 'stableford' | 'match';
-  scoringType: 'gross' | 'net';
-  tournamentRounds?: number;
-}
-
-"use client';
+'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';

@@ -11,7 +11,25 @@ interface Course {
   holes_count: number;
 }
 
-type Step = 'basics' | 'course' | 'format' | 'confirm';
+interface Loop {
+  id: string;
+  course_id: string;
+  name: string;
+  holes_count: number;
+  loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
+  tee_id: string | null;
+  is_default: boolean;
+}
+
+interface Tee {
+  id: string;
+  course_id: string;
+  external_id: string;
+  name: string | null;
+  color: string | null;
+}
+
+type Step = 'basics' | 'course' | 'loop_tee' | 'format' | 'confirm';
 
 export default function NewTournamentPage() {
   const router = useRouter();
@@ -19,6 +37,10 @@ export default function NewTournamentPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loops, setLoops] = useState<Loop[]>([]);
+  const [tees, setTees] = useState<Tee[]>([]);
+  const [loadingLoops, setLoadingLoops] = useState(false);
+  const [loadingTees, setLoadingTees] = useState(false);
 
   const STORAGE_KEY = 'opentour-tournament-new';
 
@@ -26,6 +48,8 @@ export default function NewTournamentPage() {
     name: '',
     start_date: '',
     course_id: '',
+    loop_id: '',
+    tee_id: '',
     format: 'stableford' as 'stroke' | 'stableford' | 'match',
     scoring_type: 'gross' as 'gross' | 'net',
     rounds: 1,
@@ -73,6 +97,35 @@ export default function NewTournamentPage() {
       .then(({ data }) => setCourses((data as Course[]) ?? []));
   }, [router]);
 
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (form.course_id) {
+      setLoadingLoops(true);
+      setLoadingTees(true);
+      supabase
+        .from('loops')
+        .select('*')
+        .eq('course_id', form.course_id)
+        .order('name')
+        .then(({ data }) => {
+          setLoops((data as Loop[]) ?? []);
+          setLoadingLoops(false);
+        });
+      supabase
+        .from('tees')
+        .select('*')
+        .eq('course_id', form.course_id)
+        .order('name')
+        .then(({ data }) => {
+          setTees((data as Tee[]) ?? []);
+          setLoadingTees(false);
+        });
+    } else {
+      setLoops([]);
+      setTees([]);
+    }
+  }, [form.course_id]);
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -87,6 +140,7 @@ export default function NewTournamentPage() {
         name: form.name,
         start_date: form.start_date || null,
         course_id: form.course_id || null,
+        loop_id: form.loop_id || null,
         format: form.format,
         scoring_type: form.scoring_type,
         rounds: form.rounds,
@@ -106,7 +160,7 @@ export default function NewTournamentPage() {
     router.push(`/nl/tournament/${data.id}/manage`);
   };
 
-  const steps: Step[] = ['basics', 'course', 'format', 'confirm'];
+  const steps: Step[] = ['basics', 'course', 'loop_tee', 'format', 'confirm'];
   const stepIndex = steps.indexOf(step);
 
   return (
@@ -237,7 +291,7 @@ export default function NewTournamentPage() {
             {courses.length > 0 ? (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 <button
-                  onClick={() => updateForm({ course_id: '' })}
+                  onClick={() => updateForm({ course_id: '', loop_id: '', tee_id: '' })}
                   className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                     form.course_id === ''
                       ? 'bg-green-900/30 border-green-600 text-white'
@@ -250,7 +304,7 @@ export default function NewTournamentPage() {
                 {courses.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => updateForm({ course_id: c.id })}
+                    onClick={() => updateForm({ course_id: c.id, loop_id: '', tee_id: '' })}
                     className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                       form.course_id === c.id
                         ? 'bg-green-900/30 border-green-600 text-white'
@@ -277,7 +331,7 @@ export default function NewTournamentPage() {
             )}
 
             <button
-              onClick={() => setStep('format')}
+              onClick={() => setStep('loop_tee')}
               className="w-full py-4 bg-green-700 hover:bg-green-600
                          text-white font-semibold rounded-xl transition-colors"
             >
@@ -286,7 +340,101 @@ export default function NewTournamentPage() {
           </div>
         )}
 
-        {/* Stap 3: Spelformat */}
+        {/* Stap 3: Lussen & Tees */}
+        {step === 'loop_tee' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">Lussen &amp; afslagen</h2>
+              <p className="text-gray-400 text-sm">Kies een lus en afslagkleur voor de wedstrijd.</p>
+            </div>
+
+            {!form.course_id ? (
+              <div className="text-center py-8 border border-dashed border-gray-700 rounded-2xl">
+                <p className="text-gray-400 text-sm">Selecteer eerst een baan om lussen te kiezen.</p>
+              </div>
+            ) : loadingLoops ? (
+              <div className="flex justify-center py-8">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <span className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm">Laden...</span>
+                </div>
+              </div>
+            ) : loops.length === 0 ? (
+              <div className="text-center py-8 border border-dashed border-gray-700 rounded-2xl">
+                <p className="text-gray-400 text-sm">Geen lussen gevonden voor deze baan.</p>
+                <p className="text-gray-600 text-xs mt-1">Je kunt zonder lus verdergaan.</p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Kies een lus</label>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {loops.map((loop) => (
+                    <button
+                      key={loop.id}
+                      onClick={() => updateForm({ loop_id: loop.id, tee_id: loop.tee_id || '' })}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                        form.loop_id === loop.id
+                          ? 'bg-green-900/30 border-green-600 text-white'
+                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <span className="font-medium">{loop.name}</span>
+                      <span className="text-gray-500 text-sm block">
+                        {loop.holes_count} holes · {
+                          { full_18: 'Full 18', front_9: 'Front 9', back_9: 'Back 9', custom: 'Aangepast' }[loop.loop_type]
+                        }
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {form.loop_id && !loadingTees && tees.length > 0 && (
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Kies een afslagkleur</label>
+                <div className="space-y-2">
+                  {tees.map((tee) => (
+                    <button
+                      key={tee.id}
+                      onClick={() => updateForm({ tee_id: tee.id })}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                        form.tee_id === tee.id
+                          ? 'bg-green-900/30 border-green-600 text-white'
+                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <span className="font-medium">{tee.color || tee.name || 'Onbekend'}</span>
+                      {tee.name && <span className="text-gray-500 text-xs block">{tee.name}</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {form.loop_id && (
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3">
+                <p className="text-white text-sm">
+                  {loops.find(l => l.id === form.loop_id)?.holes_count ?? '?'} holes
+                  {form.tee_id && tees.find(t => t.id === form.tee_id)?.color
+                    ? ` · ${tees.find(t => t.id === form.tee_id)?.color} tee`
+                    : ''}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setStep('format')}
+              disabled={Boolean(form.course_id && loops.length > 0 && !form.loop_id)}
+              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50
+                         text-white font-semibold rounded-xl transition-colors"
+            >
+              Volgende →
+            </button>
+          </div>
+        )}
+
+        {/* Stap 4: Spelformat */}
         {step === 'format' && (
           <div className="space-y-6">
             <div>
@@ -351,7 +499,7 @@ export default function NewTournamentPage() {
           </div>
         )}
 
-        {/* Stap 4: Bevestigen */}
+        {/* Stap 5: Bevestigen */}
         {step === 'confirm' && (
           <div className="space-y-6">
             <div>
@@ -364,6 +512,8 @@ export default function NewTournamentPage() {
                 { label: 'Naam',       value: form.name },
                 { label: 'Datum',      value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
                 { label: 'Baan',       value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
+                { label: 'Loop',       value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
+                { label: 'Afslag',     value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
                 { label: 'Format',     value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
                 { label: 'Scoring',    value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
                 { label: 'Rondes',     value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },

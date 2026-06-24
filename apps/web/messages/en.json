@@ -25,14 +25,20 @@
       "error": "An error occurred",
       "success": "Success!",
       "saved": "Saved"
+    },
+    "auth": {
+      "google_login": "Sign in with Google"
     }
   },
   "tournament": {
     "create": {
       "title": "New tournament",
       "name": "Tournament name",
+      "description": "Description (optional)",
       "date": "Date",
       "course": "Golf course",
+      "select_course": "Select a course",
+      "course_empty": "No courses available",
       "format": "Scoring format",
       "rounds": "Number of rounds",
       "submit": "Create tournament"
@@ -62,7 +68,10 @@
     },
     "pause": {
       "banner": "Tournament paused",
-      "reason_label": "Reason"
+      "reason_label": "Reason",
+      "modal_title": "Pause tournament",
+      "modal_description": "Provide a reason — this will be shown on the leaderboard.",
+      "modal_confirm": "Pause"
     },
     "actions": {
       "start": "Start tournament",
@@ -70,6 +79,40 @@
       "resume": "Resume",
       "finish": "Close",
       "reopen": "Reopen"
+    },
+    "players": {
+      "add": "Add player",
+      "name": "Player name",
+      "handicap": "HCP",
+      "gender": "Gender",
+      "remove": "Remove",
+      "duplicate_warning": "A player with this name already exists"
+    },
+    "flights": {
+      "generate": "Generate flights",
+      "start_time": "Start time",
+      "interval": "Interval (minutes)",
+      "max_players": "Max players per flight",
+      "start_holes": "Start holes",
+      "delete_all": "Delete all flights",
+      "no_categories": "Create categories first",
+      "move_player": "Move to flight",
+      "player_in_flight": "Player in flight"
+    },
+    "corrections": {
+      "title": "Score corrections",
+      "saving": "Saving...",
+      "saved": "Saved"
+    },
+    "codes": {
+      "generate": "Generate new code",
+      "deactivate": "Deactivate",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "expired": "Expired",
+      "deactivated": "Deactivated",
+      "no_codes": "No codes created yet",
+      "valid_until": "Valid until {date}"
     }
   },
   "scoring": {
@@ -108,6 +151,110 @@
     "filter": {
       "all": "All flights",
       "flight": "Flight"
+    }
+  },
+  "scorer": {
+    "page_title": "Enter scores",
+    "code_title": "Access code",
+    "code_description": "Enter the 8-character code you received from the organizer.",
+    "code_placeholder": "XXXX XXXX",
+    "code_hint": "Letters A-HJ-NP-Z and digits 2-9 only",
+    "start_scoring": "Start scoring →",
+    "invalid_code": "Invalid code",
+    "expired_code": "Code expired",
+    "network_error": "No internet connection. Please try again.",
+    "other_code": "← Different code",
+    "back_to_flights": "← Flights",
+    "no_flights": "No flights yet",
+    "no_flights_desc": "No flights have been created for this tournament yet.",
+    "players": "players",
+    "holes": "holes",
+    "submit_final": "Submit final",
+    "submit_title": "Submit scorecard",
+    "submit_confirm": "Are you sure all scores are correct? After submitting, scores cannot be changed.",
+    "submit_cancel": "Cancel",
+    "submit_processing": "Submitting...",
+    "submit_error": "Submission failed. Please try again.",
+    "tournament_not_found": "Tournament not found",
+    "data_not_found": "Data not found",
+    "load_error": "An error occurred while loading.",
+    "load_error_generic": "An error occurred.",
+    "retry": "Try again",
+    "access_code": {
+      "enter": "Enter your access code",
+      "submit": "Log in with code",
+      "validating": "Validating..."
+    },
+    "flight": {
+      "select": "Choose a flight",
+      "no_flights": "No flights found for this tournament",
+      "players_count": "{count} players"
+    },
+    "hole_nav": {
+      "grid": "Hole overview",
+      "completed": "Completed",
+      "empty": "Not yet entered"
+    },
+    "auto_advance": {
+      "next_hole": "Next hole",
+      "finished": "Round completed"
+    },
+    "mode": {
+      "follow_flight": "Walk with flight",
+      "holes_per_flight": "Enter by hole"
+    },
+    "hole_per_flight": {
+      "select_hole": "Choose a hole",
+      "enter_all": "Scores for all players"
+    }
+  },
+  "course": {
+    "create": {
+      "title": "New golf course",
+      "name": "Course name",
+      "location": "Location",
+      "holes": "Holes",
+      "hole_number": "Hole number",
+      "par": "Par",
+      "stroke_index": "Stroke index",
+      "submit": "Create course"
+    },
+    "edit": {
+      "title": "Edit course",
+      "submit": "Save changes",
+      "readonly": "This course cannot be edited",
+      "not_owner": "Only the creator can edit this course"
+    },
+    "search": {
+      "placeholder": "Search by course name..."
+    }
+  },
+  "privacy": {
+    "notice": "We only store your name and scores for this tournament",
+    "minimal_notice": "We only store your name and scores for this tournament",
+    "anonymize_request": "Anonymization request",
+    "no_tracking": "No tracking",
+    "display": {
+      "label": "Display name",
+      "full": "Full name",
+      "initials": "Initials",
+      "alias": "Alias"
+    },
+    "anonymize": {
+      "title": "Anonymize player",
+      "button": "Anonymize",
+      "confirm": "Are you sure you want to anonymize this player? This cannot be undone.",
+      "placeholder": "Player {id}"
+    },
+    "page": {
+      "title": "Privacy statement",
+      "last_updated": "Last updated"
+    },
+    "cookies": {
+      "title": "Cookie settings",
+      "description": "This website only uses functional cookies. No tracking.",
+      "accept": "Accept",
+      "decline": "Decline"
     }
   },
   "errors": {

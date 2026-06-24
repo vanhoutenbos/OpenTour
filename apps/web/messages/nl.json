@@ -25,14 +25,20 @@
       "error": "Er is een fout opgetreden",
       "success": "Gelukt!",
       "saved": "Opgeslagen"
+    },
+    "auth": {
+      "google_login": "Inloggen met Google"
     }
   },
   "tournament": {
     "create": {
       "title": "Nieuw toernooi",
       "name": "Naam toernooi",
+      "description": "Beschrijving (optioneel)",
       "date": "Datum",
       "course": "Golfbaan",
+      "select_course": "Selecteer een baan",
+      "course_empty": "Geen banen beschikbaar",
       "format": "Spelformat",
       "rounds": "Aantal rondes",
       "submit": "Toernooi aanmaken"
@@ -62,7 +68,10 @@
     },
     "pause": {
       "banner": "Toernooi gepauzeerd",
-      "reason_label": "Reden"
+      "reason_label": "Reden",
+      "modal_title": "Toernooi pauzeren",
+      "modal_description": "Geef een reden op — deze wordt zichtbaar op het leaderboard.",
+      "modal_confirm": "Pauzeren"
     },
     "actions": {
       "start": "Toernooi starten",
@@ -70,6 +79,40 @@
       "resume": "Hervatten",
       "finish": "Afsluiten",
       "reopen": "Heropenen"
+    },
+    "players": {
+      "add": "Speler toevoegen",
+      "name": "Naam speler",
+      "handicap": "HCP",
+      "gender": "Geslacht",
+      "remove": "Verwijderen",
+      "duplicate_warning": "Er bestaat al een speler met deze naam"
+    },
+    "flights": {
+      "generate": "Flights genereren",
+      "start_time": "Starttijd",
+      "interval": "Interval (minuten)",
+      "max_players": "Max spelers per flight",
+      "start_holes": "Startholes",
+      "delete_all": "Alle flights verwijderen",
+      "no_categories": "Maak eerst categorieën aan",
+      "move_player": "Verplaats naar flight",
+      "player_in_flight": "Speler in flight"
+    },
+    "corrections": {
+      "title": "Scorecorrecties",
+      "saving": "Opslaan...",
+      "saved": "Opgeslagen"
+    },
+    "codes": {
+      "generate": "Nieuwe code genereren",
+      "deactivate": "Deactiveer",
+      "copy": "Kopieer",
+      "copied": "Gekopieerd!",
+      "expired": "Verlopen",
+      "deactivated": "Gedeactiveerd",
+      "no_codes": "Nog geen codes aangemaakt",
+      "valid_until": "Geldig tot {date}"
     }
   },
   "scoring": {
@@ -108,6 +151,110 @@
     "filter": {
       "all": "Alle flights",
       "flight": "Flight"
+    }
+  },
+  "scorer": {
+    "page_title": "Score invoeren",
+    "code_title": "Toegangscode",
+    "code_description": "Voer de 8-tekens code in die je hebt ontvangen van de organisator.",
+    "code_placeholder": "XXXX XXXX",
+    "code_hint": "Alleen letters A-HJ-NP-Z en cijfers 2-9",
+    "start_scoring": "Start scoren →",
+    "invalid_code": "Ongeldige code",
+    "expired_code": "Code verlopen",
+    "network_error": "Geen internetverbinding. Probeer het opnieuw.",
+    "other_code": "← Andere code",
+    "back_to_flights": "← Flights",
+    "no_flights": "Nog geen flights",
+    "no_flights_desc": "Er zijn nog geen flights aangemaakt voor dit toernooi.",
+    "players": "spelers",
+    "holes": "holes",
+    "submit_final": "Definitief indienen",
+    "submit_title": "Scorekaart indienen",
+    "submit_confirm": "Weet je zeker dat alle scores kloppen? Na het indienen kunnen scores niet meer worden gewijzigd.",
+    "submit_cancel": "Annuleren",
+    "submit_processing": "Indienen...",
+    "submit_error": "Indienen mislukt. Probeer het opnieuw.",
+    "tournament_not_found": "Toernooi niet gevonden",
+    "data_not_found": "Gegevens niet gevonden",
+    "load_error": "Er is een fout opgetreden bij het laden.",
+    "load_error_generic": "Er is een fout opgetreden.",
+    "retry": "Opnieuw proberen",
+    "access_code": {
+      "enter": "Voer je toegangscode in",
+      "submit": "Inloggen met code",
+      "validating": "Valideren..."
+    },
+    "flight": {
+      "select": "Kies een flight",
+      "no_flights": "Geen flights gevonden voor dit toernooi",
+      "players_count": "{count} spelers"
+    },
+    "hole_nav": {
+      "grid": "Hole overzicht",
+      "completed": "Ingevuld",
+      "empty": "Nog niet ingevuld"
+    },
+    "auto_advance": {
+      "next_hole": "Volgende hole",
+      "finished": "Ronde voltooid"
+    },
+    "mode": {
+      "follow_flight": "Meelopen met flight",
+      "holes_per_flight": "Holes per flight invullen"
+    },
+    "hole_per_flight": {
+      "select_hole": "Kies een hole",
+      "enter_all": "Scores voor alle spelers"
+    }
+  },
+  "course": {
+    "create": {
+      "title": "Nieuwe golfbaan",
+      "name": "Baannaam",
+      "location": "Locatie",
+      "holes": "Holes",
+      "hole_number": "Hole nummer",
+      "par": "Par",
+      "stroke_index": "Slagindex",
+      "submit": "Baan aanmaken"
+    },
+    "edit": {
+      "title": "Baan bewerken",
+      "submit": "Wijzigingen opslaan",
+      "readonly": "Deze baan kan niet worden bewerkt",
+      "not_owner": "Alleen de aanmaker kan deze baan bewerken"
+    },
+    "search": {
+      "placeholder": "Zoek op baannaam..."
+    }
+  },
+  "privacy": {
+    "notice": "We slaan alleen je naam en scores op voor dit toernooi",
+    "minimal_notice": "We slaan alleen je naam en scores op voor dit toernooi",
+    "anonymize_request": "Verzoek tot anonimisering",
+    "no_tracking": "Geen tracking",
+    "display": {
+      "label": "Weergavenaam",
+      "full": "Volledige naam",
+      "initials": "Initialen",
+      "alias": "Alias"
+    },
+    "anonymize": {
+      "title": "Speler anonimiseren",
+      "button": "Anonimiseer",
+      "confirm": "Weet je zeker dat je deze speler wilt anonimiseren? Dit is onomkeerbaar.",
+      "placeholder": "Speler {id}"
+    },
+    "page": {
+      "title": "Privacyverklaring",
+      "last_updated": "Laatst bijgewerkt"
+    },
+    "cookies": {
+      "title": "Cookie-instellingen",
+      "description": "Deze website gebruikt alleen functionele cookies. Geen tracking.",
+      "accept": "Accepteren",
+      "decline": "Weigeren"
     }
   },
   "errors": {
