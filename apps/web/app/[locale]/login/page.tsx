@@ -18,8 +18,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // Gebruik de exacte URL die in de Supabase whitelist staat
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/nl/auth/callback`,
+        emailRedirectTo: 'https://open-tour-web-vanhoutenbos-projects.vercel.app/nl/auth/callback',
       },
     });
 
