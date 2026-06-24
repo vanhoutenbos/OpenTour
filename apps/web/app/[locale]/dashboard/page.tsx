@@ -22,8 +22,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
+    let listenerTriggered = false;
 
     const loadDashboard = async (userId: string, email: string | undefined) => {
+      console.log('[Dashboard] Loading tournaments for user:', userId);
       setUser({ email });
       const { data: rows } = await supabase
         .from('tournaments')
@@ -36,26 +38,39 @@ export default function DashboardPage() {
 
     // Luister op auth state changes - vangt ook sessie op die net via cookie binnenkwam
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Dashboard] Auth state change:', { event, hasSession: !!session });
+      listenerTriggered = true;
+      
       if (session?.user) {
+        console.log('[Dashboard] ✅ Session gevonden via listener');
         loadDashboard(session.user.id, session.user.email ?? undefined);
       } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION' && !session) {
+        console.log('[Dashboard] ❌ No session - redirect naar login');
         router.replace('/nl/login');
       }
     });
 
     // Check ook direct de huidige sessie
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Dashboard] Direct getSession check:', { hasSession: !!session, listenerTriggered });
+      
       if (session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else {
-        // Geen sessie gevonden - wacht even op onAuthStateChange
-        // als die ook niets geeft, redirect naar login
-        setTimeout(() => {
-          setLoading((prev) => {
-            if (prev) router.replace('/nl/login');
-            return prev;
-          });
-        }, 2000);
+        console.log('[Dashboard] ✅ Session gevonden via getSession');
+        if (!listenerTriggered) {
+          loadDashboard(session.user.id, session.user.email ?? undefined);
+        }
+      } else if (!listenerTriggered) {
+        // Geen sessie gevonden - wacht op listener (max 3 seconden)
+        console.log('[Dashboard] ⏳ Wacht op auth state listener...');
+        const timeout = setTimeout(() => {
+          if (!listenerTriggered) {
+            console.log('[Dashboard] ❌ Timeout - nog steeds geen sessie');
+            setLoading(false);
+            router.replace('/nl/login');
+          }
+        }, 3000);
+        
+        return () => clearTimeout(timeout);
       }
     });
 
@@ -63,6 +78,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = async () => {
+    console.log('[Dashboard] User logout clicked');
     await getSupabaseBrowser().auth.signOut();
     router.replace('/nl/login');
   };

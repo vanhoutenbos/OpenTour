@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
 
   const response = intlMiddleware(request);
 
-  // Sessie verversen alleen op beschermde paden
+  // Refresh session voor beschermde routes
   const needsAuth = pathname.includes('/dashboard') || pathname.includes('/manage');
   if (needsAuth) {
     const supabase = createServerClient(
@@ -28,14 +28,20 @@ export async function middleware(request: NextRequest) {
           getAll() { return request.cookies.getAll(); },
           setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              request.cookies.set(name, value);
-              response.cookies.set(name, value, options);
+              response.cookies.set(name, value, { 
+                ...options,
+                path: '/',
+                sameSite: 'lax',
+              });
             });
           },
         },
       }
     );
-    await supabase.auth.getUser();
+    // Refresh de sessie en zorg dat cookies in response gaan
+    console.log('[Middleware] Refreshing session for path:', pathname);
+    const { data, error } = await supabase.auth.getUser();
+    console.log('[Middleware] Session refresh:', { hasUser: !!data?.user, error: error?.message });
   }
 
   return response;
