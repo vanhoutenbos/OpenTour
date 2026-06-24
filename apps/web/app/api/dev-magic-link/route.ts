@@ -8,12 +8,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 
-  // Controleer of alle vereiste env vars aanwezig zijn
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL ontbreekt' }, { status: 500 });
-  }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY ontbreekt in Vercel environment variables' }, { status: 500 });
+    return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY ontbreekt' }, { status: 500 });
   }
 
   let email: string;
@@ -30,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
@@ -45,12 +41,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const rawUrl = new URL(data.properties.action_link);
-    const token_hash = rawUrl.searchParams.get('token_hash');
-    const type = rawUrl.searchParams.get('type') ?? 'magiclink';
+    // Log alle beschikbare properties zodat we zien wat Supabase teruggeeft
+    const props = data.properties;
+    console.log('action_link:', props.action_link);
+    console.log('properties keys:', Object.keys(props));
 
-    const fixedLink = `${PRODUCTION_URL}/auth/callback?token_hash=${token_hash}&type=${type}`;
-    return NextResponse.json({ link: fixedLink });
+    // Gebruik de action_link direct — die bevat alles wat nodig is
+    // Vervang alleen de base URL naar onze productie URL
+    const rawUrl = new URL(props.action_link);
+    
+    // Kopieer alle params naar onze eigen callback URL
+    const callbackUrl = new URL(`${PRODUCTION_URL}/auth/callback`);
+    rawUrl.searchParams.forEach((value, key) => {
+      callbackUrl.searchParams.set(key, value);
+    });
+
+    return NextResponse.json({ 
+      link: callbackUrl.toString(),
+      // Stuur ook de raw link terug voor debugging
+      debug_raw: props.action_link,
+      debug_params: Object.fromEntries(rawUrl.searchParams),
+    });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Onbekende fout';
