@@ -41,13 +41,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const rawUrl = new URL(data.properties.action_link);
-    const callbackUrl = new URL(`${PRODUCTION_URL}/auth/callback`);
-    rawUrl.searchParams.forEach((value, key) => {
-      callbackUrl.searchParams.set(key, value);
-    });
+    // Supabase geeft 'hashed_token' terug, niet 'token_hash'
+    const hashed_token = data.properties.hashed_token;
+    const type = data.properties.verification_type ?? 'magiclink';
 
-    return NextResponse.json({ link: callbackUrl.toString() });
+    const link = `${PRODUCTION_URL}/auth/callback?token_hash=${hashed_token}&type=${type}`;
+    return NextResponse.json({ link });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Onbekende fout';

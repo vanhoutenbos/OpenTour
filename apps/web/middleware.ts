@@ -10,26 +10,22 @@ const intlMiddleware = createIntlMiddleware({
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Auth callback volledig doorgeven — geen locale redirect, geen sessie check
-  if (pathname.startsWith('/auth/')) {
+  // Auth callback NOOIT door intl middleware sturen
+  if (pathname === '/auth/callback') {
     return NextResponse.next();
   }
 
-  // Intl middleware voor alle andere routes
   const response = intlMiddleware(request);
 
   // Sessie verversen alleen op beschermde paden
   const needsAuth = pathname.includes('/dashboard') || pathname.includes('/manage');
-
   if (needsAuth) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
+          getAll() { return request.cookies.getAll(); },
           setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
             cookiesToSet.forEach(({ name, value, options }) => {
               request.cookies.set(name, value);
@@ -39,7 +35,6 @@ export async function middleware(request: NextRequest) {
         },
       }
     );
-
     await supabase.auth.getUser();
   }
 
@@ -47,7 +42,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Verwerk alle routes behalve statische bestanden en Next.js internals
-  // /auth wordt hierboven al vroeg afgehandeld via NextResponse.next()
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', ],
 };
