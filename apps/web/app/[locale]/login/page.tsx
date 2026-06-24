@@ -19,6 +19,7 @@ export default function LoginPage() {
       email,
       options: {
         emailRedirectTo: 'https://open-tour-web.vercel.app/auth/callback',
+        shouldCreateUser: true,
       },
     });
 
