@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ email: string | undefined } | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
