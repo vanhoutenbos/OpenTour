@@ -207,21 +207,33 @@ Authenticatie moet laagdrempelig zijn (geen wachtwoordgedoe) maar ook veilig (be
 
 ---
 
-### US-AUTH-07 — Meerdere organisatoren per toernooi
+### US-AUTH-07a — Organisator uitnodigen als mede-beheerder
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik andere organisatoren kan toevoegen aan mijn toernooi, zodat zij ook beheer kunnen doen
-- **Waarde:** We kunnen samen een toernooi beheren zonder accounts te delen
+- **Doel:** Dat ik een andere organisator kan uitnodigen om mijn toernooi mee te beheren
+- **Waarde:** We kunnen samen een toernooi runnen zonder accounts of wachtwoorden te delen
 - **Prioriteit:** L
 - **Fase:** Later
 - **Afhankelijk van:** US-AUTH-01
 - **Acceptatiecriteria:**
-  - Organisator kan andere gebruikers uitnodigen als mede-organisator
+  - Knop "Mede-organisator toevoegen" op beheerscherm
+  - Uitnodiging via e-mailadres (andere gebruiker moet bestaand account hebben)
+  - Uitgenodigde ontvangt notificatie en kan accepteren
   - Mede-organisator heeft dezelfde rechten: beheer, scorecorrecties, codes
-  - Originele organisator kan mede-organisatoren verwijderen
-- **Opmerkingen:**
-  - Eerstvalide: in MVP heeft een toernooi altijd 1 organisator
-  - Later relevant voor clubaccounts met meerdere beheerders
+
+### US-AUTH-07b — Mede-organisator verwijderen
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een mede-organisator kan verwijderen van mijn toernooi
+- **Waarde:** Ik behoud controle over wie toegang heeft tot het beheer
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-AUTH-07a
+- **Acceptatiecriteria:**
+  - Overzicht van alle mede-organisatoren per toernooi
+  - Knop "Verwijderen" per mede-organisator
+  - Na verwijdering: mede-organisator heeft geen toegang meer tot het beheerscherm
+  - Alleen de originele organisator kan verwijderen
 
 ---
 

@@ -1,91 +1,287 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useFormatter } from 'next-intl';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import type { LeaderboardEntry } from '@opentour/types';
+import { fetchLeaderboardData, POLL_INTERVAL_MS } from '@/lib/fetchLeaderboard';
+import { useFavorites } from '@/lib/useFavorites';
+import { TournamentHeader } from './TournamentHeader';
+import { FilterBar } from './FilterBar';
+import { SponsorBanner } from './SponsorBanner';
 import { LeaderboardTable } from './LeaderboardTable';
+import { TeeTimesView } from './TeeTimesView';
+import { CourseStats } from './CourseStats';
+import { MatchplayView } from './MatchplayView';
+
+type LeaderboardTab = 'leaderboard' | 'matchplay' | 'teetimes' | 'coursestats';
+
+interface FlightInfo {
+  id: string;
+  name: string;
+  start_time: string | null;
+  tee_number: number;
+  category_name?: string;
+  players: {
+    id: string;
+    name: string;
+    handicap?: number | null;
+    started_on_hole?: number;
+  }[];
+}
 
 interface Props {
   tournamentId: string;
   tournamentName: string;
+  tournamentDescription?: string | null;
   format: string;
   scoringType: string;
   isActive: boolean;
+  status: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  courseName?: string;
+  rounds: number;
+  flights?: FlightInfo[];
+  playerCount?: number;
+  flightCount?: number;
 }
 
-const POLL_INTERVAL_MS = 30_000;
-
-async function fetchLeaderboard(tournamentId: string) {
-  const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL;
-
-  // Via Cloudflare Worker (gecached)
-  if (workerUrl) {
-    try {
-      const res = await fetch(`${workerUrl}/api/leaderboard/${tournamentId}`);
-      if (res.ok) return res.json();
-    } catch {
-      // fallthrough naar Supabase direct
-    }
-  }
-
-  // Fallback: Supabase direct
-  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tournament_leaderboard?tournament_id=eq.${tournamentId}&order=position.asc`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-    },
-  });
-  if (!res.ok) throw new Error('Leaderboard ophalen mislukt');
-  return res.json();
-}
-
-export function LeaderboardClient({ tournamentId, format: scoringFormat, scoringType, isActive }: Props) {
-  const formatter = useFormatter();
-  const [entries, setEntries] = useState<any[]>([]);
+export function LeaderboardClient({
+  tournamentId,
+  tournamentName,
+  tournamentDescription,
+  format: scoringFormat,
+  scoringType,
+  isActive,
+  status,
+  startDate,
+  endDate,
+  courseName,
+  rounds,
+  flights,
+  playerCount,
+  flightCount,
+}: Props) {
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pollRef = useRef<ReturnType<typeof setInterval>>();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFlight, setSelectedFlight] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>('leaderboard');
+
+  const { favorites, isFavorite, toggleFavorite, favoriteCount } = useFavorites(tournamentId);
+
+  // Toon standaard Tee Times als toernooi nog niet actief is
+  useEffect(() => {
+    if (status === 'draft' && flights && flights.length > 0) {
+      setActiveTab('teetimes');
+    }
+  }, [status, flights]);
+
+  // Bijhouden vorige posities voor ▲▼ indicators
+  const prevPositionsRef = useRef<Map<string, number>>(new Map());
 
   const poll = useCallback(async () => {
     try {
-      const data = await fetchLeaderboard(tournamentId);
-      setEntries(data ?? []);
+      const data = await fetchLeaderboardData(tournamentId);
+
+      // Bereken movement door te vergelijken met vorige poll
+      const currentPositions = new Map<string, number>();
+      const enriched = (data ?? []).map((entry: LeaderboardEntry) => {
+        currentPositions.set(entry.player_id, entry.position);
+        const prevPos = prevPositionsRef.current.get(entry.player_id);
+        return { ...entry, previous_position: prevPos ?? entry.position };
+      });
+      prevPositionsRef.current = currentPositions;
+
+      setEntries(enriched);
       setLastUpdated(new Date());
       setError(null);
+      setLoading(false);
     } catch {
       setError('Leaderboard tijdelijk niet beschikbaar');
+      setLoading(false);
     }
   }, [tournamentId]);
 
   useEffect(() => {
     poll();
-    if (!isActive) return;
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    if (isActive) {
+      pollRef.current = setInterval(poll, POLL_INTERVAL_MS);
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [poll, isActive]);
 
-  if (error) {
-    return (
-      <div className="text-center py-12 text-gray-400">
-        <p>{error}</p>
-        <button
-          onClick={poll}
-          className="mt-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600"
-        >
-          Opnieuw proberen
-        </button>
-      </div>
-    );
-  }
+  const uniqueFlights = useMemo(() => {
+    const f = new Set<string>();
+    entries.forEach((e) => {
+      if (e.flight_name) f.add(e.flight_name);
+    });
+    return Array.from(f).sort();
+  }, [entries]);
+
+  // Filter de entries voor de LeaderboardTable
+  const filteredEntries = useMemo(() => {
+    let list = [...entries];
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((e) => e.player_name.toLowerCase().includes(q));
+    }
+    if (selectedFlight) {
+      list = list.filter((e) => e.flight_name === selectedFlight);
+    }
+    if (showFavoritesOnly) {
+      list = list.filter((e) => isFavorite(e.player_id));
+    }
+
+    list.sort((a, b) => {
+      const aFav = isFavorite(a.player_id) ? 0 : 1;
+      const bFav = isFavorite(b.player_id) ? 0 : 1;
+      if (aFav !== bFav) return aFav - bFav;
+      return a.position - b.position;
+    });
+
+    return list;
+  }, [entries, searchQuery, selectedFlight, showFavoritesOnly, isFavorite]);
+
+  // Subtab configuratie
+  const tabs: { key: LeaderboardTab; label: string; show: boolean }[] = [
+    { key: 'leaderboard', label: 'Leaderboard', show: true },
+    { key: 'teetimes', label: 'Tee Times', show: true },
+    { key: 'matchplay', label: 'Matchplay', show: scoringFormat === 'match' },
+    { key: 'coursestats', label: 'Course Stats', show: true },
+  ];
+
+  const visibleTabs = tabs.filter((t) => t.show);
 
   return (
-    <div>
-      <LeaderboardTable entries={entries} format={scoringFormat} scoringType={scoringType} />
-      {lastUpdated && (
-        <p className="text-xs text-gray-500 text-right mt-4">
-          Bijgewerkt om {formatter.dateTime(lastUpdated, { hour: '2-digit', minute: '2-digit' })}
-          {isActive && ' · vernieuwt automatisch'}
-        </p>
+    <div className="space-y-0">
+      {/* Sticky header */}
+      <TournamentHeader
+        name={tournamentName}
+        description={tournamentDescription}
+        format={scoringFormat}
+        scoringType={scoringType}
+        status={status}
+        startDate={startDate}
+        endDate={endDate}
+        courseName={courseName}
+        rounds={rounds}
+        selectedRound={selectedRound}
+        onRoundChange={setSelectedRound}
+        playerCount={playerCount ?? entries.length}
+        flightCount={flightCount ?? uniqueFlights.length}
+      />
+
+      {/* Sponsor mid-banner */}
+      <div className="px-4 pt-4">
+        <SponsorBanner position="mid" />
+      </div>
+
+      {/* Subtab navigation */}
+      {visibleTabs.length > 1 && (
+        <div className="border-b border-gray-800 px-4">
+          <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto flex gap-4 overflow-x-auto scrollbar-none">
+            {visibleTabs.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 ${
+                  activeTab === key
+                    ? 'border-green-500 text-white'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
+
+      {/* Content area */}
+      <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto px-4 py-4">
+        {/* TEE TIMES */}
+        {activeTab === 'teetimes' && flights && (
+          <TeeTimesView flights={flights} round={1} />
+        )}
+
+        {/* MATCHPLAY */}
+        {activeTab === 'matchplay' && (
+          <MatchplayView tournamentId={tournamentId} />
+        )}
+
+        {/* COURSE STATS */}
+        {activeTab === 'coursestats' && (
+          <CourseStats tournamentId={tournamentId} />
+        )}
+
+        {/* LEADERBOARD */}
+        {activeTab === 'leaderboard' && (
+          <>
+            {loading && (
+              <div className="animate-pulse space-y-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-14 bg-gray-800 rounded-lg" />
+                ))}
+              </div>
+            )}
+
+            {error && (
+              <div className="text-center py-12 text-gray-400">
+                <p>{error}</p>
+                <button
+                  onClick={poll}
+                  className="mt-4 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600"
+                >
+                  Opnieuw proberen
+                </button>
+              </div>
+            )}
+
+            {!loading && !error && (
+              <>
+                <FilterBar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  flights={uniqueFlights}
+                  selectedFlight={selectedFlight}
+                  onFlightChange={setSelectedFlight}
+                  showFavoritesOnly={showFavoritesOnly}
+                  onFavoritesToggle={() => setShowFavoritesOnly((v) => !v)}
+                  playerCount={filteredEntries.length}
+                  favoriteCount={favoriteCount}
+                  lastUpdated={lastUpdated}
+                  isActive={isActive}
+                />
+
+                <div className="mt-4">
+                  <LeaderboardTable
+                    entries={entries}
+                    format={scoringFormat}
+                    scoringType={scoringType}
+                    isFavorite={isFavorite}
+                    onToggleFavorite={toggleFavorite}
+                    searchQuery={searchQuery}
+                    selectedFlight={selectedFlight}
+                    showFavoritesOnly={showFavoritesOnly}
+                    selectedRound={selectedRound}
+                    tournamentId={tournamentId}
+                    tournamentRounds={rounds}
+                  />
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

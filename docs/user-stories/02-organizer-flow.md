@@ -397,22 +397,48 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 
 ---
 
-### US-ORG-13 — Toernooi voor meerdere rondes instellen
+### US-ORG-13a — Aantal rondes instellen bij aanmaken
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik een meerdaags toernooi kan instellen met 2 of meer rondes
-- **Waarde:** Ik kan 36-holes of 54-holes evenementen organiseren
+- **Doel:** Dat ik bij het aanmaken van een toernooi het aantal rondes kan kiezen (1 t/m 4)
+- **Waarde:** Ik kan een meerdaags evenement opzetten zonder achteraf aanpassingen
 - **Prioriteit:** S
 - **Fase:** Later
 - **Afhankelijk van:** US-ORG-01
 - **Acceptatiecriteria:**
-  - Bij aanmaken: keuze voor aantal rondes (1, 2, 3, 4)
-  - Scores worden per ronde bijgehouden
-  - Leaderboard toont subtotalen per ronde en totaal
-  - Zelfde of verschillende baan per ronde mogelijk
+  - Keuzerondje bij aanmaken: 1, 2, 3 of 4 rondes
+  - Bij meerdere rondes: optie om per ronde een andere baan te kiezen
+  - Standaardwaarde is 1 ronde (bestaand gedrag)
+  - Wijzigen van aantal rondes na aanmaken is niet mogelijk
 - **Opmerkingen:**
   - MVP heeft alleen 1 ronde (18 holes)
   - De Haenen pilot gebruikt enkele ronden
+
+### US-ORG-13b — Scores per ronde bijhouden
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat scores per ronde worden geregistreerd, met voor elke ronde een aparte scorekaart
+- **Waarde:** Spelers kunnen per ronde hun prestaties zien, ook bij wisselende banen
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-13a, US-ORG-03
+- **Acceptatiecriteria:**
+  - Per speler wordt een aparte scorekaart aangemaakt voor elke ronde
+  - Scores uit ronde 1 worden niet beïnvloed door ronde 2
+  - Na afronden van alle rondes worden scores samengevoegd voor het totaalklassement
+
+### US-ORG-13c — Leaderboard met subtotalen per ronde
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat het leaderboard subtotalen per ronde toont en een totaalscore
+- **Waarde:** Spelers en toeschouwers zien precies hoe de eindstand is opgebouwd
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-13b, US-SPE-04
+- **Acceptatiecriteria:**
+  - Leaderboard toont kolommen: ronde 1, ronde 2, ..., totaal
+  - Sortering op totaalscore (of totaal stableford-punten)
+  - Bij nog niet gestarte rondes: kolom toont "—"
 
 ---
 
@@ -433,134 +459,309 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 
 ---
 
-### US-ORG-15 — Toernooi-sjablonen voor terugkerende evenementen
+### US-ORG-15a — Toernooi opslaan als sjabloon
 
-- **Rol:** Planner/organisator van een toernooireeks
-- **Doel:** Dat ik wedstrijden kan aanmaken op basis van een sjabloon met vaste instellingen (baan, format, type, branding)
-- **Waarde:** Ik kan in één klik een terugkerend toernooi (wekelijkse clubcompetitie) klaarzetten zonder alles opnieuw in te vullen
+- **Rol:** Organisator van een toernooireeks
+- **Doel:** Dat ik een voltooid toernooi kan opslaan als herbruikbaar sjabloon
+- **Waarde:** Ik hoef bij een volgend toernooi niet alle instellingen opnieuw in te vullen
 - **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-12
+- **Acceptatiecriteria:**
+  - Knop "Opslaan als sjabloon" op beheerscherm van een afgesloten toernooi
+  - Sjabloon bevat: baan, format, scoring type, optionele branding
+  - Sjabloon krijgt een naam en optionele beschrijving
+  - Datum wordt niet opgeslagen (altijd apart vragen bij nieuw toernooi)
+
+### US-ORG-15b — Toernooi aanmaken via sjabloon
+
+- **Rol:** Organisator van een toernooireeks
+- **Doel:** Dat ik een nieuw toernooi kan aanmaken op basis van een opgeslagen sjabloon
+- **Waarde:** Ik zet in enkele klikken een toernooi klaar zonder iets in te vullen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-15a
+- **Acceptatiecriteria:**
+  - Bij nieuw toernooi: tab "Kies sjabloon" naast "Leeg toernooi"
+  - Alle sjabloonvelden worden overgenomen, datum wordt apart gevraagd
+  - Na aanmaken is er geen koppeling meer met het sjabloon (losse kopie)
+
+### US-ORG-15c — Sjablonen beheren
+
+- **Rol:** Organisator van een toernooireeks
+- **Doel:** Dat ik mijn opgeslagen sjablonen kan bewerken, hernoemen of verwijderen
+- **Waarde:** Ik hou mijn sjablonen actueel en ruim verouderde op
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-15a
+- **Acceptatiecriteria:**
+  - Overzicht van alle eigen sjablonen op dashboard of aparte pagina
+  - Per sjabloon: bewerken, hernoemen, dupliceren, verwijderen
+  - Verwijderen bevestigen met dialoog ("Weet je zeker?")
+
+### US-ORG-15d — Terugkerende reeks aanmaken
+
+- **Rol:** Organisator van een toernooireeks
+- **Doel:** Dat ik een sjabloon kan instellen om automatisch een reeks toernooien aan te maken (bijv. elke donderdag in juli)
+- **Waarde:** Ik hoef elk toernooi afzonderlijk aan te maken voor een terugkerende competitie
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-15a
+- **Acceptatiecriteria:**
+  - Bij sjabloon: optie "Herhalend" met frequentie (wekelijks, tweewekelijks, maandelijks)
+  - Datumbereik instellen: begin- en einddatum
+  - Toernooien worden automatisch aangemaakt op de gekozen dagen
+  - Bij aanmaken: organisator krijgt notificatie dat de reeks is klaargezet
+
+---
+
+### US-ORG-16a — Contactgegevens van spelers opslaan
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik bij elke speler optioneel een e-mailadres en telefoonnummer kan opslaan
+- **Waarde:** Ik kan spelers bereiken voor notificaties zonder aparte lijst bij te houden
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-02
+- **Acceptatiecriteria:**
+  - Bij toevoegen speler: optionele velden voor e-mail en telefoon
+  - Bestaande spelers kunnen alsnog contactgegevens krijgen via bewerken
+  - Velden zijn nooit verplicht
+  - E-mailformaat wordt gevalideerd
+  - Privacy-opmerking: "Alleen gebruikt voor toernooicommunicatie"
+
+### US-ORG-16b — Automatische notificaties bij statuswijzigingen
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat spelers automatisch een bericht krijgen als het toernooi start, pauzeert of is afgelopen
+- **Waarde:** Spelers worden proactief geïnformeerd zonder dat ik handmatig berichten hoef te sturen
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-16a, US-ORG-05
+- **Acceptatiecriteria:**
+  - Bij status active: notificatie met starttijden per speler
+  - Bij status paused: notificatie met reden
+  - Bij status finished: notificatie met link naar einduitslag
+  - Bericht via e-mail (primair) en/of push (indien PWA geïnstalleerd)
+  - Speler kan notificaties uitzetten per toernooi
+
+### US-ORG-16c — Handmatig bericht sturen naar deelnemers
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik handmatig een bericht kan sturen naar alle deelnemers
+- **Waarde:** Ik kan last-minute wijzigingen of bijzonderheden direct communiceren
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-16a
+- **Acceptatiecriteria:**
+  - Tekstveld op beheerscherm voor handmatig bericht
+  - Bericht wordt per e-mail naar alle spelers met bekend e-mailadres gestuurd
+  - Bevestiging na verzenden: "Bericht verstuurd naar X spelers"
+  - Rate limiting: max 2 handmatige berichten per toernooi per dag
+
+### US-ORG-16d — Notificatiesjablonen beheren
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik de tekst van notificaties kan aanpassen met eigen sjablonen
+- **Waarde:** De communicatie sluit aan bij de stijl van mijn club
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-16b
+- **Acceptatiecriteria:**
+  - Overzicht van notificatietypes met bijbehorende sjablonen
+  - Per type: onderwerp en berichttekst bewerkbaar
+  - Variabelen beschikbaar: {toernooinaam}, {datum}, {starttijd}, {leaderboard_link}
+  - Sjablonen worden per club opgeslagen (niet per toernooi)
+  - Standaardsjablonen zijn vooringevuld maar aanpasbaar
+
+---
+
+### US-ORG-17a — Seizoen aanmaken en toernooien koppelen
+
+- **Rol:** Organisator van een club
+- **Doel:** Dat ik een "seizoen" kan aanmaken en daar bestaande en toekomstige toernooien aan kan koppelen
+- **Waarde:** Ik bouw een jaarranglijst op zonder aparte administratie
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-12
+- **Acceptatiecriteria:**
+  - Knop "Nieuw seizoen" op dashboard
+  - Seizoen heeft: naam, startdatum, einddatum
+  - Bestaande toernooien kunnen aan een seizoen worden gekoppeld
+  - Nieuwe toernooien kunnen direct aan een seizoen worden toegewezen
+
+### US-ORG-17b — Seizoensranglijst tonen
+
+- **Rol:** Organisator van een club
+- **Doel:** Dat ik een ranglijst kan zien die punten over alle toernooien in een seizoen samenvoegt
+- **Waarde:** Spelers zien hun positie in het clubkampioenschap gedurende het hele seizoen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-17a
+- **Acceptatiecriteria:**
+  - Seizoensranglijst toont totaalpunten van alle gekoppelde toernooien
+  - Spelers worden automatisch samengevoegd op (toernooi-onafhankelijke) naam
+  - Sortering op totaalpunten (stableford) of totaalslagen (strokeplay)
+  - Filter op kalenderjaar of ingestelde periode
+
+### US-ORG-17c — Clubstatistieken overzicht
+
+- **Rol:** Organisator van een club
+- **Doel:** Dat ik statistieken kan zien over meerdere toernooien: gemiddelde score, beste ronde, deelnemersaantallen
+- **Waarde:** Ik krijg inzicht in clubprestaties en gebruik
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-17b
+- **Acceptatiecriteria:**
+  - Statistieken: aantal toernooien, unieke deelnemers, gemiddelde score, beste ronde
+  - Grafiek van deelnemersaantallen over tijd
+  - Data is te filteren op seizoen of datumreeks
+
+---
+
+### US-ORG-18a — Deelnameprijs instellen per toernooi
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik per toernooi een deelnameprijs kan instellen (€0 = gratis)
+- **Waarde:** Ik bepaal of spelers moeten betalen en hoeveel
+- **Prioriteit:** S
 - **Fase:** Later
 - **Afhankelijk van:** US-ORG-01
 - **Acceptatiecriteria:**
-  - Organisator kan een voltooid toernooi opslaan als sjabloon
-  - Sjabloon bevat: baan, format, scoring type (gross/net), optionele branding/kleuren
-  - Bij nieuw toernooi: kiezen uit beschikbare sjablonen
-  - Datum wordt apart gevraagd; alle andere velden worden overgenomen
-  - Sjablonen zijn beheerbaar (bewerken, verwijderen, delen binnen club)
-  - Terugkerend sjabloon kan automatisch een reeks aanmaken (bv. elke donderdag in juli)
-- **Opmerkingen:**
-  - Gaat verder dan eenvoudig dupliceren: sjablonen zijn herbruikbaar en deelbaar
-  - Vergelijkbaar met Parrow's Planner-rol "wedstrijden creëren op basis van sjablonen"
-  - Competitiekalender (reeks toernooien) valt onder deze story
+  - Vrij tekstveld voor bedrag bij toernooi-instellingen
+  - €0 is standaard (gratis toernooi)
+  - Alleen hele euro's ondersteund (geen centen)
+  - Prijs kan worden gewijzigd zolang er nog geen betalingen zijn gedaan
 
----
-
-### US-ORG-16 — Notificaties naar deelnemers (e-mail, SMS, push)
+### US-ORG-18b — Betalingsintegratie (iDeal/creditcard)
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik deelnemers kan informeren over starttijden, statuswijzigingen en uitslag via e-mail, SMS, of pushnotificatie
-- **Waarde:** Spelers worden direct bereikt op hun voorkeurskanaal zonder dat ik ze individueel hoef te benaderen
+- **Doel:** Dat spelers via iDeal of creditcard kunnen betalen bij inschrijving
+- **Waarde:** Betaling verloopt automatisch; ik hoef niets na te controleen
 - **Prioriteit:** S
 - **Fase:** Later
-- **Afhankelijk van:** US-ORG-01, optioneel US-ORG-02 (contactveld toevoegen)
+- **Afhankelijk van:** US-ORG-18a, US-ORG-02
 - **Acceptatiecriteria:**
-  - Organisator kan bij elke speler een e-mailadres en/of telefoonnummer toevoegen (optioneel)
-  - Automatische notificatie bij: toernooi active (starttijden), toernooi paused, toernooi finished (uitslag)
-  - Organisator kan handmatig een bericht naar alle deelnemers sturen
-  - Kanaalkeuze per notificatie: e-mail, SMS, of beide
-  - Bericht-sjablonen: organisator kan templates beheren voor elk type notificatie
-  - Notificatie bevat: toernooinaam, relevante link (leaderboard), korte boodschap
-  - Rate limiting: max 5 e-mails / 5 SMS per toernooi per dag
-  - Speler kan aangeven geen notificaties te willen ontvangen (per toernooi)
-- **Opmerkingen:**
-  - E-mail via SMTP/Resend/Mailgun; SMS via Twilio
-  - Staat in §4.2 van het ontwerpdocument als "Handig maar later"
-  - Vergelijkbaar met Parrow's "Templates voor e-mails, sms-berichten en meldingen"
+  - Betaling via Stripe of Mollie met iDeal (NL) en creditcard (internationaal)
+  - Speler wordt doorgestuurd naar betaalprovider na aanmelden
+  - Toegang tot toernooi is pas definitief na succesvolle betaling
+  - Bij betalingsfout: speler krijgt duidelijke foutmelding en kan opnieuw proberen
 
----
-
-### US-ORG-17 — Seizoensranglijsten en clubstatistieken
-
-- **Rol:** Organisator van een club
-- **Doel:** Dat ik over meerdere toernooien een seizoensranglijst kan samenstellen met statistieken
-- **Waarde:** Ik kan een clubkampioenschap of jaarranglijst opbouwen zonder aparte administratie
-- **Prioriteit:** L
-- **Fase:** Later
-- **Afhankelijk van:** US-ORG-12, US-SPE-07, US-PRM-01
-- **Acceptatiecriteria:**
-  - Organisator kan een "seizoen" aanmaken en toernooien eraan koppelen
-  - Seizoensranglijst toont punten over alle toernooien heen
-  - Spelers die aan meerdere toernooien meedoen worden automatisch samengevoegd op naam
-  - Statistieken: aantal toernooien, gemiddelde score, beste ronde
-  - Filter op kalenderjaar of zelf in te stellen periode
-  - Club-branding mogelijk (premium)
-- **Opmerkingen:**
-  - Merge op naam is eenvoudig maar kan fouten geven bij dubbele namen
-  - Vereist premium voor club-branding (US-PRM-01)
-  - Staat in roadmap fase 3
-
----
-
-### US-ORG-18 — Online betaling via iDeal voor toernooideelname
+### US-ORG-18c — Betaalstatus per speler inzien
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik deelnemers online kan laten betalen bij inschrijving via iDeal of creditcard
-- **Waarde:** Ik hoef geen contant geld of overschrijvingen te verwerken; betaling verloopt automatisch
+- **Doel:** Dat ik per speler kan zien of de betaling is voldaan, openstaat of is kwijtgescholden
+- **Waarde:** Ik heb in één oogopslag overzicht van wie heeft betaald
 - **Prioriteit:** S
 - **Fase:** Later
-- **Afhankelijk van:** US-ORG-02, US-ORG-15 (sjablonen)
+- **Afhankelijk van:** US-ORG-18b
 - **Acceptatiecriteria:**
-  - Organisator kan per toernooi een deelnameprijs instellen (€0 = gratis)
-  - Betaling via iDeal (NL) en creditcard (internationaal) via Stripe of Mollie
-  - Speler betaalt tijdens online registratie; toegang pas definitief na betaling
-  - Organisator ziet betaalstatus per speler (betaald / openstaand / kwijtschelding)
-  - Automatische herinnering bij openstaande betaling (via US-ORG-16)
-  - Kosteloos annuleren tot X uur voor start; terugbetaling geregeld
-  - Geen betaling nodig voor gratis toernooien (USD 0 werkt naadloos)
-- **Opmerkingen:**
-  - Parity met Parrow events editie (€99/tournament) en Stripe/Mollie integratie
-  - Ons platform is gratis; betaling is alleen voor de organisator richting deelnemers
-  - OpenTour houdt geen commissie op betalingen
+  - Status badge per speler: betaald, openstaand, kwijtschelding
+  - Organisator kan betaling kwijtschelden voor individuele spelers
+  - Totaaloverzicht: X van Y spelers heeft betaald
+
+### US-ORG-18d — Herinnering en annulering bij betaling
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat spelers met openstaande betaling een herinnering krijgen en dat annuleren met terugbetaling mogelijk is
+- **Waarde:** Minder administratieve last voor mij en duidelijkheid voor spelers
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-18b, US-ORG-16b
+- **Acceptatiecriteria:**
+  - Automatische herinnering bij openstaande betaling (1 week en 1 dag voor toernooi)
+  - Speler kan kosteloos annuleren tot X uur voor start; daarna geen terugbetaling
+  - Terugbetaling wordt automatisch verwerkt via de betaalprovider
+  - Organisator kan annuleringstermijn instellen per toernooi
 
 ---
 
-### US-ORG-19 — Extra spelvormen (Texas Scramble, Greensome, fourball)
+### US-ORG-19a — Texas Scramble als spelvorm
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik ook Texas Scramble, Greensome (stableford), fourball en andere teamformats kan kiezen
-- **Waarde:** Ik kan alle gangbare wedstrijdvormen organiseren, niet alleen individuele stroke/stableford
+- **Doel:** Dat ik een toernooi in Texas Scramble-formaat kan opzetten, waarbij teamleden de beste slag spelen
+- **Waarde:** Mijn club kan populaire scramble-evenementen organiseren
 - **Prioriteit:** S
 - **Fase:** Later
 - **Afhankelijk van:** US-ORG-01, US-ORG-03
 - **Acceptatiecriteria:**
-  - Extra formats bij aanmaken: Texas Scramble, Greensome (stableford), fourball (better ball), foursome
-  - Scoring-regels per format worden correct toegepast (bv. teamscore i.p.v. individueel)
-  - Leaderboard past weergave aan per format (team-ranglijst, individueel binnen team)
-  - Teamindeling via flights (bv. 2 teams per flight bij fourball)
-- **Opmerkingen:**
-  - Parrow ondersteunt deze formats al; essentieel om concurrerend te blijven
-  - Niet in MVP — De Haenen pilot gebruikt alleen individuele stableford
+  - Extra format "Texas Scramble" bij aanmaken toernooi
+  - Teams van 2-4 spelers, ingedeeld per flight
+  - Score per hole = beste slag van het team, iedereen speelt vanaf die positie
+  - Leaderboard toont teamscore, niet individueel
+
+### US-ORG-19b — Greensome (stableford) als spelvorm
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een toernooi in Greensome-formaat kan opzetten (beiden afslaan, beste bal spelen afwisselend)
+- **Waarde:** Mijn club kan greensome-wedstrijden organiseren naast individuele formats
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-01, US-ORG-03
+- **Acceptatiecriteria:**
+  - Extra format "Greensome (stableford)" bij aanmaken toernooi
+  - Teams van 2 spelers: beide slaan af, kiezen beste bal, dan afwisselend
+  - Scoring op stableford-punten
+  - Leaderboard toont teamscore
+
+### US-ORG-19c — Fourball (better ball) als spelvorm
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een toernooi in fourball-formaat kan opzetten (beste score per hole per team telt)
+- **Waarde:** Mijn club kan fourball-wedstrijden organiseren, een van de meest gespeelde clubformats
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-01, US-ORG-03
+- **Acceptatiecriteria:**
+  - Extra format "Fourball (better ball)" bij aanmaken toernooi
+  - Teams van 2 spelers, beide spelen eigen bal
+  - Beste score van de twee telt per hole
+  - Individuele scores worden ook bijgehouden voor statistieken
+  - Leaderboard toont teamscore én individuele scores
+
+### US-ORG-19d — Foursome als spelvorm
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een toernooi in foursome-formaat kan opzetten (afwisselend slaan met 1 bal)
+- **Waarde:** Mijn club kan foursome-wedstrijden organiseren, klassiek format in clubcompetities
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-01, US-ORG-03
+- **Acceptatiecriteria:**
+  - Extra format "Foursome" bij aanmaken toernooi
+  - Teams van 2 spelers, 1 bal, afwisselend slaan
+  - Score per hole is het aantal slagen voor de team
+  - Leaderboard toont teamscore
 
 ---
 
-### US-ORG-20 — Koppeling met baanbezetting (Teecontrol / API)
+### US-ORG-20a — Starttijden exporteren naar Teecontrol
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat starttijden van het toernooi automatisch worden gesynchroniseerd met de baanbezetting
-- **Waarde:** De baan weet welke flights er zijn en conflicten met losse starttijden worden voorkomen
+- **Doel:** Dat ik starttijden van flights kan exporteren naar Teecontrol of een vergelijkbaar systeem
+- **Waarde:** De baanbezetting wordt automatisch bijgewerkt; ik hoef niet dubbel in te voeren
 - **Prioriteit:** L
 - **Fase:** Later
-- **Afhankelijk van:** US-ORG-04 (starttijden), externe API
+- **Afhankelijk van:** US-ORG-04
 - **Acceptatiecriteria:**
-  - OpenTour kan starttijden exporteren naar Teecontrol of vergelijkbaar systeem
-  - Baanbezetting blokkeert de tijdslots voor de toernooi-flights
-  - Bij wijzigen van starttijden: synchronisatie wordt opnieuw gestuurd
-  - Bij annuleren toernooi: tijdslots worden vrijgegeven
+  - Knop "Exporteer naar Teecontrol" op beheerscherm
+  - Starttijden per flight worden gestuurd naar Teecontrol API
+  - Tijdslots worden geblokkeerd in Teecontrol
   - Werkt ook zonder koppeling (handmatige invoer blijft mogelijk)
-- **Opmerkingen:**
-  - Parrow synchroniseert met Teecontrol voor baanbezetting
-  - Niet alle clubs gebruiken Teecontrol; koppeling optioneel via API-interface
-  - Vereist API-documentatie en samenwerking met Teecontrol of alternatief
+
+### US-ORG-20b — Synchronisatie bij wijzigen of annuleren
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat bijgewerkte starttijden of een geannuleerd toernooi automatisch worden gesynchroniseerd met de baanbezetting
+- **Waarde:** De baanbezetting is altijd actueel; voorkomt dubbele boekingen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-ORG-20a, US-ORG-05
+- **Acceptatiecriteria:**
+  - Bij wijzigen starttijd: update wordt opnieuw naar Teecontrol gestuurd
+  - Bij annuleren toernooi: alle geblokkeerde slots worden vrijgeven
+  - Bij pauzeren: optioneel tijdelijk vrijgeven van slots
+  - Logboek van synchronisatie-acties in het beheerscherm
 
 ---
 

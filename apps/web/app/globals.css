@@ -3,8 +3,33 @@
 @tailwind utilities;
 
 :root {
+  /* Base */
   --foreground: 255 255 255;
   --background: 3 7 18;
+
+  /* Brand colors — overschrijfbaar per tenant via white-labeling */
+  --brand-primary: 34 197 94;        /* green-500 */
+  --brand-primary-dark: 22 163 74;   /* green-600 */
+  --brand-primary-light: 74 222 128; /* green-400 */
+  --brand-accent: 245 158 11;        /* amber-500 */
+  --brand-danger: 248 113 113;       /* red-400 */
+
+  /* Layout */
+  --leaderboard-max-width: 1280px;
+  --header-bg: 17 24 39;            /* gray-900 */
+  --header-border: 31 41 55;        /* gray-800 */
+  --card-bg: 17 24 39;              /* gray-900 */
+  --card-border: 31 41 55;          /* gray-800 */
+
+  /* Favorites */
+  --favorite-color: 250 204 21;     /* yellow-400 */
+  --favorite-bg: 250 204 21 / 0.05; /* yellow-400/5 */
+
+  /* Score colors */
+  --score-under-par: 248 113 113;   /* red-400 */
+  --score-even-par: 74 222 128;     /* green-400 */
+  --score-over-par: 156 163 175;    /* gray-400 */
+  --score-muted: 107 114 128;       /* gray-500 */
 }
 
 * {
@@ -19,8 +44,23 @@ body {
   overflow-x: hidden;
 }
 
-/* Grote touchdoelen voor buitengebruik op de baan */
 button {
   min-height: 44px;
   touch-action: manipulation;
+}
+
+/* Leaderboard specifieke utilities */
+@layer utilities {
+  .score-eagle {
+    @apply ring-2 ring-green-400 bg-green-900/30 rounded-full;
+  }
+  .score-birdie {
+    @apply ring-2 ring-green-500/60 rounded-full;
+  }
+  .score-bogey {
+    @apply ring-2 ring-amber-500/60 rounded;
+  }
+  .score-double-bogey {
+    @apply ring-2 ring-red-500/60 bg-red-900/20 rounded;
+  }
 }

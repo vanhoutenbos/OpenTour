@@ -161,6 +161,18 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['access_codes']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['access_codes']['Insert']>;
       };
+      matchplay_pairings: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          player_a_id: string;
+          player_b_id: string;
+          flight_id: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['matchplay_pairings']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['matchplay_pairings']['Insert']>;
+      };
     };
     Views: {
       tournament_leaderboard: {
@@ -170,6 +182,7 @@ export interface Database {
           handicap: number | null;
           player_status: string;
           flight_name: string | null;
+          started_on_hole: number;
           tournament_id: string;
           tournament_name: string;
           format: string;
@@ -181,7 +194,58 @@ export interface Database {
           net_score_to_par: number | null;
           gross_stableford_points: number | null;
           net_stableford_points: number | null;
+          today_holes: number;
+          today_score: number | null;
+          round_scores: number[] | null;
+          round_to_par: number[] | null;
           position: number;
+        };
+      };
+      player_hole_scores: {
+        Row: {
+          player_id: string;
+          tournament_id: string;
+          round_number: number;
+          hole_number: number;
+          par: number;
+          distance_meters: number | null;
+          stroke_index: number;
+          strokes: number;
+          to_par: number;
+          score_type: string;
+        };
+      };
+      course_hole_stats: {
+        Row: {
+          tournament_id: string;
+          hole_number: number;
+          par: number;
+          distance_meters: number | null;
+          stroke_index: number;
+          average_score: number;
+          eagles: number;
+          birdies: number;
+          pars: number;
+          bogeys: number;
+          double_bogeys: number;
+          total_scores: number;
+        };
+      };
+      matchplay_standings: {
+        Row: {
+          tournament_id: string;
+          round_number: number;
+          player_a_id: string;
+          player_a_name: string;
+          player_b_id: string;
+          player_b_name: string;
+          holes_won_a: number;
+          holes_won_b: number;
+          holes_halved: number;
+          standing: number;
+          holes_played: number;
+          standing_text: string;
+          hole_results: string[] | null;
         };
       };
     };

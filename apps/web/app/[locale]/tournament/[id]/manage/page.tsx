@@ -178,6 +178,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   });
   const [flightGenerating, setFlightGenerating] = useState(false);
   const [flightError, setFlightError] = useState<string | null>(null);
+  const [showFlightSettings, setShowFlightSettings] = useState(false);
   const [sortBy, setSortBy] = useState<'handicap_asc' | 'random'>('handicap_asc');
   const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
@@ -427,8 +428,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   };
 
   const deleteAllFlights = async () => {
-    await supabase.from('flights').delete().eq('tournament_id', params.id);
     await supabase.from('tournament_players').delete().eq('tournament_id', params.id);
+    await supabase.from('flights').delete().eq('tournament_id', params.id);
     await supabase.from('tournament_categories').delete().eq('tournament_id', params.id);
     await loadData();
   };
@@ -707,6 +708,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       format={tournament.format}
                       scoringType={tournament.scoring_type}
                       isActive={tournament.status === 'active'}
+                      status={tournament.status}
+                      rounds={tournament.rounds}
+                      flightCount={flights.length}
                     />
                     <div className="mt-4 text-center">
                       <Link
@@ -777,6 +781,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   format={tournament.format}
                   scoringType={tournament.scoring_type}
                   isActive={tournament.status === 'active'}
+                  status={tournament.status}
+                  rounds={tournament.rounds}
                 />
                 {tournament.status === 'draft' && (
                   <div className="mt-4 text-center">
@@ -1191,7 +1197,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   <>
                     {/* Simpel menu als er al flights zijn */}
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-white">Flights beheren</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-medium text-white">Flights beheren</h3>
+                        <button
+                          onClick={() => setShowFlightSettings(true)}
+                          title="Instellingen wijzigen"
+                          className="text-gray-500 hover:text-white transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                          </svg>
+                        </button>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={generateFlights}
@@ -1210,8 +1227,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     </div>
                     {flightError && (
                       <p className="text-red-400 text-sm">{flightError}</p>
-                    )}
-                  </>
+                )}
+
+              </>
                 ) : (
                   <>
                     {/* Flight generator form (geen flights) */}
@@ -1326,6 +1344,115 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       )}
                     </div>
                   </>
+                )}
+
+                {/* Flight settings modal */}
+                {showFlightSettings && (
+                  <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Flight instellingen</h3>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                        <input
+                          type="datetime-local"
+                          value={flightForm.start_time}
+                          onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
+                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={flightForm.interval_minutes}
+                            onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={4}
+                            value={flightForm.max_players}
+                            onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                        <div className="flex gap-3">
+                          {startHoleOptions.map(hole => (
+                            <button
+                              key={hole}
+                              type="button"
+                              onClick={() => toggleStartHole(hole)}
+                              className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
+                                flightForm.start_holes.includes(hole)
+                                  ? 'bg-green-900/30 border-green-600 text-green-400'
+                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              {hole}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
+                          <select
+                            value={sortBy}
+                            onChange={e => setSortBy(e.target.value as 'handicap_asc' | 'random')}
+                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                          >
+                            <option value="handicap_asc">Handicap laag → hoog</option>
+                            <option value="random">Willekeurig</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setGenderMode('mixed')}
+                              className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                                genderMode === 'mixed'
+                                  ? 'bg-green-900/30 border-green-600 text-green-400'
+                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              Gemengd
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setGenderMode('separate')}
+                              className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                                genderMode === 'separate'
+                                  ? 'bg-green-900/30 border-green-600 text-green-400'
+                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              Op geslacht
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={() => setShowFlightSettings(false)}
+                          className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                        >
+                          Sluiten
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Flight cards */}

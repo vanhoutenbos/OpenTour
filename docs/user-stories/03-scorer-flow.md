@@ -432,42 +432,73 @@ Recorders gebruiken de app onder vaak lastige omstandigheden: buiten, in bewegin
 
 ---
 
-### US-SCR-15 — Pushmeldingen voor starttijdherinnering en updates
+### US-SCR-15a — Starttijdherinnering via pushmelding
 
 - **Rol:** Recorder (scorer) van een toernooi
-- **Doel:** Dat ik een pushmelding krijg als het toernooi start, gepauzeerd wordt, of als mijn starttijd nadert
-- **Waarde:** Ik word proactief geïnformeerd en hoef de app niet continu te checken
+- **Doel:** Dat ik een pushmelding krijg 30 minuten voor mijn starttijd
+- **Waarde:** Ik hoef de app niet continu te checken en kom op tijd bij mijn flight
 - **Prioriteit:** L
 - **Fase:** Later
 - **Afhankelijk van:** US-SCR-01, PWA-installatie
 - **Acceptatiecriteria:**
-  - Pushmelding bij: starttijd (30 min vooraf), toernooi gepauzeerd, toernooi hervat
+  - Pushmelding 30 minuten voor starttijd
   - Melding werkt ook als de app niet open is (service worker)
   - Toestemming gevraagd volgens browser-richtlijnen
+  - Opt-out mogelijk
+
+### US-SCR-15b — Notificatie bij toernooi-statuswijzigingen
+
+- **Rol:** Recorder (scorer) van een toernooi
+- **Doel:** Dat ik een pushmelding krijg als het toernooi wordt gepauzeerd of hervat
+- **Waarde:** Ik weet direct of ik moet wachten of kan doorspelen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SCR-01, PWA-installatie
+- **Acceptatiecriteria:**
+  - Melding bij: toernooi gepauzeerd, toernooi hervat
+  - Bericht bevat korte reden (indien ingevuld door organisator)
   - Opt-out per notificatietype
-- **Opmerkingen:**
-  - Vereist Web Push API + VAPID-sleutels
-  - Gebruiker moet de PWA hebben geïnstalleerd
-  - Beperkte ondersteuning op iOS Safari
 
 ---
 
-### US-SCR-16 — Persoonlijke statistieken over meerdere toernooien
+### US-SCR-16a — Account aanmaken voor scoregeschiedenis
 
 - **Rol:** Recorder (scorer) van een toernooi
-- **Doel:** Dat ik mijn scores en statistieken kan terugzien over meerdere toernooien heen
+- **Doel:** Dat ik een account kan aanmaken zodat mijn scores automatisch worden gekoppeld aan mijn profiel
+- **Waarde:** Ik bouw een scoregeschiedenis op zonder handmatig te importeren
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-AUTH-01
+- **Acceptatiecriteria:**
+  - Na inloggen via code: optie "Koppel scores aan account"
+  - Na koppeling: scores van eerdere en toekomstige toernooien worden automatisch gelinkt
+  - Speler ziet een overzicht van toernooien waaraan hij heeft deelgenomen
+
+### US-SCR-16b — Statistieken-dashboard
+
+- **Rol:** Recorder (scorer) van een toernooi
+- **Doel:** Dat ik een dashboard zie met mijn statistieken: aantal toernooien, gemiddelde score, beste ronde, handicapverloop
 - **Waarde:** Ik kan mijn vooruitgang volgen en prestaties vergelijken
 - **Prioriteit:** L
 - **Fase:** Later
-- **Afhankelijk van:** US-ORG-17, US-AUTH-03
+- **Afhankelijk van:** US-SCR-16a
 - **Acceptatiecriteria:**
-  - Speler kan een account aanmaken en scores automatisch laten koppelen
-  - Dashboard met: aantal toernooien, gemiddelde score, beste ronde, handicapverloop
-  - Grafieken per toernooi (stableford punten, score to par)
-  - Data wordt alleen getoond voor toernooien waar de speler aan heeft deelgenomen
-- **Opmerkingen:**
-  - Vereist een optioneel speler-account (niet in MVP, US-AUTH-03)
-  - Privacy: speler kiest zelf of statistieken publiek of privé zijn
+  - Dashboard toont: aantal toernooien, gemiddelde score, beste ronde, huidige handicap
+  - Scores worden alleen getoond voor toernooien waar de speler aan heeft deelgenomen
+  - Data is te filteren op kalenderjaar of seizoen
+
+### US-SCR-16c — Grafieken en trendweergave
+
+- **Rol:** Recorder (scorer) van een toernooi
+- **Doel:** Dat ik grafieken zie van mijn stableford-punten en score-to-par over meerdere toernooien
+- **Waarde:** Ik zie in één oogopslag of ik vooruitgaat
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SCR-16b
+- **Acceptatiecriteria:**
+  - Lijngrafiek van stableford-punten per toernooi (chronologisch)
+  - Lijngrafiek van score-to-par per toernooi
+  - Speler kiest zelf of statistieken publiek of privé zijn
 
 ---
 

@@ -143,23 +143,34 @@ Toeschouwers zijn de grootste potentiële gebruikersgroep. Familie, clubleden en
 
 ---
 
-### US-SPE-08 — Kiosk-modus voor groot scherm
+### US-SPE-08a — Fullscreen kiosk-weergave
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik het leaderboard in een kiosk-modus kan tonen op een TV of projector in het clubhuis
-- **Waarde:** Bezoekers in het clubhuis kunnen de stand volgen op een groot scherm
+- **Doel:** Dat ik het leaderboard in fullscreen kan tonen op een TV of projector, zonder browser UI
+- **Waarde:** Bezoekers in het clubhuis zien alleen het leaderboard, geen browser-chrome
 - **Prioriteit:** L
 - **Fase:** Later
 - **Afhankelijk van:** US-SPE-01
 - **Acceptatiecriteria:**
-  - Speciale URL-parameter (?kiosk) activeert kiosk-modus
-  - Automatisch scrollen door de lijst als deze niet op 1 scherm past
-  - Groot lettertype, minimaal 48px voor namen
+  - URL-parameter (?kiosk) activeert kiosk-modus
   - Geen browser UI (fullscreen)
+  - Groot lettertype, minimaal 48px voor spelersnamen
+  - Leaderboard past zich aan aan elk schermformaat (TV, projector, monitor)
   - Automatische verversing zonder zichtbare polling-indicatoren
-- **Opmerkingen:**
-  - Geen aparte app nodig; de browser volstaat
-  - Waardevol voor clubs met een TV in het clubhuis
+
+### US-SPE-08b — Auto-scroll in kiosk-modus
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat het leaderboard automatisch scrollt als de lijst niet op 1 scherm past
+- **Waarde:** Alle spelers zijn zichtbaar, ook bij een groot deelnemersveld
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SPE-08a
+- **Acceptatiecriteria:**
+  - Automatisch scrollen door de lijst als deze langer is dan 1 scherm
+  - Scroll-snelheid configureerbaar (pauze per pagina)
+  - Scrollen stopt bij de laatste speler, dan terug naar boven
+  - Handmatig scrollen (muis/touch) onderbreekt auto-scroll tijdelijk
 
 ---
 
@@ -235,63 +246,104 @@ Toeschouwers zijn de grootste potentiële gebruikersgroep. Familie, clubleden en
 
 ---
 
-### US-SPE-13 — Matchplay leaderboard view
+### US-SPE-13a — Matchplay score per hole bijhouden
 
 - **Rol:** Toeschouwer van een toernooi
-- **Doel:** Dat ik het leaderboard in matchplay-formaat kan bekijken met holes gewonnen, gelijk en verloren
-- **Waarde:** Ik kan matchplay-toernooien op de juiste manier volgen in plaats van stabelford-weergave
+- **Doel:** Dat ik voor een matchplay-toernooi de uitslag per hole kan zien (gewonnen, gelijk, verloren)
+- **Waarde:** Ik zie precies hoe de wedstrijd verloopt, hole-by-hole
 - **Prioriteit:** S
 - **Fase:** Later
-- **Afhankelijk van:** US-SPE-04, US-ORG-01 (matchplay format)
+- **Afhankelijk van:** US-ORG-01 (matchplay format)
 - **Acceptatiecriteria:**
-  - Leaderboard toont matchplay-specifieke kolommen: gwn (gewonnen), gel (gelijk), verl (verloren), gaten voor
-  - Sortering op wedstrijdpunten, niet op totaalslagen
-  - Huidige hole-status wordt getoond voor actieve wedstrijden
-  - Automatisch schakelen tussen stroke/stableford/matchplay-weergave op basis van toernooiformat
-- **Opmerkingen:**
-  - Matchplay heeft een andere dynamiek (hole-by-hole, geen cumulatieve score)
-  - Alleen relevant voor toernooien met format `matchplay`
-  - Genoemd in §4.2 van het ontwerpdocument
+  - Per matchup: overzicht van alle holes met uitslag (gwn/gel/verl)
+  - Huidige hole wordt uitgelicht tijdens actieve wedstrijd
+  - Score staat weergegeven als "X & Y" (aantal gaten voor)
+
+### US-SPE-13b — Matchplay leaderboard weergave
+
+- **Rol:** Toeschouwer van een toernooi
+- **Doel:** Dat het leaderboard voor matchplay-toernooien de juiste kolommen toont en sorteert op wedstrijdpunten
+- **Waarde:** Het leaderboard is relevant voor het gekozen formaat
+- **Prioriteit:** S
+- **Fase:** Later
+- **Afhankelijk van:** US-SPE-13a, US-SPE-04
+- **Acceptatiecriteria:**
+  - Leaderboard toont kolommen: gwn, gel, verl, gaten voor
+  - Sortering op wedstrijdpunten (niet op totaalslagen)
+  - Automatisch schakelen tussen stroke/stableford/matchplay op basis van toernooiformat
 
 ---
 
-### US-SPE-14 — Specifieke speler volgen met notificaties
+### US-SPE-14a — Speler volgen op leaderboard
 
 - **Rol:** Toeschouwer van een toernooi
-- **Doel:** Dat ik een specifieke speler kan selecteren om te volgen en notificaties krijg bij belangrijke gebeurtenissen
-- **Waarde:** Ik hoef niet het hele leaderboard in de gaten te houden; ik krijg alleen updates voor mijn favoriete speler
+- **Doel:** Dat ik een specifieke speler kan selecteren om te volgen via een "Volg"-knop op het leaderboard
+- **Waarde:** Ik kan mijn favoriete speler snel terugvinden zonder te zoeken
 - **Prioriteit:** L
 - **Fase:** Later
-- **Afhankelijk van:** US-SPE-04, US-SPE-11, US-SCR-15
+- **Afhankelijk van:** US-SPE-04
 - **Acceptatiecriteria:**
   - "Volg"-knop per speler op het leaderboard
-  - Notificatie bij: ronde voltooid, birdie/eagle, positieverandering in top 3
-  - Melding via browser-notificatie (toestemming vereist) of push (US-SCR-15)
-  - Gevolgde spelers opgeslagen in localStorage (geen account nodig)
+  - Gevolgde spelers worden bovenaan het leaderboard getoond of gemarkeerd
   - Maximaal 3 spelers tegelijk volgen
-- **Opmerkingen:**
-  - Genoemd in §2.3 Spectator Later
-  - Browser-notificaties vereisen toestemming
+  - Opgeslagen in localStorage (geen account nodig)
+
+### US-SPE-14b — Notificaties bij gevolgde speler
+
+- **Rol:** Toeschouwer van een toernooi
+- **Doel:** Dat ik een browser-notificatie krijg als een gevolgde speler een birdie/eagle maakt of van positie verandert in de top 3
+- **Waarde:** Ik hoef het leaderboard niet continu te verversen; ik word gewaarschuwd bij belangrijke gebeurtenissen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SPE-14a
+- **Acceptatiecriteria:**
+  - Notificatie bij: birdie, eagle, positieverandering in top 3, ronde voltooid
+  - Melding via browser-notificatie (toestemming vereist) of push
+  - Toestemming wordt gevraagd volgens browser-richtlijnen
 
 ---
 
-### US-SPE-15 — Sociale functies (delen en reageren)
+### US-SPE-15a — Leaderboard delen via social media
 
 - **Rol:** Toeschouwer van een toernooi
-- **Doel:** Dat ik een score kan delen op social media en kan reageren op het leaderboard
-- **Waarde:** Ik kan het toernooi delen met vrienden en interactie hebben met andere toeschouwers
+- **Doel:** Dat ik het leaderboard of een speler kan delen via de native share sheet van mijn telefoon
+- **Waarde:** Ik kan het toernooi eenvoudig delen met vrienden
 - **Prioriteit:** L
 - **Fase:** Later
 - **Afhankelijk van:** US-SPE-01
 - **Acceptatiecriteria:**
-  - Deel-knop per speler opent native share sheet
-  - Leaderboard delen via URL (US-SPE-02)
-  - Emoji-reacties bij een score (👏🔥💪) optioneel
-  - Reacties op leaderboard (optioneel, na moderatie)
-- **Opmerkingen:**
-  - Sociale functies introduceren moderatie- en privacy-risico's
-  - Reacties vereisen een account en moderatie-systeem
-  - Prioriteit laag; focus eerst op de kern-leaderboardervaring
+  - Deel-knop op leaderboard-pagina opent native share sheet
+  - Deel-knop per speler deelt link naar leaderboard met speler gemarkeerd
+  - Gedeelde link werkt zonder account (publiek toegankelijk)
+
+### US-SPE-15b — Emoji-reacties op scores
+
+- **Rol:** Toeschouwer van een toernooi
+- **Doel:** Dat ik met een emoji kan reageren op een score (👏🔥💪)
+- **Waarde:** Ik kan mijn waardering tonen zonder een reactie te typen
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SPE-01
+- **Acceptatiecriteria:**
+  - Per speler op leaderboard: emoji-knoppen (👏🔥💪)
+  - Aantal reacties wordt getoond als teller
+  - Reacties zijn anoniem (geen account nodig)
+  - Rate limiting: max 1 reactie per minuut per IP
+
+### US-SPE-15c — Geschreven reacties met moderatie
+
+- **Rol:** Toeschouwer van een toernooi
+- **Doel:** Dat ik een tekstreactie kan achterlaten op het leaderboard, die na moderatie wordt getoond
+- **Waarde:** Ik kan het toernooi actief becommentariëren
+- **Prioriteit:** L
+- **Fase:** Later
+- **Afhankelijk van:** US-SPE-01
+- **Acceptatiecriteria:**
+  - Reactieveld onder het leaderboard
+  - Account vereist om te reageren
+  - Reacties worden pas getoond na moderatie (goedkeuring door organisator)
+  - Organisator kan reacties verwijderen
+  - Moderatie-scherm op beheerscherm van het toernooi
 
 ---
 

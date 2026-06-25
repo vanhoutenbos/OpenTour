@@ -162,10 +162,31 @@
     "live": "LIVE",
     "updated_at": "Bijgewerkt om",
     "no_scores": "Nog geen scores ingevoerd",
+    "auto_refresh": "vernieuwt automatisch",
+    "search_placeholder": "Zoek speler...",
+    "favorites": "Favorieten",
+    "players": "Spelers",
+    "today": "Vandaag",
+    "thru": "Thru",
     "filter": {
       "all": "Alle flights",
       "flight": "Flight"
-    }
+    },
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "teetimes": "Tee Times",
+      "matchplay": "Matchplay",
+      "coursestats": "Baanstatistieken"
+    },
+    "scorecard": {
+      "eagle": "Eagle",
+      "birdie": "Birdie",
+      "par": "Par",
+      "bogey": "Bogey",
+      "double_bogey": "Dubbele+"
+    },
+    "info": "Toernooi informatie",
+    "started_on_hole": "Gestart op hole {hole}"
   },
   "scorer": {
     "page_title": "Score invoeren",

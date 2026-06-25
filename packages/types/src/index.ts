@@ -174,10 +174,54 @@ export interface LeaderboardEntry {
   gross_stableford_points?: number;
   net_stableford_points?: number;
   position: number;
+  /** Speler is gestart op hole 10 i.p.v. 1 */
+  started_on_hole?: number;
+  /** Per-ronde totaalscores: [72, 70, null, null] */
+  round_scores?: (number | null)[];
+  /** Per-ronde to-par: [-2, -1, null, null] */
+  round_to_par?: (number | null)[];
+  /** Holes gespeeld in huidige ronde (vandaag) */
+  today_holes?: number;
+  /** Score vandaag (to par voor huidige ronde) */
+  today_score?: number;
+  /** Vorige positie voor ▲▼ indicators (wordt client-side gezet) */
+  previous_position?: number;
+}
+
+export interface PlayerHoleScore {
+  hole_number: number;
+  par: number;
+  distance_meters?: number;
+  stroke_index: number;
+  strokes?: number;
+  to_par?: number;
+}
+
+export interface PlayerRoundDetail {
+  round_number: number;
+  holes: PlayerHoleScore[];
+  total_strokes: number;
+  total_par: number;
+  score_to_par: number;
+}
+
+export interface HoleStat {
+  hole_number: number;
+  par: number;
+  distance_meters?: number;
+  stroke_index: number;
+  average_score: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  double_bogeys: number;
+  total_scores: number;
 }
 
 export interface MatchplayStanding {
   tournament_id: string;
+  round_number: number;
   player_a_id: string;
   player_a_name: string;
   player_b_id: string;
@@ -185,8 +229,12 @@ export interface MatchplayStanding {
   holes_won_a: number;
   holes_won_b: number;
   holes_halved: number;
-  standing: number; // positief = A leidt, negatief = B leidt
+  standing: number; // positief = A leidt, negatief = B leidt, 0 = all square
   holes_played: number;
+  /** Stand in wording: "2up", "AS", "1dn" */
+  standing_text: string;
+  /** Per-hole wie de hole won: 'A' | 'B' | 'H' */
+  hole_results?: ('A' | 'B' | 'H')[];
 }
 
 // ============================================================

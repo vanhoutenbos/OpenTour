@@ -218,10 +218,31 @@
     "live": "LIVE",
     "updated_at": "Updated at",
     "no_scores": "No scores entered yet",
+    "auto_refresh": "auto-refreshes",
+    "search_placeholder": "Search player...",
+    "favorites": "Favorites",
+    "players": "Players",
+    "today": "Today",
+    "thru": "Thru",
     "filter": {
       "all": "All flights",
       "flight": "Flight"
-    }
+    },
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "teetimes": "Tee Times",
+      "matchplay": "Matchplay",
+      "coursestats": "Course Stats"
+    },
+    "scorecard": {
+      "eagle": "Eagle",
+      "birdie": "Birdie",
+      "par": "Par",
+      "bogey": "Bogey",
+      "double_bogey": "Double+"
+    },
+    "info": "Tournament info",
+    "started_on_hole": "Started on hole {hole}"
   },
   "scorer": {
     "page_title": "Enter scores",

@@ -1,0 +1,359 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { PlayerHoleScore, PlayerRoundDetail } from '@opentour/types';
+import { fetchPlayerHoleScores } from '@/lib/fetchLeaderboard';
+
+interface Props {
+  playerId: string;
+  playerName: string;
+  tournamentId: string;
+  handicap?: number;
+  roundsInTournament: number;
+  onClose: () => void;
+}
+
+function groupHolesByRound(holes: PlayerHoleScore[]): PlayerRoundDetail[] {
+  const roundMap = new Map<number, PlayerHoleScore[]>();
+  for (const hole of holes) {
+    const existing = roundMap.get(hole.round_number) ?? [];
+    existing.push(hole);
+    roundMap.set(hole.round_number, existing);
+  }
+  const result: PlayerRoundDetail[] = [];
+  for (const [roundNumber, roundHoles] of roundMap) {
+    const sorted = roundHoles.sort((a, b) => a.hole_number - b.hole_number);
+    const totalStrokes = sorted.reduce((sum, h) => sum + (h.strokes ?? 0), 0);
+    const totalPar = sorted.reduce((sum, h) => sum + h.par, 0);
+    result.push({
+      round_number: roundNumber,
+      holes: sorted,
+      total_strokes: totalStrokes,
+      total_par: totalPar,
+      score_to_par: totalStrokes - totalPar,
+    });
+  }
+  return result.sort((a, b) => a.round_number - b.round_number);
+}
+
+function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
+  strokes?: number;
+  par: number;
+  isBirdie: boolean;
+  isBogey: boolean;
+  isEagle: boolean;
+}) {
+  if (strokes === undefined || strokes === null) {
+    return <span className="text-gray-600">-</span>;
+  }
+
+  const baseClass = 'inline-flex items-center justify-center w-8 h-8 text-sm font-mono font-bold';
+
+  if (isEagle) {
+    return <span className={`${baseClass} score-eagle text-green-400`}>{strokes}</span>;
+  }
+  if (isBirdie) {
+    return <span className={`${baseClass} score-birdie text-green-400`}>{strokes}</span>;
+  }
+  if (isBogey) {
+    return <span className={`${baseClass} score-bogey text-amber-400`}>{strokes}</span>;
+  }
+  if (strokes >= par + 2) {
+    return <span className={`${baseClass} score-double-bogey text-red-400`}>{strokes}</span>;
+  }
+
+  return <span className={`${baseClass} text-white`}>{strokes}</span>;
+}
+
+export function ScorecardModal({
+  playerId,
+  playerName,
+  tournamentId,
+  handicap,
+  roundsInTournament,
+  onClose,
+}: Props) {
+  const [rounds, setRounds] = useState<PlayerRoundDetail[]>([]);
+  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchPlayerHoleScores(tournamentId, playerId)
+      .then((data) => {
+        if (cancelled) return;
+        const grouped = groupHolesByRound(data);
+        setRounds(grouped);
+        if (grouped.length > 0) {
+          setSelectedRound(grouped[grouped.length - 1].round_number);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError('Scorekaart niet beschikbaar');
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [tournamentId, playerId]);
+
+  const active = rounds.find((r) => r.round_number === selectedRound) ?? rounds[rounds.length - 1];
+
+  const splitHoles = (holes: PlayerHoleScore[]) => {
+    const front = holes.filter((h) => h.hole_number <= 9);
+    const back = holes.filter((h) => h.hole_number > 9);
+    return { front, back };
+  };
+
+  const renderHoleRow = (
+    label: string,
+    holes: PlayerHoleScore[],
+    renderCell: (hole: PlayerHoleScore) => React.ReactNode
+  ) => (
+    <tr className="border-b border-gray-800/60 last:border-b-0">
+      <td className="py-1.5 pr-3 text-xs text-gray-500 font-medium w-10">{label}</td>
+      {holes.map((h) => (
+        <td key={h.hole_number} className="py-1.5 text-center">
+          {renderCell(h)}
+        </td>
+      ))}
+      <td className="py-1.5 pl-3 text-right text-xs text-gray-500 font-medium" />
+    </tr>
+  );
+
+  const totalFront = (holes: PlayerHoleScore[]) =>
+    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+  const totalBack = (holes: PlayerHoleScore[]) =>
+    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+  const parFront = (holes: PlayerHoleScore[]) =>
+    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + h.par, 0);
+  const parBack = (holes: PlayerHoleScore[]) =>
+    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + h.par, 0);
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+          <div>
+            <h3 className="text-lg font-bold text-white">{playerName}</h3>
+            {handicap !== undefined && (
+              <p className="text-xs text-gray-400">HCP {handicap}</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Round tabs */}
+        {rounds.length > 1 && (
+          <div className="flex gap-1 px-5 py-2 border-b border-gray-800/60 shrink-0">
+            {rounds.map((r) => (
+              <button
+                key={r.round_number}
+                onClick={() => setSelectedRound(r.round_number)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                  selectedRound === r.round_number
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                R{r.round_number}
+                {r.score_to_par !== 0 && (
+                  <span className={`ml-1 ${r.score_to_par < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {r.score_to_par > 0 ? `+${r.score_to_par}` : r.score_to_par}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Scorecard */}
+        <div className="overflow-y-auto p-5">
+          {loading && (
+            <div className="animate-pulse space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-8 bg-gray-800 rounded" />
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && active && (
+            <div className="space-y-6">
+              {(() => {
+                const { front, back } = splitHoles(active.holes);
+                return (
+                  <>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-gray-500 text-xs">
+                          <th className="text-left font-medium w-10" />
+                          {Array.from({ length: 9 }, (_, i) => (
+                            <th key={i} className="text-center font-medium w-8">
+                              {i + 1}
+                            </th>
+                          ))}
+                          <th className="text-right font-medium w-10 pl-3">OUT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {renderHoleRow('Par', front, (h) => (
+                          <span className="text-xs text-gray-400 font-mono">{h.par}</span>
+                        ))}
+                        {front.some((h) => h.distance_meters) && renderHoleRow('M', front, (h) => (
+                          <span className="text-xs text-gray-500 font-mono">{h.distance_meters ?? '-'}</span>
+                        ))}
+                        {renderHoleRow('SI', front, (h) => (
+                          <span className="text-xs text-gray-500 font-mono">{h.stroke_index}</span>
+                        ))}
+                        {renderHoleRow('Score', front, (h) => (
+                          <ScoreSymbol
+                            strokes={h.strokes}
+                            par={h.par}
+                            isBirdie={h.to_par === -1}
+                            isBogey={h.to_par === 1}
+                            isEagle={h.to_par !== null && h.to_par <= -2}
+                          />
+                        ))}
+                        <tr className="border-t border-gray-700">
+                          <td colSpan={9} className="py-2" />
+                          <td className="text-right py-2">
+                            <span className="font-mono font-bold text-white">
+                              {totalFront(front)}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({parFront(front)})
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-gray-500 text-xs">
+                          <th className="text-left font-medium w-10" />
+                          {Array.from({ length: 9 }, (_, i) => (
+                            <th key={i} className="text-center font-medium w-8">
+                              {i + 10}
+                            </th>
+                          ))}
+                          <th className="text-right font-medium w-10 pl-3">IN</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {renderHoleRow('Par', back, (h) => (
+                          <span className="text-xs text-gray-400 font-mono">{h.par}</span>
+                        ))}
+                        {back.some((h) => h.distance_meters) && renderHoleRow('M', back, (h) => (
+                          <span className="text-xs text-gray-500 font-mono">{h.distance_meters ?? '-'}</span>
+                        ))}
+                        {renderHoleRow('SI', back, (h) => (
+                          <span className="text-xs text-gray-500 font-mono">{h.stroke_index}</span>
+                        ))}
+                        {renderHoleRow('Score', back, (h) => (
+                          <ScoreSymbol
+                            strokes={h.strokes}
+                            par={h.par}
+                            isBirdie={h.to_par === -1}
+                            isBogey={h.to_par === 1}
+                            isEagle={h.to_par !== null && h.to_par <= -2}
+                          />
+                        ))}
+                        <tr className="border-t border-gray-700">
+                          <td colSpan={9} className="py-2" />
+                          <td className="text-right py-2">
+                            <span className="font-mono font-bold text-white">
+                              {totalBack(back)}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({parBack(back)})
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    {/* TOTAL row */}
+                    <div className="flex items-center justify-between px-1 pt-4 border-t border-gray-800">
+                      <span className="text-sm font-bold text-white">Totaal</span>
+                      <div className="text-right">
+                        <span className="font-mono font-bold text-lg text-white">
+                          {active.total_strokes}
+                        </span>
+                        <span className="text-xs text-gray-500 mx-1">
+                          / {active.total_par}
+                        </span>
+                        <span className={`font-mono font-bold text-sm ${
+                          active.score_to_par < 0
+                            ? 'text-red-400'
+                            : active.score_to_par === 0
+                              ? 'text-green-400'
+                              : 'text-gray-400'
+                        }`}>
+                          {active.score_to_par === 0
+                            ? 'E'
+                            : active.score_to_par > 0
+                              ? `+${active.score_to_par}`
+                              : active.score_to_par
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+
+              {/* Legenda */}
+              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-gray-500">
+                <span><span className="score-eagle inline-block w-5 h-5 text-center leading-5 text-green-400 mr-1">◉</span> Eagle</span>
+                <span><span className="score-birdie inline-block w-5 h-5 text-center leading-5 text-green-400 mr-1">○</span> Birdie</span>
+                <span><span className="text-white mr-1">—</span> Par</span>
+                <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-amber-400 mr-1">□</span> Bogey</span>
+                <span><span className="score-double-bogey inline-block w-5 h-5 text-center leading-5 text-red-400 mr-1">▫</span> Double+</span>
+                <span className="text-gray-600">M = Meters · SI = Stroke Index</span>
+              </div>
+
+              {/* Stats */}
+              {(() => {
+                const birdies = active.holes.filter((h) => h.to_par === -1).length;
+                const bogeys = active.holes.filter((h) => h.to_par === 1).length;
+                const eagles = active.holes.filter((h) => h.to_par !== null && h.to_par <= -2).length;
+                const pars = active.holes.filter((h) => h.to_par === 0).length;
+                return (
+                  <div className="flex flex-wrap gap-4 pt-2 text-xs text-gray-400">
+                    <span>◎ {eagles} Eagles</span>
+                    <span>○ {birdies} Birdies</span>
+                    <span>— {pars} Pars</span>
+                    <span>□ {bogeys} Bogeys</span>
+                    <span>GIR: {active.holes.filter((h) => h.to_par !== null && h.to_par !== undefined && h.to_par <= 0).length}/{active.holes.length}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {!loading && !error && !active && (
+            <div className="text-center py-8 text-gray-500">
+              Geen scores beschikbaar voor deze speler
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

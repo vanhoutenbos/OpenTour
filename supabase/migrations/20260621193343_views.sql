@@ -122,6 +122,3 @@ GROUP BY
   mp.tournament_id,
   mp.player_a_id, tpa.name,
   mp.player_b_id, tpb.name;
-
--- Later: Supabase Realtime activeren voor live updates
--- ALTER PUBLICATION supabase_realtime ADD TABLE scores;
