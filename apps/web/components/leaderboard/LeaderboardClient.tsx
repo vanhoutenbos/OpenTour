@@ -19,7 +19,7 @@ interface FlightInfo {
   name: string;
   start_time: string | null;
   tee_number: number;
-  category_name?: string;
+  category_name?: string | undefined;
   players: {
     id: string;
     name: string;
