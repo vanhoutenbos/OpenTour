@@ -3,7 +3,9 @@
     "nav": {
       "home": "Home",
       "tournaments": "Toernooien",
+      "scorer": "Score invoeren",
       "dashboard": "Dashboard",
+      "profile": "Profiel",
       "login": "Inloggen",
       "logout": "Uitloggen"
     },

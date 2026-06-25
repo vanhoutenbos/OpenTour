@@ -430,7 +430,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const deleteAllFlights = async () => {
     await supabase.from('tournament_players').delete().eq('tournament_id', params.id);
     await supabase.from('flights').delete().eq('tournament_id', params.id);
-    await supabase.from('tournament_categories').delete().eq('tournament_id', params.id);
     await loadData();
   };
 
@@ -711,6 +710,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       status={tournament.status}
                       rounds={tournament.rounds}
                       flightCount={flights.length}
+                      hideExtras
                     />
                     <div className="mt-4 text-center">
                       <Link
@@ -783,6 +783,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   isActive={tournament.status === 'active'}
                   status={tournament.status}
                   rounds={tournament.rounds}
+                  hideExtras
                 />
                 {tournament.status === 'draft' && (
                   <div className="mt-4 text-center">

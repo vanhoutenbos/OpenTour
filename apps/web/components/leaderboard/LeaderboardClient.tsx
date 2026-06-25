@@ -43,6 +43,7 @@ interface Props {
   flights?: FlightInfo[];
   playerCount?: number;
   flightCount?: number;
+  hideExtras?: boolean;
 }
 
 export function LeaderboardClient({
@@ -60,7 +61,9 @@ export function LeaderboardClient({
   flights,
   playerCount,
   flightCount,
+  hideExtras: hideExtrasProp,
 }: Props) {
+  const hideExtras = hideExtrasProp ?? false;
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -163,27 +166,30 @@ export function LeaderboardClient({
 
   return (
     <div className="space-y-0">
-      {/* Sticky header */}
-      <TournamentHeader
-        name={tournamentName}
-        description={tournamentDescription}
-        format={scoringFormat}
-        scoringType={scoringType}
-        status={status}
-        startDate={startDate}
-        endDate={endDate}
-        courseName={courseName}
-        rounds={rounds}
-        selectedRound={selectedRound}
-        onRoundChange={setSelectedRound}
-        playerCount={playerCount ?? entries.length}
-        flightCount={flightCount ?? uniqueFlights.length}
-      />
+      {!hideExtras && (
+        <>
+          <TournamentHeader
+            name={tournamentName}
+            description={tournamentDescription}
+            format={scoringFormat}
+            scoringType={scoringType}
+            status={status}
+            startDate={startDate}
+            endDate={endDate}
+            courseName={courseName}
+            rounds={rounds}
+            selectedRound={selectedRound}
+            onRoundChange={setSelectedRound}
+            playerCount={playerCount ?? entries.length}
+            flightCount={flightCount ?? uniqueFlights.length}
+          />
 
-      {/* Sponsor mid-banner */}
-      <div className="px-4 pt-4">
-        <SponsorBanner position="mid" />
-      </div>
+          {/* Sponsor mid-banner */}
+          <div className="px-4 pt-4">
+            <SponsorBanner position="mid" />
+          </div>
+        </>
+      )}
 
       {/* Subtab navigation */}
       {visibleTabs.length > 1 && (

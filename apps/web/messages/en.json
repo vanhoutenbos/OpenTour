@@ -3,7 +3,9 @@
     "nav": {
       "home": "Home",
       "tournaments": "Tournaments",
+      "scorer": "Enter scores",
       "dashboard": "Dashboard",
+      "profile": "Profile",
       "login": "Log in",
       "logout": "Log out"
     },
