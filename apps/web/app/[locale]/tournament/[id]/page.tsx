@@ -50,6 +50,7 @@ interface PlayerRow {
   name: string;
   handicap: number | null;
   flight_id: string | null;
+  status: string;
   started_on_hole?: number;
 }
 
