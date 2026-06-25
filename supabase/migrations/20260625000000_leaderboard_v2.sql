@@ -197,7 +197,7 @@ WITH hole_results AS (
   SELECT
     mp.id                     AS pairing_id,
     mp.tournament_id,
-    s.round_number,
+    sa.round_number,
     ha.number                 AS hole_number,
     sa.strokes                AS strokes_a,
     sb.strokes                AS strokes_b,
