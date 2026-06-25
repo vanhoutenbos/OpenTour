@@ -1,36 +1,52 @@
-import Link from 'next/link';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { HeroSection } from '@/components/home/HeroSection';
+import { TournamentWidget } from '@/components/home/TournamentWidget';
+import { AboutSection } from '@/components/home/AboutSection';
+import { FeaturesSection } from '@/components/home/FeaturesSection';
+import { StatsSection } from '@/components/home/StatsSection';
+import { DemoSection } from '@/components/home/DemoSection';
+import { FinalCtaSection } from '@/components/home/FinalCtaSection';
+import { HomeFooter } from '@/components/home/HomeFooter';
 
-export default function HomePage() {
+interface Props {
+  params: { locale: string };
+}
+
+async function getIsLoggedIn(): Promise<boolean> {
+  try {
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll(_cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {},
+        },
+      }
+    );
+    const { data } = await supabase.auth.getUser();
+    return !!data.user;
+  } catch {
+    return false;
+  }
+}
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = params;
+  const isLoggedIn = await getIsLoggedIn();
+
   return (
-    <main className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4">
-      <div className="text-center max-w-2xl">
-        <div className="mb-8">
-          <span className="text-6xl">🏌️</span>
-        </div>
-        <h1 className="text-5xl font-bold text-white mb-4">
-          Open<span className="text-green-500">Tour</span>
-        </h1>
-        <p className="text-xl text-gray-400 mb-4">
-          Gratis golf toernooi & live scoring voor clubs, vrienden en laddercompetities.
-        </p>
-        <p className="text-sm text-gray-600 mb-10">
-          Geen account nodig voor toeschouwers · Open source · AGPL-3.0
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/nl/login"
-            className="px-8 py-4 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
-          >
-            Toernooi organiseren →
-          </Link>
-          <Link
-            href="/nl/scorer"
-            className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl transition-colors"
-          >
-            Score invoeren
-          </Link>
-        </div>
-      </div>
+    <main className="min-h-screen bg-gray-950">
+      <HeroSection locale={locale} isLoggedIn={isLoggedIn} />
+      <TournamentWidget locale={locale} />
+      <AboutSection locale={locale} />
+      <FeaturesSection locale={locale} />
+      <StatsSection locale={locale} />
+      <DemoSection locale={locale} />
+      <FinalCtaSection locale={locale} />
+      <HomeFooter locale={locale} />
     </main>
   );
 }

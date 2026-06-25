@@ -52,3 +52,4 @@ test-results/
 *.tsbuildinfo
 package-lock.json
 /data
+/images

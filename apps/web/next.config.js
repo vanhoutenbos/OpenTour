@@ -18,7 +18,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self' https://ygewcjsrpewwhiqgcmyn.supabase.co",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https: https://open-tour-web.vercel.app",
       "font-src 'self'",
       "frame-ancestors 'none'",
     ].join('; '),
@@ -33,6 +33,13 @@ const nextConfig = {
   reactStrictMode: true,
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
+  },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.vercel.app' },
+      { protocol: 'https', hostname: 'github.com' },
+      { protocol: 'https', hostname: '**.githubusercontent.com' },
+    ],
   },
   transpilePackages: ['@opentour/types', '@opentour/supabase', '@opentour/i18n'],
 };
