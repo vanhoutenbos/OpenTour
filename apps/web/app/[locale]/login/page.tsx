@@ -18,13 +18,25 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        router.replace(`/${locale}/dashboard`);
-      } else {
+
+    // Timeout: als Supabase niet binnen 3s antwoordt, toon gewoon de loginpagina
+    const timeout = setTimeout(() => setCheckingAuth(false), 3000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        clearTimeout(timeout);
+        if (session?.user) {
+          router.replace(`/${locale}/dashboard`);
+        } else {
+          setCheckingAuth(false);
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeout);
         setCheckingAuth(false);
-      }
-    });
+      });
+
+    return () => clearTimeout(timeout);
   }, [locale, router]);
 
   if (checkingAuth) {
