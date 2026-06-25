@@ -22,7 +22,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'https://open-tour-web.vercel.app/auth/callback',
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         shouldCreateUser: true,
       },
     });

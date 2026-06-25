@@ -1,16 +1,14 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
-
-const PRODUCTION_URL = 'https://open-tour-web.vercel.app';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash') ?? searchParams.get('token');
   const type = searchParams.get('type');
 
-  console.log('Auth callback ontvangen:', { code: !!code, token_hash: !!token_hash, type });
+  console.log('Auth callback ontvangen:', { code: !!code, token_hash: !!token_hash, type, origin });
 
   const cookieStore = cookies();
   const supabase = createServerClient(
@@ -18,15 +16,26 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options?: CookieOptions) {
+          cookieStore.set(name, value, options ?? { path: '/' });
+        },
+        remove(name: string, options?: CookieOptions) {
+          cookieStore.set(name, '', { ...options, path: '/', maxAge: 0 });
         },
       },
     }
   );
+
+  const makeRedirect = (path: string) => {
+    const response = NextResponse.redirect(`${origin}${path}`);
+    cookieStore.getAll().forEach(cookie => {
+      response.cookies.set(cookie.name, cookie.value, { path: '/' });
+    });
+    return response;
+  };
 
   // PKCE flow
   if (code) {
@@ -39,12 +48,7 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.session) {
       console.log('✅ PKCE succesvol - redirect naar dashboard');
-      const response = NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
-      // Zorg dat cookies naar client worden gestuurd
-      cookieStore.getAll().forEach(cookie => {
-        response.cookies.set(cookie.name, cookie.value, { path: '/' });
-      });
-      return response;
+      return makeRedirect('/nl/dashboard');
     }
   }
 
@@ -65,12 +69,7 @@ export async function GET(request: NextRequest) {
     
     if (!error && data?.session) {
       console.log('✅ OTP succesvol - redirect naar dashboard');
-      const response = NextResponse.redirect(`${PRODUCTION_URL}/nl/dashboard`);
-      // Zorg dat cookies naar client worden gestuurd
-      cookieStore.getAll().forEach(cookie => {
-        response.cookies.set(cookie.name, cookie.value, { path: '/' });
-      });
-      return response;
+      return makeRedirect('/nl/dashboard');
     }
     
     if (error) {
@@ -79,5 +78,5 @@ export async function GET(request: NextRequest) {
   }
 
   console.log('Auth callback mislukt — redirect naar login');
-  return NextResponse.redirect(`${PRODUCTION_URL}/nl/login?error=auth`);
+  return NextResponse.redirect(`${origin}/nl/login?error=auth`);
 }

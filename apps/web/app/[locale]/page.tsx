@@ -21,8 +21,11 @@ async function getIsLoggedIn(): Promise<boolean> {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() { return cookieStore.getAll(); },
-          setAll(_cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {},
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(_name: string, _value: string, _options?: CookieOptions) {},
+          remove(_name: string, _options?: CookieOptions) {},
         },
       }
     );
