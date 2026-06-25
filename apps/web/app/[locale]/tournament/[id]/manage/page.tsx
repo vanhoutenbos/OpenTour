@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import ScoreGrid from '@/components/score-grid/ScoreGrid';
 
 interface Tournament {
   id: string;
@@ -42,6 +43,13 @@ interface Player {
   status: string;
   flight_id: string | null;
   category_id: string | null;
+}
+
+interface Hole {
+  id: string;
+  number: number;
+  par: 3 | 4 | 5;
+  stroke_index: number;
 }
 
 interface AccessCode {
@@ -83,7 +91,7 @@ interface Flight {
   max_players: number;
 }
 
-type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'codes';
+type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'corrections' | 'codes';
 
 function InputField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
@@ -110,6 +118,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   const [tees, setTees] = useState<Tee[]>([]);
   const [categories, setCategories] = useState<TournamentCategory[]>([]);
   const [flights, setFlights] = useState<Flight[]>([]);
+  const [holes, setHoles] = useState<Hole[]>([]);
+  const [selectedFlightId, setSelectedFlightId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [pauseReason, setPauseReason] = useState('');
@@ -228,12 +238,12 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     setFlights((f as Flight[]) ?? []);
 
     if (t.course_id) {
-      const { data: teeData } = await supabase
-        .from('tees')
-        .select('id, name, color')
-        .eq('course_id', t.course_id)
-        .order('name');
-      setTees((teeData as Tee[]) ?? []);
+      const [teeData, holeData] = await Promise.all([
+        supabase.from('tees').select('id, name, color').eq('course_id', t.course_id).order('name'),
+        supabase.from('holes').select('id, number, par, stroke_index').eq('course_id', t.course_id).order('number'),
+      ]);
+      setTees((teeData.data as Tee[]) ?? []);
+      setHoles((holeData.data as Hole[]) ?? []);
     }
 
     setLoading(false);
@@ -270,7 +280,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   // ---- Add player ----
   const addPlayer = async () => {
     if (!playerForm.name.trim()) return;
-    await supabase.from('tournament_players').insert({
+    const { data: inserted } = await supabase.from('tournament_players').insert({
       tournament_id: params.id,
       name: playerForm.name.trim(),
       handicap: playerForm.handicap ? parseFloat(playerForm.handicap) : null,
@@ -290,7 +300,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       phone: playerForm.phone || null,
       ngf_number: playerForm.ngfNumber || null,
       status: 'registered',
-    });
+    }).select('id, handicap, gender');
+
+    if (inserted && inserted.length > 0) {
+      const pl = inserted[0]!;
+      await supabase.rpc('assign_player_category', {
+        p_player_id: pl.id,
+        p_handicap: pl.handicap ?? 0,
+        p_gender: pl.gender ?? 'mixed',
+      });
+    }
+
     setPlayerForm({
       name: '', handicap: '', gender: '',
       initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
@@ -354,6 +374,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     if (!flightForm.start_time) return;
     setFlightGenerating(true);
     setFlightError(null);
+
+    // Assign unassigned players to matching categories before generating flights
+    const unassigned = players.filter(p => !p.category_id);
+    for (const pl of unassigned) {
+      await supabase.rpc('assign_player_category', {
+        p_player_id: pl.id,
+        p_handicap: pl.handicap ?? 0,
+        p_gender: pl.gender ?? 'mixed',
+      });
+    }
+
     const { error } = await supabase.rpc('generate_flights', {
       p_tournament_id: params.id,
       p_start_time: new Date(flightForm.start_time).toISOString(),
@@ -447,6 +478,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     { key: 'players', label: `Spelers (${players.length})` },
     { key: 'categories', label: `Categorieën (${categories.length})` },
     { key: 'flights', label: `Flights (${flights.length})` },
+    { key: 'corrections', label: 'Scorecorrecties' },
     { key: 'codes', label: 'Toegangscodes' },
   ];
 
@@ -1076,6 +1108,62 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                       );
                     })}
                   </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: Scorecorrecties ===== */}
+        {activeTab === 'corrections' && (
+          <div className="space-y-4">
+            {holes.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+                <span className="text-5xl">🏌️</span>
+                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Geen holes gevonden</h3>
+                <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                  Koppel eerst een baan aan het toernooi via het tabblad Bewerken.
+                </p>
+              </div>
+            ) : flights.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+                <span className="text-5xl">🗂️</span>
+                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Nog geen flights</h3>
+                <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                  Genereer eerst flights via het tabblad Flights.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                  <label className="block text-sm text-gray-400 mb-2">Selecteer flight</label>
+                  <select
+                    value={selectedFlightId}
+                    onChange={e => setSelectedFlightId(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                  >
+                    <option value="">-- Kies een flight --</option>
+                    {flights.map(f => {
+                      const catName = categories.find(c => c.id === f.category_id)?.name;
+                      const playerCount = players.filter(p => p.flight_id === f.id).length;
+                      return (
+                        <option key={f.id} value={f.id}>
+                          {f.name} ({playerCount} spelers{catName ? ` · ${catName}` : ''})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {selectedFlightId && (
+                  <ScoreGrid
+                    tournamentId={params.id}
+                    players={players.filter(p => p.flight_id === selectedFlightId) as any}
+                    holes={holes}
+                    tournamentFormat={tournament.format as 'stroke' | 'stableford' | 'match'}
+                    scoringType={tournament.scoring_type as 'gross' | 'net'}
+                    tournamentRounds={tournament.rounds}
+                  />
                 )}
               </>
             )}

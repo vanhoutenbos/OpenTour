@@ -933,6 +933,12 @@ Als het platform eenmaal bewezen heeft waardevol te zijn, ontstaat er vanzelf vr
 - Premium-inkomsten zijn bedoeld om de beheerde dienst te bekostigen, niet als primaire winstmotor.
 - Als premium niet werkt: het project draait door met de gratis kern en community-bijdragen.
 
+### 12.5 Gratis tier: enkele gebruikers vs. Vereniging
+
+- **Enkele gebruiker (gratis):** 1 organisator met 1 account mag altijd gratis onbeperkt wedstrijden aanmaken en toernooien organiseren. Geen limiet op aantal toernooien, spelers of leaderboard-weergave.
+- **Vereniging (betaald, later):** Voor organisaties die meerdere organisator-accounts of beheerders nodig hebben. Wat dit precies inhoudt (aantal accounts, extra functionaliteiten, prijs) wordt later bepaald.
+- Self-hosting valt buiten deze indeling: self-hosters hebben altijd alle functionaliteit, ongeacht of ze 'enkele gebruiker' of 'vereniging' zijn.
+
 ---
 
 ## 13. Open vragen en beslissingen
