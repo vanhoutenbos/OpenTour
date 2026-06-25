@@ -26,6 +26,8 @@ interface ScoreGridProps {
   tournamentFormat: 'stroke' | 'stableford' | 'match';
   scoringType: 'gross' | 'net';
   tournamentRounds?: number;
+  highlightedHole?: number | null;
+  currentRound?: number;
 }
 
 export default function ScoreGrid({
@@ -35,6 +37,8 @@ export default function ScoreGrid({
   tournamentFormat,
   scoringType,
   tournamentRounds = 1,
+  highlightedHole,
+  currentRound = 1,
 }: ScoreGridProps) {
   const [scores, setScores] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -79,7 +83,7 @@ export default function ScoreGrid({
         .from('scores')
         .select('player_id, hole_id, strokes')
         .eq('tournament_id', tournamentId)
-        .eq('round_number', 1);
+        .eq('round_number', currentRound);
 
       const scoresMap = new Map<string, number>();
 
@@ -127,7 +131,6 @@ export default function ScoreGrid({
     try {
       setIsSaving(true);
 
-      // Eerst proberen direct naar Supabase te schrijven
       const { data: userData } = await supabase.auth.getUser();
       const recordedBy = userData.user?.id;
       const scoreInserts = [];
@@ -140,7 +143,7 @@ export default function ScoreGrid({
           tournament_id: tournamentId,
           player_id: playerId,
           hole_id: holeId,
-          round_number: 1,
+          round_number: currentRound,
           strokes,
           recorded_by: recordedBy,
           is_verified: false,
@@ -157,7 +160,6 @@ export default function ScoreGrid({
         throw error;
       }
     } catch {
-      // Fallback: lokaal opslaan voor latere sync
       for (const [key, strokes] of Object.entries(changes)) {
         const parts = key.split('-');
         if (parts.length < 2) continue;
@@ -166,7 +168,7 @@ export default function ScoreGrid({
           tournament_id: tournamentId,
           player_id: playerId,
           hole_id: holeId,
-          round_number: 1,
+          round_number: currentRound,
           strokes,
           updated_at: new Date().toISOString(),
         });
@@ -224,7 +226,7 @@ export default function ScoreGrid({
         <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white">Score in Excel-stijl</h3>
           <p className="text-sm text-gray-400 mt-1">
-            {sortedPlayers.length} spelers × {sortedHoles.length} holes ronde 1
+            {sortedPlayers.length} spelers × {sortedHoles.length} holes ronde {currentRound}
             {lastSaved && ` • Laatst opgeslagen: ${lastSaved.toLocaleTimeString('nl-NL')}`}
             {isSaving && ' • Bezig met opslaan...'}
           </p>
@@ -240,7 +242,12 @@ export default function ScoreGrid({
                 {sortedHoles.map((hole) => (
                   <th
                     key={hole.id}
-                    className="px-3 py-3 text-center text-sm font-medium text-gray-300"
+                    id={`hole-col-${hole.number}`}
+                    className={`px-3 py-3 text-center text-sm font-medium transition-colors ${
+                      highlightedHole === hole.number
+                        ? 'text-green-300 bg-green-900/20'
+                        : 'text-gray-300'
+                    }`}
                   >
                     <div>Hole {hole.number}</div>
                     <div className="text-xs text-gray-500">Par {hole.par}</div>
@@ -278,7 +285,12 @@ export default function ScoreGrid({
                     }
 
                     return (
-                      <td key={hole.id} className="px-2 py-2 text-center">
+                      <td
+                        key={hole.id}
+                        className={`px-2 py-2 text-center transition-colors ${
+                          highlightedHole === hole.number ? 'bg-green-900/10' : ''
+                        }`}
+                      >
                         <input
                           type="number"
                           min="1"

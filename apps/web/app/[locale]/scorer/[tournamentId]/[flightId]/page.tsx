@@ -6,10 +6,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import ScoreGrid from '@/components/score-grid/ScoreGrid';
+import { HoleNavigator } from '@/components/scorer/HoleNavigator';
 import { SyncStatusBar } from '@/components/scorer/SyncStatusBar';
-import { ScoringModeSelector } from '@/components/scorer/ScoringModeSelector';
-import { HoleByHoleView } from '@/components/scorer/HoleByHoleView';
-import { HolePerFlightView } from '@/components/scorer/HolePerFlightView';
 import {
   getPendingScores,
   markScoreSynced,
@@ -38,6 +36,14 @@ interface TournamentInfo {
   rounds: number;
 }
 
+interface ScoreRow {
+  player_id: string;
+  hole_id: string;
+  is_verified: boolean;
+}
+
+type HoleStatus = 'empty' | 'filled' | 'verified';
+
 export default function FlightScorePage() {
   const t = useTranslations('scorer');
   const params = useParams();
@@ -49,6 +55,7 @@ export default function FlightScorePage() {
   const [tournament, setTournament] = useState<TournamentInfo | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [holes, setHoles] = useState<Hole[]>([]);
+  const [scores, setScores] = useState<ScoreRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error'>('synced');
@@ -56,7 +63,7 @@ export default function FlightScorePage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [scoringMode, setScoringMode] = useState<'follow' | 'holes_per_flight' | null>(null);
+  const [selectedHole, setSelectedHole] = useState<number | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -108,6 +115,19 @@ export default function FlightScorePage() {
           if (holeRows) {
             setHoles(holeRows as Hole[]);
           }
+        }
+
+        const playerIds = (playersRes.data ?? []).map((p: Player) => p.id);
+
+        if (playerIds.length > 0) {
+          const { data: scoreRows } = await supabase
+            .from('scores')
+            .select('player_id, hole_id, is_verified')
+            .eq('tournament_id', tournamentId)
+            .eq('round_number', 1)
+            .in('player_id', playerIds);
+
+          setScores(scoreRows ?? []);
         }
 
         setPlayers(playersRes.data ?? []);
@@ -206,6 +226,38 @@ export default function FlightScorePage() {
     };
   }, [online]);
 
+  const handleHoleSelect = useCallback((holeNumber: number) => {
+    setSelectedHole((prev) => (prev === holeNumber ? null : holeNumber));
+  }, []);
+
+  useEffect(() => {
+    if (selectedHole === null) return;
+    const el = document.getElementById(`hole-col-${selectedHole}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [selectedHole]);
+
+  const computeHoleStatus = useCallback((): Record<number, HoleStatus> => {
+    const status: Record<number, HoleStatus> = {};
+
+    for (const hole of holes) {
+      const holeScores = scores.filter((s) => s.hole_id === hole.id);
+
+      if (holeScores.length === 0) {
+        status[hole.number] = 'empty';
+      } else if (holeScores.every((s) => s.is_verified)) {
+        status[hole.number] = 'verified';
+      } else {
+        status[hole.number] = 'filled';
+      }
+    }
+
+    return status;
+  }, [holes, scores]);
+
+  const holeStatus = computeHoleStatus();
+
   const handleSubmitFinal = useCallback(async () => {
     setSubmitting(true);
     try {
@@ -268,14 +320,6 @@ export default function FlightScorePage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {scoringMode && (
-              <button
-                onClick={() => setScoringMode(null)}
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                {t('mode.follow_flight')} / {t('mode.holes_per_flight')}
-              </button>
-            )}
             <Link
               href={`/${locale}/scorer/${tournamentId}`}
               className="text-sm text-gray-500 hover:text-gray-300"
@@ -287,32 +331,34 @@ export default function FlightScorePage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-        {scoringMode === null && (
-          <ScoringModeSelector onSelect={setScoringMode} />
-        )}
-
-        {scoringMode === 'follow' && (
-          <HoleByHoleView
-            tournamentId={tournamentId}
-            players={players}
+        {holes.length > 0 && (
+          <HoleNavigator
             holes={holes}
-            tournament={tournament}
-            locale={locale}
-            onComplete={() => setShowConfirm(true)}
-            onBack={() => setScoringMode(null)}
+            holeStatus={holeStatus}
+            selectedHole={selectedHole}
+            onHoleSelect={handleHoleSelect}
           />
         )}
 
-        {scoringMode === 'holes_per_flight' && (
-          <HolePerFlightView
-            tournamentId={tournamentId}
-            players={players}
-            holes={holes}
-            tournamentFormat={tournament.format}
-            scoringType={tournament.scoring_type}
-            onBack={() => router.push(`/${locale}/scorer/${tournamentId}`)}
-          />
-        )}
+        <ScoreGrid
+          tournamentId={tournamentId}
+          players={players}
+          holes={holes}
+          tournamentFormat={tournament.format}
+          scoringType={tournament.scoring_type}
+          tournamentRounds={tournament.rounds}
+          highlightedHole={selectedHole}
+        />
+
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowConfirm(true)}
+            className="px-8 py-4 bg-green-700 hover:bg-green-600 text-white font-semibold
+                       text-lg rounded-xl transition-colors min-h-[48px]"
+          >
+            {t('submit_final')}
+          </button>
+        </div>
       </div>
 
       {showConfirm && (
