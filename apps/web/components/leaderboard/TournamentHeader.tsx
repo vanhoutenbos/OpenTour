@@ -7,13 +7,13 @@ import { LiveBadge } from './LiveBadge';
 
 interface Props {
   name: string;
-  description?: string | null;
+  description?: string | null | undefined;
   format: string;
   scoringType: string;
   status: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  courseName?: string;
+  startDate?: string | null | undefined;
+  endDate?: string | null | undefined;
+  courseName?: string | null | undefined;
   rounds: number;
   selectedRound: number | null;
   onRoundChange: (round: number | null) => void;

@@ -2,16 +2,16 @@
 
 interface Props {
   name: string;
-  description?: string | null;
+  description?: string | null | undefined;
   format: string;
   scoringType: string;
   status: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  courseName?: string;
+  startDate?: string | null | undefined;
+  endDate?: string | null | undefined;
+  courseName?: string | null | undefined;
   rounds: number;
-  playerCount?: number;
-  flightCount?: number;
+  playerCount?: number | undefined;
+  flightCount?: number | undefined;
   onClose: () => void;
 }
 

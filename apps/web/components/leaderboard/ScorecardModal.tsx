@@ -8,7 +8,7 @@ interface Props {
   playerId: string;
   playerName: string;
   tournamentId: string;
-  handicap?: number;
+  handicap?: number | undefined;
   roundsInTournament: number;
   onClose: () => void;
 }
@@ -37,7 +37,7 @@ function groupHolesByRound(holes: PlayerHoleScore[]): PlayerRoundDetail[] {
 }
 
 function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
-  strokes?: number;
+  strokes?: number | undefined;
   par: number;
   isBirdie: boolean;
   isBogey: boolean;
@@ -87,7 +87,7 @@ export function ScorecardModal({
         const grouped = groupHolesByRound(data);
         setRounds(grouped);
         if (grouped.length > 0) {
-          setSelectedRound(grouped[grouped.length - 1].round_number);
+          setSelectedRound(grouped[grouped.length - 1]!.round_number);
         }
         setLoading(false);
       })
@@ -226,7 +226,7 @@ export function ScorecardModal({
                             par={h.par}
                             isBirdie={h.to_par === -1}
                             isBogey={h.to_par === 1}
-                            isEagle={h.to_par !== null && h.to_par <= -2}
+                            isEagle={h.to_par != null && h.to_par <= -2}
                           />
                         ))}
                         <tr className="border-t border-gray-700">
@@ -271,7 +271,7 @@ export function ScorecardModal({
                             par={h.par}
                             isBirdie={h.to_par === -1}
                             isBogey={h.to_par === 1}
-                            isEagle={h.to_par !== null && h.to_par <= -2}
+                            isEagle={h.to_par != null && h.to_par <= -2}
                           />
                         ))}
                         <tr className="border-t border-gray-700">
@@ -332,7 +332,7 @@ export function ScorecardModal({
               {(() => {
                 const birdies = active.holes.filter((h) => h.to_par === -1).length;
                 const bogeys = active.holes.filter((h) => h.to_par === 1).length;
-                const eagles = active.holes.filter((h) => h.to_par !== null && h.to_par <= -2).length;
+                const eagles = active.holes.filter((h) => h.to_par != null && h.to_par <= -2).length;
                 const pars = active.holes.filter((h) => h.to_par === 0).length;
                 return (
                   <div className="flex flex-wrap gap-4 pt-2 text-xs text-gray-400">

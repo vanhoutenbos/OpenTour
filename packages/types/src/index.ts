@@ -189,6 +189,7 @@ export interface LeaderboardEntry {
 }
 
 export interface PlayerHoleScore {
+  round_number: number;
   hole_number: number;
   par: number;
   distance_meters?: number;
