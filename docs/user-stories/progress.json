@@ -1,0 +1,140 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anomalyco/opencode/main/docs/user-stories/progress-schema.json",
+  "description": "Status tracking voor alle OpenTour user stories. Werk bij na implementatie.",
+  "last_updated": "2026-06-24",
+  "stories": {
+    "01-vision-and-scope.md": {
+      "epic": "Visie en scope",
+      "stories": {
+        "VS-01": { "title": "Product open source beschikbaar", "fase": "MVP", "status": "done", "notes": "Repository publiek op GitHub, AGPL-3.0 LICENSE" },
+        "VS-02": { "title": "Data altijd exporteerbaar", "fase": "MVP", "status": "in_progress", "notes": "REST API endpoint voor JSON-export bestaat, UI-exportknop nog niet" },
+        "VS-03": { "title": "Privacy-by-default", "fase": "MVP", "status": "done", "notes": "Geen tracking, geen cookies, anoniem leaderboard" },
+        "VS-04": { "title": "Geen ledenbeheer", "fase": "MVP", "status": "done", "notes": "Core principe, spelers bestaan alleen per toernooi" },
+        "VS-05": { "title": "Nederlands als standaardtaal", "fase": "MVP", "status": "done", "notes": "next-intl setup, NL + EN messages" },
+        "VS-06": { "title": "Offline-first architectuur", "fase": "MVP", "status": "in_progress", "notes": "Dexie.js opslag en sync-status werken, service worker registratie moet nog" },
+        "VS-07": { "title": "Responsive leaderboard", "fase": "MVP", "status": "done", "notes": "Leaderboard werkt op telefoon, tablet, TV" },
+        "VS-08": { "title": "Engels als tweede taal (i18n)", "fase": "Later", "status": "todo" },
+        "VS-09": { "title": "OpenTour unique selling points vs concurrentie", "fase": "MVP", "status": "done", "notes": "Gedocumenteerd in user story, README moet nog" }
+      }
+    },
+    "02-organizer-flow.md": {
+      "epic": "Organisator — toernooibeheer",
+      "stories": {
+        "ORG-01": { "title": "Toernooi aanmaken", "fase": "MVP", "status": "done", "notes": "4-stappen wizard in /tournament/new" },
+        "ORG-02": { "title": "Spelers toevoegen (handmatig)", "fase": "MVP", "status": "done", "notes": "Players tab op manage pagina" },
+        "ORG-03": { "title": "Flights automatisch genereren", "fase": "MVP", "status": "done", "notes": "generate_flights RPC + Flights tab" },
+        "ORG-04": { "title": "Starttijden per flight instellen", "fase": "MVP", "status": "done", "notes": "start_time op flights, in te stellen via manage" },
+        "ORG-05": { "title": "Toernooistatus wijzigen", "fase": "MVP", "status": "done", "notes": "draft/active/paused/finished in manage" },
+        "ORG-06": { "title": "Toernooi pauzeren met reden", "fase": "MVP", "status": "done", "notes": "pause_reason + PauseBanner component" },
+        "ORG-07": { "title": "Speler markeren als DNS, DNF of DSQ", "fase": "MVP", "status": "done", "notes": "Status field via PlayerStatusDropdown" },
+        "ORG-08": { "title": "Scorecorrecties uitvoeren", "fase": "MVP", "status": "todo", "notes": "Organisator kan scores bekijken maar correctie-UI ontbreekt" },
+        "ORG-09": { "title": "Toegangscodes genereren", "fase": "MVP", "status": "done", "notes": "generate_access_code RPC + codes tab" },
+        "ORG-10": { "title": "Spelers importeren via CSV", "fase": "Later", "status": "todo" },
+        "ORG-11": { "title": "Flights handmatig aanpassen", "fase": "MVP", "status": "done", "notes": "Flights tab met overzicht en aanpassen" },
+        "ORG-12": { "title": "Einduitslag bekijken", "fase": "MVP", "status": "done", "notes": "Leaderboard archive via /tournament/[id]" },
+        "ORG-13": { "title": "Meerdere rondes instellen", "fase": "Later", "status": "todo" },
+        "ORG-14": { "title": "Spelerslijst filteren en doorzoeken", "fase": "Later", "status": "todo" },
+        "ORG-15": { "title": "Toernooi-sjablonen", "fase": "Later", "status": "todo" },
+        "ORG-16": { "title": "Notificaties (e-mail, SMS, push)", "fase": "Later", "status": "todo" },
+        "ORG-17": { "title": "Seizoensranglijsten en clubstatistieken", "fase": "Later", "status": "todo" },
+        "ORG-18": { "title": "Online betaling via iDeal", "fase": "Later", "status": "todo" },
+        "ORG-19": { "title": "Extra spelvormen", "fase": "Later", "status": "todo" },
+        "ORG-20": { "title": "Koppeling baanbezetting (Teecontrol)", "fase": "Later", "status": "todo" }
+      }
+    },
+    "03-scorer-flow.md": {
+      "epic": "Scorer — score invoeren",
+      "stories": {
+        "SCR-01": { "title": "Inloggen via toegangscode", "fase": "MVP", "status": "done", "notes": "scorer/page.tsx met validate-code API" },
+        "SCR-02": { "title": "Flight kiezen", "fase": "MVP", "status": "done", "notes": "scorer/[tournamentId]/page.tsx" },
+        "SCR-03": { "title": "Score per hole invoeren", "fase": "MVP", "status": "done", "notes": "ScoreGrid component" },
+        "SCR-04": { "title": "Offline scores opslaan", "fase": "MVP", "status": "done", "notes": "offline-db.ts met Dexie.js" },
+        "SCR-05": { "title": "Synchronisatiestatus zien", "fase": "MVP", "status": "done", "notes": "SyncStatusBar component" },
+        "SCR-06": { "title": "Automatische synchronisatie", "fase": "MVP", "status": "done", "notes": "upsert_score_if_newer + offline-db.ts" },
+        "SCR-07": { "title": "Terug naar vorige hole om te corrigeren", "fase": "MVP", "status": "todo", "notes": "ScoreGrid overlay view, dedicated UX ontbreekt" },
+        "SCR-08": { "title": "Auto-advance naar volgende hole", "fase": "MVP", "status": "in_progress", "notes": "ScoreGrid heeft grid-navigatie, auto-advance per hole moet nog" },
+        "SCR-09": { "title": "Holes-per-flight modus", "fase": "MVP", "status": "todo", "notes": "Wedstrijdcommissie-modus: per hole alle spelers scoren" },
+        "SCR-10": { "title": "Bevestigingsstap definitief indienen", "fase": "MVP", "status": "done", "notes": "scorer/[id]/[flightId] met confirm-dialog" },
+        "SCR-11": { "title": "Waarschuwing bij hoge score", "fase": "MVP", "status": "done", "notes": "ScoreInput met high-score check" },
+        "SCR-12": { "title": "Overzichtsscherm alle holes", "fase": "Later", "status": "todo" },
+        "SCR-13": { "title": "Meerdere spelers in flight tegelijk", "fase": "Later", "status": "todo" },
+        "SCR-14": { "title": "Eigen positie op leaderboard", "fase": "Later", "status": "todo" },
+        "SCR-15": { "title": "Pushmeldingen", "fase": "Later", "status": "todo" },
+        "SCR-16": { "title": "Persoonlijke statistieken", "fase": "Later", "status": "todo" },
+        "SCR-17": { "title": "Smartwatch-ondersteuning", "fase": "Later", "status": "todo" },
+        "SCR-18": { "title": "QR-code scannen voor toegang", "fase": "Later", "status": "todo" }
+      }
+    },
+    "04-spectator-leaderboard.md": {
+      "epic": "Toeschouwer — leaderboard",
+      "stories": {
+        "SPE-01": { "title": "Leaderboard zonder account", "fase": "MVP", "status": "done", "notes": "Publieke route /tournament/[id]" },
+        "SPE-02": { "title": "Deelbare link", "fase": "MVP", "status": "done", "notes": "Stabiele URL /tournament/[id]" },
+        "SPE-03": { "title": "Auto updaten (polling)", "fase": "MVP", "status": "done", "notes": "LeaderboardClient met 30s polling" },
+        "SPE-04": { "title": "Positie, naam, score, holes", "fase": "MVP", "status": "done", "notes": "LeaderboardTable" },
+        "SPE-05": { "title": "Status badges (DNS/DNF/DSQ)", "fase": "MVP", "status": "done", "notes": "LeaderboardTable met badges" },
+        "SPE-06": { "title": "Pauzebanner", "fase": "MVP", "status": "done", "notes": "PauseBanner component" },
+        "SPE-07": { "title": "Archief na afloop", "fase": "MVP", "status": "done", "notes": "Leaderboard blijft bereikbaar na finish" },
+        "SPE-08": { "title": "Kiosk-modus", "fase": "Later", "status": "todo" },
+        "SPE-09": { "title": "QR-code generatie", "fase": "Later", "status": "todo" },
+        "SPE-10": { "title": "Flight-filter", "fase": "Later", "status": "todo" },
+        "SPE-11": { "title": "Realtime via WebSockets", "fase": "Later", "status": "todo" },
+        "SPE-12": { "title": "LIVE indicator", "fase": "MVP", "status": "done", "notes": "LiveBadge component" },
+        "SPE-13": { "title": "Matchplay leaderboard view", "fase": "Later", "status": "todo" },
+        "SPE-14": { "title": "Speler volgen met notificaties", "fase": "Later", "status": "todo" },
+        "SPE-15": { "title": "Sociale functies", "fase": "Later", "status": "todo" }
+      }
+    },
+    "05-authentication-and-access.md": {
+      "epic": "Authenticatie en toegang",
+      "stories": {
+        "AUTH-01": { "title": "Magic link login", "fase": "MVP", "status": "done", "notes": "Supabase OTP, login page" },
+        "AUTH-02": { "title": "Recorder toegangscode", "fase": "MVP", "status": "done", "notes": "/api/validate-code + scorer page" },
+        "AUTH-03": { "title": "Google OAuth", "fase": "MVP", "status": "todo", "notes": "Nog niet geïmplementeerd" },
+        "AUTH-04": { "title": "Code deactiveren", "fase": "MVP", "status": "done", "notes": "is_active toggle op access codes" },
+        "AUTH-05": { "title": "Organisator-dashboard", "fase": "MVP", "status": "done", "notes": "Dashboard toont toernooien met status" },
+        "AUTH-06": { "title": "Recorder permanent account", "fase": "Later", "status": "todo" },
+        "AUTH-07": { "title": "Meerdere organisatoren", "fase": "Later", "status": "todo" },
+        "AUTH-08": { "title": "Uitloggen en sessiebeheer", "fase": "MVP", "status": "done", "notes": "Sessie cookie + auth callback" }
+      }
+    },
+    "06-privacy-and-exports.md": {
+      "epic": "Privacy, AVG en exports",
+      "stories": {
+        "PRI-01": { "title": "Minimale dataverzameling", "fase": "MVP", "status": "done", "notes": "Alleen naam + optionele handicap" },
+        "PRI-02": { "title": "Naam zichtbaarheid beheren", "fase": "MVP", "status": "done", "notes": "Naam op leaderboard, geen adres/email" },
+        "PRI-03": { "title": "Spelergegevens anonimiseren", "fase": "MVP", "status": "todo", "notes": "Anonymize UI ontbreekt nog" },
+        "PRI-04": { "title": "Account verwijderen", "fase": "Later", "status": "todo" },
+        "PRI-05": { "title": "CSV export", "fase": "Later", "status": "todo" },
+        "PRI-06": { "title": "Privacyverklaring", "fase": "MVP", "status": "done", "notes": "Verwijzing op site" },
+        "PRI-07": { "title": "JSON export via REST API", "fase": "MVP", "status": "in_progress", "notes": "Leaderboard data beschikbaar, export-endpoint moet nog" },
+        "PRI-08": { "title": "Bewaartermijn instellen", "fase": "Later", "status": "todo" },
+        "PRI-09": { "title": "Cookie-toestemming", "fase": "Later", "status": "todo" }
+      }
+    },
+    "07-course-database.md": {
+      "epic": "Baandatabase en open data",
+      "stories": {
+        "CRS-01": { "title": "Handmatig baan aanmaken", "fase": "MVP", "status": "done", "notes": "courses tabel + formulier" },
+        "CRS-02": { "title": "Bestaande baan kiezen", "fase": "MVP", "status": "done", "notes": "Course selector in wizard" },
+        "CRS-03": { "title": "eGolf4u banen importeren", "fase": "MVP", "status": "done", "notes": "import-egolf4u.ts script + data/" },
+        "CRS-04": { "title": "Baan bewerken", "fase": "MVP", "status": "done", "notes": "Edit tab in manage" },
+        "CRS-05": { "title": "Baan delen", "fase": "Later", "status": "todo" },
+        "CRS-06": { "title": "Banen exporteren als open data", "fase": "Later", "status": "todo" },
+        "CRS-07": { "title": "Baandatabase buitenland", "fase": "Later", "status": "todo" }
+      }
+    },
+    "08-premium-and-future.md": {
+      "epic": "Premium en toekomst",
+      "stories": {
+        "PRM-01": { "title": "White-label leaderboard", "fase": "Premium", "status": "todo" },
+        "PRM-02": { "title": "Uitgebreide exports", "fase": "Premium", "status": "todo" },
+        "PRM-03": { "title": "Sponsorblokken", "fase": "Premium", "status": "todo" },
+        "PRM-04": { "title": "Eigen domein", "fase": "Premium", "status": "todo" },
+        "PRM-05": { "title": "Extra analytics", "fase": "Premium", "status": "todo" },
+        "PRM-06": { "title": "Beheerde hosting", "fase": "Premium", "status": "todo" },
+        "PRM-07": { "title": "Prioriteitsondersteuning", "fase": "Premium", "status": "todo" }
+      }
+    }
+  }
+}

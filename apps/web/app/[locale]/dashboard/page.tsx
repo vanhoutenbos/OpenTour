@@ -18,32 +18,67 @@ export default function DashboardPage() {
   const router = useRouter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ email: string | undefined } | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
+    let listenerTriggered = false;
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        router.replace('/nl/login');
-        return;
-      }
-      setUser({ email: data.user.email });
-
-      // Toernooien ophalen
-      supabase
+    const loadDashboard = async (userId: string, email: string | undefined) => {
+      console.log('[Dashboard] Loading tournaments for user:', userId);
+      setUser({ email });
+      const { data: rows } = await supabase
         .from('tournaments')
         .select('id, name, status, format, start_date, created_at')
-        .eq('created_by', data.user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data: rows }) => {
-          setTournaments((rows as Tournament[]) ?? []);
-          setLoading(false);
-        });
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+      setTournaments((rows as Tournament[]) ?? []);
+      setLoading(false);
+    };
+
+    // Luister op auth state changes - vangt ook sessie op die net via cookie binnenkwam
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Dashboard] Auth state change:', { event, hasSession: !!session });
+      listenerTriggered = true;
+      
+      if (session?.user) {
+        console.log('[Dashboard] ✅ Session gevonden via listener');
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION' && !session) {
+        console.log('[Dashboard] ❌ No session - redirect naar login');
+        router.replace('/nl/login');
+      }
     });
+
+    // Check ook direct de huidige sessie
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Dashboard] Direct getSession check:', { hasSession: !!session, listenerTriggered });
+      
+      if (session?.user) {
+        console.log('[Dashboard] ✅ Session gevonden via getSession');
+        if (!listenerTriggered) {
+          loadDashboard(session.user.id, session.user.email ?? undefined);
+        }
+      } else if (!listenerTriggered) {
+        // Geen sessie gevonden - wacht op listener (max 3 seconden)
+        console.log('[Dashboard] ⏳ Wacht op auth state listener...');
+        const timeout = setTimeout(() => {
+          if (!listenerTriggered) {
+            console.log('[Dashboard] ❌ Timeout - nog steeds geen sessie');
+            setLoading(false);
+            router.replace('/nl/login');
+          }
+        }, 3000);
+        
+        return () => clearTimeout(timeout);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleLogout = async () => {
+    console.log('[Dashboard] User logout clicked');
     await getSupabaseBrowser().auth.signOut();
     router.replace('/nl/login');
   };
@@ -65,7 +100,6 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-bold text-white">
@@ -84,7 +118,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Acties */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
           <Link
@@ -96,7 +129,6 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Toernooilijst */}
         {tournaments.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
             <span className="text-5xl">🏌️</span>

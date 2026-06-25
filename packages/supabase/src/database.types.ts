@@ -72,6 +72,18 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['tournaments']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['tournaments']['Insert']>;
       };
+      tees: {
+        Row: {
+          id: string;
+          course_id: string;
+          external_id: string;
+          name: string | null;
+          color: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tees']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['tees']['Insert']>;
+      };
       flights: {
         Row: {
           id: string;
@@ -79,20 +91,41 @@ export interface Database {
           name: string;
           start_time: string | null;
           tee_number: number;
+          tee_id: string | null;
+          category_id: string | null;
+          max_players: number;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['flights']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['flights']['Insert']>;
+      };
+      tournament_categories: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          name: string;
+          description: string | null;
+          gender: 'male' | 'female' | 'mixed' | null;
+          handicap_min: number | null;
+          handicap_max: number | null;
+          tee_id: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tournament_categories']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['tournament_categories']['Insert']>;
       };
       tournament_players: {
         Row: {
           id: string;
           tournament_id: string;
           flight_id: string | null;
+          category_id: string | null;
           profile_id: string | null;
           name: string;
           email: string | null;
           handicap: number | null;
+          gender: 'male' | 'female' | null;
           status: 'registered' | 'confirmed' | 'withdrawn' | 'dns' | 'dnf' | 'dsq';
           created_at: string;
         };
@@ -166,6 +199,24 @@ export interface Database {
       };
       generate_access_code: {
         Args: Record<never, never>;
+        Returns: string;
+      };
+      generate_flights: {
+        Args: {
+          p_tournament_id: string;
+          p_start_time: string;
+          p_start_holes: number[];
+          p_interval_minutes: number;
+          p_max_players_per_flight: number;
+        };
+        Returns: void;
+      };
+      assign_player_category: {
+        Args: {
+          p_player_id: string;
+          p_handicap: number;
+          p_gender: string;
+        };
         Returns: string;
       };
     };

@@ -3,11 +3,15 @@
 import { useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
+const IS_DEV = process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [devLoading, setDevLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email) return;
@@ -18,18 +22,48 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // Redirect naar callback page, niet direct naar dashboard
-        // Dit laat Supabase de token verwerken
-        emailRedirectTo: `${window.location.origin}/nl/auth/callback`,
+        emailRedirectTo: 'https://open-tour-web.vercel.app/auth/callback',
+        shouldCreateUser: true,
       },
     });
 
     if (error) {
-      setError('Inloggen mislukt. Controleer je e-mailadres.');
+      setError(error.message.includes('rate limit') 
+        ? 'Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.'
+        : 'Inloggen mislukt. Controleer je e-mailadres.');
     } else {
       setSent(true);
     }
     setLoading(false);
+  };
+
+  const handleDevLink = async () => {
+    if (!email) return;
+    setDevLoading(true);
+    setError(null);
+
+    const res = await fetch('/api/dev-magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const supabase = getSupabaseBrowser();
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (sessionError) {
+        setError(`Session instellen mislukt: ${sessionError.message}`);
+      } else {
+        window.location.href = '/nl/dashboard';
+      }
+    } else {
+      setError(data.error ?? 'Dev login mislukt');
+    }
+    setDevLoading(false);
   };
 
   return (
@@ -90,6 +124,21 @@ export default function LoginPage() {
               >
                 {loading ? 'Versturen...' : 'Stuur inloglink →'}
               </button>
+
+              {/* Dev-only: direct inloggen zonder e-mail */}
+              {IS_DEV && (
+                <div className="pt-4 border-t border-gray-700">
+                  <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
+                  <button
+                    onClick={handleDevLink}
+                    disabled={devLoading || !email}
+                    className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
+                               text-white text-sm font-medium rounded-xl transition-colors"
+                  >
+                    {devLoading ? 'Bezig met inloggen...' : 'Direct inloggen (geen e-mail)'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

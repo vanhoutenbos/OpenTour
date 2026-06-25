@@ -15,6 +15,7 @@ export type CourseSource = 'egolf4u' | 'custom' | 'community';
 export type UserRole = 'organizer' | 'recorder';
 export type Language = 'nl' | 'en';
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
+export type Gender = 'male' | 'female' | 'mixed';
 
 // ============================================================
 // DATABASE ENTITEITEN
@@ -53,6 +54,15 @@ export interface Hole {
   distance_meters?: number;
 }
 
+export interface Tee {
+  id: string;
+  course_id: string;
+  external_id: string;
+  name?: string;
+  color?: string;
+  created_at: string;
+}
+
 export interface Tournament {
   id: string;
   name: string;
@@ -77,6 +87,22 @@ export interface Flight {
   name: string;
   start_time?: string;
   tee_number: number;
+  tee_id?: string;
+  category_id?: string;
+  max_players: number;
+  created_at: string;
+}
+
+export interface TournamentCategory {
+  id: string;
+  tournament_id: string;
+  name: string;
+  description?: string;
+  gender?: Gender;
+  handicap_min?: number;
+  handicap_max?: number;
+  tee_id?: string;
+  sort_order: number;
   created_at: string;
 }
 
@@ -84,10 +110,12 @@ export interface TournamentPlayer {
   id: string;
   tournament_id: string;
   flight_id?: string;
+  category_id?: string;
   profile_id?: string;
   name: string;
   email?: string;
   handicap?: number;
+  gender?: Gender;
   status: PlayerStatus;
   created_at: string;
 }

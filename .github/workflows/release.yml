@@ -34,6 +34,8 @@ jobs:
             20260621193318 \
             20260621193343 \
             20260621193434
+          # Remote-only migratie (niet lokaal aanwezig) markeren als reverted
+          supabase migration repair --status reverted 20260625044616
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
