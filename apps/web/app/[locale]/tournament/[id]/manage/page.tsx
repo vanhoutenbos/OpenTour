@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { userError } from '@/lib/errors';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
 import { PauseBanner } from '@/components/leaderboard/PauseBanner';
@@ -396,20 +397,32 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     setFlightGenerating(true);
     setFlightError(null);
 
-    // Verwijder eerst alle bestaande flights zodat we écht opnieuw beginnen
-    await supabase.from('flights').delete().eq('tournament_id', params.id);
-    await supabase.from('tournament_players').update({ flight_id: null }).eq('tournament_id', params.id);
+    // Stap 1: Ontkoppel spelers van flights (FK constraint, moet vóór DELETE)
+    const { error: updateErr } = await supabase
+      .from('tournament_players')
+      .update({ flight_id: null })
+      .eq('tournament_id', params.id);
+    if (updateErr) { setFlightError(userError(updateErr, 'Kon spelers niet ontkoppelen van bestaande flights.')); setFlightGenerating(false); return; }
 
-    // Assign unassigned players to matching categories before generating flights
+    // Stap 2: Verwijder alle bestaande flights (nu veilig, FK is ontkoppeld)
+    const { error: deleteErr } = await supabase
+      .from('flights')
+      .delete()
+      .eq('tournament_id', params.id);
+    if (deleteErr) { setFlightError(userError(deleteErr, 'Kon bestaande flights niet verwijderen.')); setFlightGenerating(false); return; }
+
+    // Stap 3: Ken categorieën toe aan spelers zonder categorie
     const unassigned = players.filter(p => !p.category_id);
     for (const pl of unassigned) {
-      await supabase.rpc('assign_player_category', {
+      const { error: catErr } = await supabase.rpc('assign_player_category', {
         p_player_id: pl.id,
         p_handicap: pl.handicap ?? 0,
         p_gender: pl.gender ?? 'mixed',
       });
+      if (catErr) { setFlightError(userError(catErr, 'Kon categorie niet toewijzen aan speler.')); setFlightGenerating(false); return; }
     }
 
+    // Stap 4: Genereer nieuwe flights via RPC
     const { error } = await supabase.rpc('generate_flights', {
       p_tournament_id: params.id,
       p_start_time: new Date(flightForm.start_time).toISOString(),
@@ -420,7 +433,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       p_gender_mode: genderMode,
     });
     if (error) {
-      setFlightError(error.message);
+      setFlightError(userError(error, 'Kon geen flights genereren. Controleer de instellingen en probeer het opnieuw.'));
     } else {
       await loadData();
     }
