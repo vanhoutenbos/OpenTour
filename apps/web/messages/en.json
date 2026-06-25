@@ -90,6 +90,7 @@
     },
     "flights": {
       "generate": "Generate flights",
+      "regenerate": "Re-generate flights",
       "start_time": "Start time",
       "interval": "Interval (minutes)",
       "max_players": "Max players per flight",
@@ -97,7 +98,20 @@
       "delete_all": "Delete all flights",
       "no_categories": "Create categories first",
       "move_player": "Move to flight",
-      "player_in_flight": "Player in flight"
+      "player_in_flight": "Player in flight",
+      "sort_by": "Sort by",
+      "handicap_desc": "Handicap high → low",
+      "random": "Random",
+      "gender_mode": "Gender",
+      "mixed": "Mixed",
+      "separate": "By gender",
+      "dns": "DNS",
+      "undo_dns": "Undo DNS",
+      "remove_from_flight": "Remove from flight",
+      "no_flights": "No flights generated yet.",
+      "drag_hint": "Drag players between flights to move them",
+      "players_count": "{count}/{max} players",
+      "player_hcp": "HCP {hcp}"
     },
     "corrections": {
       "title": "Score corrections",

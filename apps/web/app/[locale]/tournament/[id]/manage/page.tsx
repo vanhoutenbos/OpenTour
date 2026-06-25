@@ -174,6 +174,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   });
   const [flightGenerating, setFlightGenerating] = useState(false);
   const [flightError, setFlightError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'handicap_desc' | 'random'>('handicap_desc');
+  const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const loadData = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -394,6 +397,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       p_start_holes: flightForm.start_holes,
       p_interval_minutes: flightForm.interval_minutes,
       p_max_players_per_flight: flightForm.max_players,
+      p_sort_by: sortBy,
+      p_gender_mode: genderMode,
     });
     if (error) {
       setFlightError(error.message);
@@ -417,6 +422,38 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
         ? prev.start_holes.filter(h => h !== hole)
         : [...prev.start_holes, hole].sort(),
     }));
+  };
+
+  // ---- Flight drag & drop / DNS ----
+  const handleDragStart = (e: React.DragEvent, playerId: string) => {
+    setDraggedPlayerId(playerId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', playerId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, flightId: string) => {
+    e.preventDefault();
+    const playerId = e.dataTransfer.getData('text/plain') || draggedPlayerId;
+    if (!playerId) return;
+    setDraggedPlayerId(null);
+    const { error } = await supabase.from('tournament_players').update({ flight_id: flightId }).eq('id', playerId);
+    if (!error) await loadData();
+  };
+
+  const markPlayerDNS = async (playerId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'dns' ? 'registered' : 'dns';
+    await supabase.from('tournament_players').update({ status: newStatus }).eq('id', playerId);
+    await loadData();
+  };
+
+  const removePlayerFromFlight = async (playerId: string) => {
+    await supabase.from('tournament_players').update({ flight_id: null }).eq('id', playerId);
+    await loadData();
   };
 
   // ---- Codes ----
@@ -1029,7 +1066,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
               <>
                 {/* Flight generator */}
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <h3 className="text-sm font-medium text-white mb-3">Flights genereren</h3>
+                  <h3 className="text-sm font-medium text-white mb-3">
+                    {flights.length > 0 ? 'Flights beheren' : 'Flights genereren'}
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
@@ -1083,13 +1122,58 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                       </div>
                     </div>
                   </div>
+                  {/* Sorteer- en geslachtsopties */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
+                      <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value as 'handicap_desc' | 'random')}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                      >
+                        <option value="handicap_desc">Handicap hoog → laag</option>
+                        <option value="random">Willekeurig</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setGenderMode('mixed')}
+                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                            genderMode === 'mixed'
+                              ? 'bg-green-900/30 border-green-600 text-green-400'
+                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
+                        >
+                          Gemengd
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGenderMode('separate')}
+                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                            genderMode === 'separate'
+                              ? 'bg-green-900/30 border-green-600 text-green-400'
+                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                          }`}
+                        >
+                          Op geslacht
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                   <div className="flex gap-3">
                     <button
                       onClick={generateFlights}
                       disabled={flightGenerating || !flightForm.start_time}
                       className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
                     >
-                      {flightGenerating ? 'Genereren...' : 'Flights genereren'}
+                      {flightGenerating
+                        ? 'Genereren...'
+                        : flights.length > 0
+                          ? 'Flights her-genereren'
+                          : 'Flights genereren'}
                     </button>
                     {flights.length > 0 && (
                       <button
@@ -1105,39 +1189,100 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                   )}
                 </div>
 
-                {/* Flights list */}
+                {/* Flight cards */}
                 {flights.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">Nog geen flights gegenereerd.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {flights.map((f) => {
-                      const catName = categories.find(c => c.id === f.category_id)?.name;
-                      const playersInFlight = players.filter(p => p.flight_id === f.id);
-                      return (
-                        <div
-                          key={f.id}
-                          className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
-                        >
-                          <div>
-                            <p className="text-white font-medium text-sm">{f.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                              {f.tee_number && ` · Hole ${f.tee_number}`}
-                              {catName && ` · ${catName}`}
-                              {` · ${playersInFlight.length}/${f.max_players} spelers`}
-                            </p>
+                  <>
+                    <p className="text-xs text-gray-500 text-center">
+                      Sleep spelers tussen flights om ze te verplaatsen
+                    </p>
+                    <div className="space-y-4">
+                      {flights.map((f) => {
+                        const catName = categories.find(c => c.id === f.category_id)?.name;
+                        const playersInFlight = players.filter(p => p.flight_id === f.id);
+                        return (
+                          <div
+                            key={f.id}
+                            className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, f.id)}
+                          >
+                            {/* Flight header */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                  {f.tee_number && ` · Hole ${f.tee_number}`}
+                                  {catName && ` · ${catName}`}
+                                  {` · ${playersInFlight.length}/${f.max_players} spelers`}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Player cards */}
+                            <div className="space-y-1.5">
+                              {playersInFlight.length === 0 ? (
+                                <div className="border border-dashed border-gray-700 rounded-lg py-3 text-center">
+                                  <p className="text-xs text-gray-500">Sleep een speler hiernaartoe</p>
+                                </div>
+                              ) : (
+                                playersInFlight.map(pl => (
+                                  <div
+                                    key={pl.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, pl.id)}
+                                    className={`bg-gray-800 rounded-lg px-3 py-2 flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-gray-750 transition-colors ${
+                                      pl.status === 'dns' ? 'opacity-50' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="text-gray-400 text-xs cursor-grab">⠿</span>
+                                      <span className={`text-sm truncate ${pl.status === 'dns' ? 'text-gray-500 line-through' : 'text-white'}`}>
+                                        {pl.name}
+                                      </span>
+                                      {pl.handicap !== null && (
+                                        <span className="text-gray-500 text-xs shrink-0">HCP {pl.handicap}</span>
+                                      )}
+                                      {pl.gender && (
+                                        <span className="text-gray-600 text-xs shrink-0">
+                                          {pl.gender === 'male' ? 'M' : pl.gender === 'female' ? 'V' : ''}
+                                        </span>
+                                      )}
+                                      {pl.status === 'dns' && (
+                                        <span className="text-xs font-medium text-red-400 shrink-0">DNS</span>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-1 shrink-0">
+                                      <button
+                                        onClick={() => markPlayerDNS(pl.id, pl.status)}
+                                        title={pl.status === 'dns' ? 'DNS ongedaan maken' : 'Markeer als DNS'}
+                                        className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                                          pl.status === 'dns'
+                                            ? 'bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                      >
+                                        {pl.status === 'dns' ? '↩' : 'DNS'}
+                                      </button>
+                                      <button
+                                        onClick={() => removePlayerFromFlight(pl.id)}
+                                        title="Uit flight halen"
+                                        className="text-xs px-2 py-1 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 transition-colors"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           </div>
-                          <div className="flex gap-1">
-                            {playersInFlight.slice(0, 4).map(pl => (
-                              <span key={pl.id} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
-                                {pl.name.split(' ')[0]}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             )}

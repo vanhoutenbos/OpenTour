@@ -2,7 +2,11 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+<<<<<<< Updated upstream
 import { saveScoreLocally, getPendingScores } from '@/lib/offline-db';
+=======
+import { saveScoreLocally } from '@/lib/offline-db';
+>>>>>>> Stashed changes
 
 interface Player {
   id: string;
@@ -42,7 +46,12 @@ export default function ScoreGrid({
   const [isSaving, setIsSaving] = useState(false);
   const saveScheduled = useRef(false);
   const debouncedChanges = useRef<Record<string, number>>({});
+  const scoresRef = useRef(scores);
   const supabase = getSupabaseBrowser();
+
+  useEffect(() => {
+    scoresRef.current = scores;
+  }, [scores]);
 
   const sortedPlayers = [...players].sort((a, b) => {
     const flightA = a.flight_id || '';
@@ -116,22 +125,69 @@ export default function ScoreGrid({
   const saveScores = async () => {
     if (!saveScheduled.current) return;
 
+    const changes = { ...debouncedChanges.current };
+    if (Object.keys(changes).length === 0) return;
+
     try {
       setIsSaving(true);
 
+<<<<<<< Updated upstream
       const changes = debouncedChanges.current;
       for (const [key, strokes] of Object.entries(changes)) {
         const [playerId, holeId] = key.split('-') as [string, string];
         await saveScoreLocally({
+=======
+      const { data: userData } = await supabase.auth.getUser();
+      const recordedBy = userData.user?.id;
+      const scoreInserts = [];
+
+      for (const [key, strokes] of Object.entries(changes)) {
+        const parts = key.split('-');
+        if (parts.length < 2) continue;
+        const [playerId, holeId] = parts as [string, string];
+        scoreInserts.push({
+>>>>>>> Stashed changes
           tournament_id: tournamentId,
           player_id: playerId,
           hole_id: holeId,
           round_number: 1,
+<<<<<<< Updated upstream
           strokes,
           updated_at: new Date().toISOString(),
         });
       }
 
+=======
+          strokes: strokes,
+          recorded_by: recordedBy,
+          is_verified: false,
+        });
+      }
+
+      const { error } = await supabase.from('scores').upsert(scoreInserts, {
+        onConflict: 'tournament_id, player_id, hole_id, round_number',
+        count: 'exact',
+      });
+
+      if (error) {
+        console.error('Direct upsert mislukt, val terug op offline-db:', error);
+      }
+
+      for (const [key, strokes] of Object.entries(changes)) {
+        const parts = key.split('-');
+        if (parts.length < 2) continue;
+        const [playerId, holeId] = parts as [string, string];
+        await saveScoreLocally({
+          tournament_id: tournamentId,
+          player_id: playerId,
+          hole_id: holeId,
+          round_number: 1,
+          strokes: strokes,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+>>>>>>> Stashed changes
       saveScheduled.current = false;
       debouncedChanges.current = {};
       setLastSaved(new Date());

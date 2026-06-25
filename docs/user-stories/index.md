@@ -21,18 +21,18 @@
 
 ## Voortgang
 
-**Huidige stand (MVP):** 0 🟢 Confirmed · 33 ✅ Done · 2 🔄 In Progress · 16 ⬜ To Do · 0 ⛔ Blocked = **65%**
+**Huidige stand (MVP):** 0 🟢 Confirmed · 34 ✅ Done · 2 🔄 In Progress · 15 ⬜ To Do · 0 ⛔ Blocked = **67%**
 
 | Epic | MVP | 🟢 | ✅ | 🔄 | ⬜ | % |
 |---|---|---|---|---|---|---|
 | Visie en scope | 5 | 0 | 4 | 1 | 0 | 80% |
-| Organisator | 12 | 0 | 10 | 0 | 2 | 83% |
+| Organisator | 12 | 0 | 11 | 0 | 1 | 92% |
 | Scorer | 10 | 0 | 7 | 1 | 2 | 70% |
 | Spectator | 8 | 0 | 8 | 0 | 0 | 100% |
 | Authenticatie | 5 | 0 | 4 | 0 | 1 | 80% |
 | Privacy/AVG | 7 | 0 | 4 | 1 | 2 | 57% |
 | Baandatabase | 4 | 0 | 4 | 0 | 0 | 100% |
-| **Totaal** | **51** | **0** | **33** | **2** | **16** | **65%** |
+| **Totaal** | **51** | **0** | **34** | **2** | **15** | **67%** |
 
 > **Lifecycle:** ⬜ To Do → 🔄 In Progress → ✅ Done → 🟢 Confirmed  
 > Status per individuele story staat in [`progress.json`](progress.json). Werk na elke implementatiesessie bij.

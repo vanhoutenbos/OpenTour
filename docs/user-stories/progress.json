@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/anomalyco/opencode/main/docs/user-stories/progress-schema.json",
   "description": "Status tracking voor alle OpenTour user stories. Werk bij na implementatie.",
-  "last_updated": "2026-06-24",
+  "last_updated": "2026-06-25",
   "stories": {
     "01-vision-and-scope.md": {
       "epic": "Visie en scope",
@@ -27,7 +27,7 @@
         "ORG-05": { "title": "Toernooistatus wijzigen", "fase": "MVP", "status": "done", "notes": "draft/active/paused/finished in manage" },
         "ORG-06": { "title": "Toernooi pauzeren met reden", "fase": "MVP", "status": "done", "notes": "pause_reason + PauseBanner component" },
         "ORG-07": { "title": "Speler markeren als DNS, DNF of DSQ", "fase": "MVP", "status": "done", "notes": "Status field via PlayerStatusDropdown" },
-        "ORG-08": { "title": "Scorecorrecties uitvoeren", "fase": "MVP", "status": "todo", "notes": "Organisator kan scores bekijken maar correctie-UI ontbreekt" },
+        "ORG-08": { "title": "Scorecorrecties uitvoeren", "fase": "MVP", "status": "done", "notes": "ScoreGrid werkt nu via debouncedChanges + offline-db fallback" },
         "ORG-09": { "title": "Toegangscodes genereren", "fase": "MVP", "status": "done", "notes": "generate_access_code RPC + codes tab" },
         "ORG-10": { "title": "Spelers importeren via CSV", "fase": "Later", "status": "todo" },
         "ORG-11": { "title": "Flights handmatig aanpassen", "fase": "MVP", "status": "done", "notes": "Flights tab met overzicht en aanpassen" },

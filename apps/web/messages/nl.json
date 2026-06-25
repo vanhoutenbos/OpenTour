@@ -90,6 +90,7 @@
     },
     "flights": {
       "generate": "Flights genereren",
+      "regenerate": "Flights her-genereren",
       "start_time": "Starttijd",
       "interval": "Interval (minuten)",
       "max_players": "Max spelers per flight",
@@ -97,7 +98,20 @@
       "delete_all": "Alle flights verwijderen",
       "no_categories": "Maak eerst categorieën aan",
       "move_player": "Verplaats naar flight",
-      "player_in_flight": "Speler in flight"
+      "player_in_flight": "Speler in flight",
+      "sort_by": "Sorteer op",
+      "handicap_desc": "Handicap hoog → laag",
+      "random": "Willekeurig",
+      "gender_mode": "Geslacht",
+      "mixed": "Gemengd",
+      "separate": "Op geslacht",
+      "dns": "DNS",
+      "undo_dns": "DNS ongedaan maken",
+      "remove_from_flight": "Uit flight halen",
+      "no_flights": "Nog geen flights gegenereerd.",
+      "drag_hint": "Sleep spelers tussen flights om ze te verplaatsen",
+      "players_count": "{count}/{max} spelers",
+      "player_hcp": "HCP {hcp}"
     },
     "corrections": {
       "title": "Scorecorrecties",
