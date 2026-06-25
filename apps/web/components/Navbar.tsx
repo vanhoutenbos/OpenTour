@@ -29,7 +29,7 @@ export function Navbar() {
         .from('profiles')
         .select('display_name')
         .eq('id', userId)
-        .single();
+        .maybeSingle();   // .single() throws PGRST116 als profiel ontbreekt
       return data?.display_name ?? null;
     }
 
