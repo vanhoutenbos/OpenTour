@@ -185,6 +185,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       start_date: t.start_date ? t.start_date.slice(0, 10) : '',
     });
 
+    // Vul de starttijd voor in het flight-formulier vanuit de toernooistart
+    if (t.start_date) {
+      // datetime-local verwacht "YYYY-MM-DDTHH:MM"
+      const dt = new Date(t.start_date);
+      const local = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}T${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+      setFlightForm(prev => prev.start_time ? prev : { ...prev, start_time: local });
+    }
+
     const { data: p } = await supabase
       .from('tournament_players')
       .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id')

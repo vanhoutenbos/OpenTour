@@ -46,7 +46,8 @@ export default function NewTournamentPage() {
 
   const defaultForm = {
     name: '',
-    start_date: '',
+    start_date: '',       // YYYY-MM-DD
+    start_time: '09:00',  // HH:MM — begintijd eerste flight
     course_id: '',
     loop_id: '',
     tee_id: '',
@@ -75,12 +76,20 @@ export default function NewTournamentPage() {
     setForm({ ...defaultForm });
   };
 
+  // Combineer datum + tijd naar een ISO datetime string
+  const buildStartDatetime = (): string | null => {
+    if (!form.start_date) return null;
+    const time = form.start_time || '00:00';
+    return `${form.start_date}T${time}:00`;
+  };
+
   useEffect(() => {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (!parsed.multi_rounds) parsed.rounds = 1;
+        if (!parsed.start_time) parsed.start_time = '09:00';
         setForm((prev) => ({ ...prev, ...parsed }));
       } catch {}
     }
@@ -134,11 +143,13 @@ export default function NewTournamentPage() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) { router.replace('/nl/login'); return; }
 
+    const startDatetime = buildStartDatetime();
+
     const { data, error } = await supabase
       .from('tournaments')
       .insert({
         name: form.name,
-        start_date: form.start_date || null,
+        start_date: startDatetime,
         course_id: form.course_id || null,
         loop_id: form.loop_id || null,
         format: form.format,
@@ -157,6 +168,7 @@ export default function NewTournamentPage() {
       return;
     }
 
+    clearForm();
     router.push(`/nl/tournament/${data.id}/manage`);
   };
 
@@ -204,7 +216,7 @@ export default function NewTournamentPage() {
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Toernooi details</h2>
-              <p className="text-gray-400 text-sm">Geef je toernooi een naam en datum.</p>
+              <p className="text-gray-400 text-sm">Geef je toernooi een naam, datum en starttijd.</p>
             </div>
 
             <div>
@@ -220,15 +232,31 @@ export default function NewTournamentPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Datum</label>
-              <input
-                type="date"
-                value={form.start_date}
-                onChange={(e) => updateForm({ start_date: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
-                           focus:outline-none focus:border-green-600 transition-colors"
-              />
+            {/* Datum + tijd naast elkaar */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1.5">Datum</label>
+                <input
+                  type="date"
+                  value={form.start_date}
+                  onChange={(e) => updateForm({ start_date: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
+                             focus:outline-none focus:border-green-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1.5">
+                  Starttijd
+                  <span className="text-gray-600 text-xs ml-1">— eerste flight</span>
+                </label>
+                <input
+                  type="time"
+                  value={form.start_time}
+                  onChange={(e) => updateForm({ start_time: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
+                             focus:outline-none focus:border-green-600 transition-colors"
+                />
+              </div>
             </div>
 
             <div>
@@ -509,14 +537,15 @@ export default function NewTournamentPage() {
 
             <div className="bg-gray-900 border border-gray-800 rounded-2xl divide-y divide-gray-800">
               {[
-                { label: 'Naam',       value: form.name },
-                { label: 'Datum',      value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
-                { label: 'Baan',       value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
-                { label: 'Loop',       value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
-                { label: 'Afslag',     value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
-                { label: 'Format',     value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
-                { label: 'Scoring',    value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
-                { label: 'Rondes',     value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
+                { label: 'Naam',        value: form.name },
+                { label: 'Datum',       value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
+                { label: 'Starttijd',   value: form.start_time ? `${form.start_time} (eerste flight)` : 'Niet ingesteld' },
+                { label: 'Baan',        value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
+                { label: 'Loop',        value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
+                { label: 'Afslag',      value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
+                { label: 'Format',      value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
+                { label: 'Scoring',     value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
+                { label: 'Rondes',      value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between px-4 py-3">
                   <span className="text-gray-400 text-sm">{label}</span>
