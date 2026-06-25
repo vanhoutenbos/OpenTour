@@ -33,14 +33,19 @@ export function Navbar() {
       return data?.display_name ?? null;
     }
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const display_name = await fetchProfile(session.user.id);
-        setUser({ email: session.user.email ?? '', display_name });
+    // getUser() verifieert server-side — betrouwbaarder dan getSession() voor initiële load
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        const display_name = await fetchProfile(user.id);
+        setUser({ email: user.email ?? '', display_name });
+      } else {
+        setUser(null);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // INITIAL_SESSION negeren — wordt al afgehandeld door getUser() hierboven
+      if (event === 'INITIAL_SESSION') return;
       if (session?.user) {
         const display_name = await fetchProfile(session.user.id);
         setUser({ email: session.user.email ?? '', display_name });
