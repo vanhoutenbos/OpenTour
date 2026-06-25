@@ -100,7 +100,7 @@
       "move_player": "Move to flight",
       "player_in_flight": "Player in flight",
       "sort_by": "Sort by",
-      "handicap_desc": "Handicap high → low",
+      "handicap_asc": "Handicap low → high",
       "random": "Random",
       "gender_mode": "Gender",
       "mixed": "Mixed",

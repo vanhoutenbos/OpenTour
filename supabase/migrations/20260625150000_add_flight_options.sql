@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION generate_flights(
   p_start_holes          INT[]     DEFAULT ARRAY[1, 10],
   p_interval_minutes     INT       DEFAULT 8,
   p_max_players_per_flight INT     DEFAULT 4,
-  p_sort_by              TEXT      DEFAULT 'handicap_desc',
+  p_sort_by              TEXT      DEFAULT 'handicap_asc',
   p_gender_mode          TEXT      DEFAULT 'mixed'
 ) RETURNS VOID
 LANGUAGE plpgsql
@@ -131,7 +131,7 @@ BEGIN
                 AND category_id = v_category.id
                 AND status IN ('registered', 'confirmed')
                 AND flight_id IS NULL
-              ORDER BY handicap DESC NULLS LAST, name
+              ORDER BY handicap ASC NULLS LAST, name
               LIMIT p_max_players_per_flight
             );
           ELSE
@@ -144,7 +144,7 @@ BEGIN
                 AND status IN ('registered', 'confirmed')
                 AND flight_id IS NULL
                 AND COALESCE(gender, 'unknown') = v_gender
-              ORDER BY handicap DESC NULLS LAST, name
+              ORDER BY handicap ASC NULLS LAST, name
               LIMIT p_max_players_per_flight
             );
           END IF;

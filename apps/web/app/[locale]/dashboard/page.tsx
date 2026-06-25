@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface Tournament {
@@ -16,6 +17,8 @@ interface Tournament {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const params = useParams();
+  const format = useFormatter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ email: string | undefined } | null>(null);
@@ -160,7 +163,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400 mt-0.5">
                         {t.format} ·{' '}
                         {t.start_date
-                          ? new Date(t.start_date).toLocaleDateString('nl-NL')
+                          ? format.dateTime(new Date(t.start_date), { day: 'numeric', month: 'short', year: 'numeric' })
                           : 'Datum nog niet ingesteld'}
                       </p>
                     </div>

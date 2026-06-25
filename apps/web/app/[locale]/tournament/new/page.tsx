@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface Course {
@@ -50,6 +51,8 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function NewTournamentPage() {
   const router = useRouter();
+  const params = useParams();
+  const format = useFormatter();
   const [step, setStep] = useState<Step>('basics');
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
@@ -717,7 +720,7 @@ export default function NewTournamentPage() {
             <div className="bg-gray-900 border border-gray-800 rounded-2xl divide-y divide-gray-800">
               {[
                 { label: 'Naam',      value: form.name },
-                { label: 'Datum',     value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
+                { label: 'Datum',     value: form.start_date ? format.dateTime(new Date(form.start_date), { day: 'numeric', month: 'short', year: 'numeric' }) : 'Nog niet ingesteld' },
                 { label: 'Starttijd', value: form.start_time ? `${form.start_time} (eerste flight)` : 'Niet ingesteld' },
                 { label: 'Baan',      value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
                 { label: 'Loop',      value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { saveScoreLocally, getPendingScores } from '@/lib/offline-db';
 
@@ -40,6 +41,7 @@ export default function ScoreGrid({
   highlightedHole,
   currentRound = 1,
 }: ScoreGridProps) {
+  const format = useFormatter();
   const [scores, setScores] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -227,7 +229,7 @@ export default function ScoreGrid({
           <h3 className="text-lg font-semibold text-white">Score in Excel-stijl</h3>
           <p className="text-sm text-gray-400 mt-1">
             {sortedPlayers.length} spelers × {sortedHoles.length} holes ronde {currentRound}
-            {lastSaved && ` • Laatst opgeslagen: ${lastSaved.toLocaleTimeString('nl-NL')}`}
+            {lastSaved && ` • Laatst opgeslagen: ${format.dateTime(lastSaved, { hour: '2-digit', minute: '2-digit' })}`}
             {isSaving && ' • Bezig met opslaan...'}
           </p>
         </div>
@@ -332,7 +334,7 @@ export default function ScoreGrid({
             Typ om direct op te slaan • Klik op een vakje om te selecteren
           </div>
           <div className="text-xs text-gray-500">
-            Scores 1-99 • Laatst opgeslagen: {lastSaved?.toLocaleTimeString('nl-NL')}
+            Scores 1-99 • Laatst opgeslagen: {lastSaved && format.dateTime(lastSaved, { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
       </div>

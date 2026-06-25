@@ -10,6 +10,8 @@ const createNextIntlPlugin = require('next-intl/plugin');
 // Absoluut pad zodat het werkt ongeacht working directory
 const withNextIntl = createNextIntlPlugin(path.resolve(__dirname, 'i18n.ts'));
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ygewcjsrpewwhiqgcmyn.supabase.co';
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
@@ -17,7 +19,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' https://ygewcjsrpewwhiqgcmyn.supabase.co",
+      `connect-src 'self' ${supabaseUrl}`,
       "img-src 'self' data: blob: https: https://open-tour-web.vercel.app",
       "font-src 'self'",
       "frame-ancestors 'none'",

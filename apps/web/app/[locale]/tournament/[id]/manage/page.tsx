@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
@@ -110,8 +111,9 @@ function InputField({ label, value, onChange, type = 'text' }: { label: string; 
   );
 }
 
-export default function ManageTournamentPage({ params }: { params: { id: string } }) {
+export default function ManageTournamentPage({ params }: { params: { id: string; locale: string } }) {
   const router = useRouter();
+  const format = useFormatter();
   const supabase = getSupabaseBrowser();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -176,7 +178,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   });
   const [flightGenerating, setFlightGenerating] = useState(false);
   const [flightError, setFlightError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'handicap_desc' | 'random'>('handicap_desc');
+  const [sortBy, setSortBy] = useState<'handicap_asc' | 'random'>('handicap_asc');
   const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
@@ -393,6 +395,10 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
     setFlightGenerating(true);
     setFlightError(null);
 
+    // Verwijder eerst alle bestaande flights zodat we écht opnieuw beginnen
+    await supabase.from('flights').delete().eq('tournament_id', params.id);
+    await supabase.from('tournament_players').update({ flight_id: null }).eq('tournament_id', params.id);
+
     // Assign unassigned players to matching categories before generating flights
     const unassigned = players.filter(p => !p.category_id);
     for (const pl of unassigned) {
@@ -422,7 +428,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
 
   const deleteAllFlights = async () => {
     await supabase.from('flights').delete().eq('tournament_id', params.id);
-    await supabase.from('tournament_players').update({ flight_id: null }).eq('tournament_id', params.id);
+    await supabase.from('tournament_players').delete().eq('tournament_id', params.id);
+    await supabase.from('tournament_categories').delete().eq('tournament_id', params.id);
     await loadData();
   };
 
@@ -549,7 +556,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
               <h1 className="text-xl font-bold text-white">{tournament.name}</h1>
               <p className="text-sm text-gray-400">
                 {courseName} · {tournament.format} · {tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto'}
-                {tournament.start_date && ` · ${new Date(tournament.start_date).toLocaleDateString('nl-NL')}`}
+                {tournament.start_date && ` · ${format.dateTime(new Date(tournament.start_date), { day: 'numeric', month: 'short', year: 'numeric' })}`}
               </p>
             </div>
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${sc.className}`}>
@@ -725,7 +732,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                             <div>
                               <h4 className="text-white font-semibold text-sm">{f.name}</h4>
                               <p className="text-xs text-gray-400 mt-0.5">
-                                {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                 {f.tee_number && ` · Hole ${f.tee_number}`}
                                 {catName && ` · ${catName}`}
                               </p>
@@ -1180,130 +1187,146 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
               </div>
             ) : (
               <>
-                {/* Flight generator */}
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <h3 className="text-sm font-medium text-white mb-3">
-                    {flights.length > 0 ? 'Flights beheren' : 'Flights genereren'}
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
-                      <input
-                        type="datetime-local"
-                        value={flightForm.start_time}
-                        onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                      />
+                {flights.length > 0 ? (
+                  <>
+                    {/* Simpel menu als er al flights zijn */}
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-white">Flights beheren</h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={generateFlights}
+                          disabled={flightGenerating || !flightForm.start_time}
+                          className="py-2 px-4 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
+                        >
+                          {flightGenerating ? 'Genereren...' : 'Flights her-genereren'}
+                        </button>
+                        <button
+                          onClick={deleteAllFlights}
+                          className="py-2 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
+                        >
+                          Alle flights verwijderen
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={30}
-                        value={flightForm.interval_minutes}
-                        onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={4}
-                        value={flightForm.max_players}
-                        onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
-                      <div className="flex gap-3 pt-1">
-                        {startHoleOptions.map(hole => (
-                          <label key={hole} className="flex items-center gap-2 cursor-pointer">
+                    {flightError && (
+                      <p className="text-red-400 text-sm">{flightError}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Flight generator form (geen flights) */}
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                      <h3 className="text-sm font-medium text-white mb-3">
+                        Flights genereren
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                          <input
+                            type="datetime-local"
+                            value={flightForm.start_time}
+                            onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={flightForm.interval_minutes}
+                            onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={4}
+                            value={flightForm.max_players}
+                            onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                          <div className="flex gap-3 pt-1">
+                            {startHoleOptions.map(hole => (
+                              <label key={hole} className="flex items-center gap-2 cursor-pointer">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleStartHole(hole)}
+                                  className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
+                                    flightForm.start_holes.includes(hole)
+                                      ? 'bg-green-900/30 border-green-600 text-green-400'
+                                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                                  }`}
+                                >
+                                  {hole}
+                                </button>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
+                          <select
+                            value={sortBy}
+                            onChange={e => setSortBy(e.target.value as 'handicap_asc' | 'random')}
+                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                          >
+                            <option value="handicap_asc">Handicap laag → hoog</option>
+                            <option value="random">Willekeurig</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
+                          <div className="flex gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => toggleStartHole(hole)}
-                              className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
-                                flightForm.start_holes.includes(hole)
+                              onClick={() => setGenderMode('mixed')}
+                              className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                                genderMode === 'mixed'
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
                                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
                               }`}
                             >
-                              {hole}
+                              Gemengd
                             </button>
-                          </label>
-                        ))}
+                            <button
+                              type="button"
+                              onClick={() => setGenderMode('separate')}
+                              className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                                genderMode === 'separate'
+                                  ? 'bg-green-900/30 border-green-600 text-green-400'
+                                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              Op geslacht
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  {/* Sorteer- en geslachtsopties */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
-                      <select
-                        value={sortBy}
-                        onChange={e => setSortBy(e.target.value as 'handicap_desc' | 'random')}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
-                      >
-                        <option value="handicap_desc">Handicap hoog → laag</option>
-                        <option value="random">Willekeurig</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-3">
                         <button
-                          type="button"
-                          onClick={() => setGenderMode('mixed')}
-                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                            genderMode === 'mixed'
-                              ? 'bg-green-900/30 border-green-600 text-green-400'
-                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
-                          }`}
+                          onClick={generateFlights}
+                          disabled={flightGenerating || !flightForm.start_time}
+                          className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
                         >
-                          Gemengd
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGenderMode('separate')}
-                          className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                            genderMode === 'separate'
-                              ? 'bg-green-900/30 border-green-600 text-green-400'
-                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
-                          }`}
-                        >
-                          Op geslacht
+                          {flightGenerating ? 'Genereren...' : 'Flights genereren'}
                         </button>
                       </div>
+                      {flightError && (
+                        <p className="text-red-400 text-sm mt-3">{flightError}</p>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={generateFlights}
-                      disabled={flightGenerating || !flightForm.start_time}
-                      className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
-                    >
-                      {flightGenerating
-                        ? 'Genereren...'
-                        : flights.length > 0
-                          ? 'Flights her-genereren'
-                          : 'Flights genereren'}
-                    </button>
-                    {flights.length > 0 && (
-                      <button
-                        onClick={deleteAllFlights}
-                        className="py-3 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
-                      >
-                        Alle flights verwijderen
-                      </button>
-                    )}
-                  </div>
-                  {flightError && (
-                    <p className="text-red-400 text-sm mt-3">{flightError}</p>
-                  )}
-                </div>
+                  </>
+                )}
 
                 {/* Flight cards */}
                 {flights.length === 0 ? (
@@ -1329,7 +1352,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                               <div>
                                 <h4 className="text-white font-semibold text-sm">{f.name}</h4>
                                 <p className="text-xs text-gray-400 mt-0.5">
-                                  {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                  {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                   {f.tee_number && ` · Hole ${f.tee_number}`}
                                   {catName && ` · ${catName}`}
                                   {` · ${playersInFlight.length}/${f.max_players} spelers`}
@@ -1495,7 +1518,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                           {c.code}
                         </code>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {expired ? 'Verlopen' : !c.is_active ? 'Gedeactiveerd' : `Geldig tot ${new Date(c.expires_at).toLocaleString('nl-NL')}`}
+                          {expired ? 'Verlopen' : !c.is_active ? 'Gedeactiveerd' : `Geldig tot ${format.dateTime(new Date(c.expires_at), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
                         </p>
                       </div>
                       <div className="flex gap-2">

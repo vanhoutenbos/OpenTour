@@ -54,17 +54,17 @@ export async function StatsSection({ locale }: Props) {
 
   const items = [
     {
-      value: stats.tournaments.toLocaleString(),
+      value: stats.tournaments.toLocaleString(locale),
       label: locale === 'nl' ? 'toernooien' : 'tournaments',
       icon: '🏆',
     },
     {
-      value: stats.scores.toLocaleString(),
+      value: stats.scores.toLocaleString(locale),
       label: locale === 'nl' ? 'scores ingevoerd' : 'scores entered',
       icon: '⛳',
     },
     {
-      value: stats.players.toLocaleString(),
+      value: stats.players.toLocaleString(locale),
       label: locale === 'nl' ? 'unieke spelers' : 'unique players',
       icon: '👥',
     },

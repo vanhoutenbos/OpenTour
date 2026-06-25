@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useFormatter } from 'next-intl';
 import { LeaderboardTable } from './LeaderboardTable';
 
 interface Props {
@@ -38,7 +39,8 @@ async function fetchLeaderboard(tournamentId: string) {
   return res.json();
 }
 
-export function LeaderboardClient({ tournamentId, format, scoringType, isActive }: Props) {
+export function LeaderboardClient({ tournamentId, format: scoringFormat, scoringType, isActive }: Props) {
+  const formatter = useFormatter();
   const [entries, setEntries] = useState<any[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,10 +79,10 @@ export function LeaderboardClient({ tournamentId, format, scoringType, isActive 
 
   return (
     <div>
-      <LeaderboardTable entries={entries} format={format} scoringType={scoringType} />
+      <LeaderboardTable entries={entries} format={scoringFormat} scoringType={scoringType} />
       {lastUpdated && (
         <p className="text-xs text-gray-500 text-right mt-4">
-          Bijgewerkt om {lastUpdated.toLocaleTimeString('nl-NL')}
+          Bijgewerkt om {formatter.dateTime(lastUpdated, { hour: '2-digit', minute: '2-digit' })}
           {isActive && ' · vernieuwt automatisch'}
         </p>
       )}

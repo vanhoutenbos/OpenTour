@@ -100,7 +100,7 @@
       "move_player": "Verplaats naar flight",
       "player_in_flight": "Speler in flight",
       "sort_by": "Sorteer op",
-      "handicap_desc": "Handicap hoog → laag",
+      "handicap_asc": "Handicap laag → hoog",
       "random": "Willekeurig",
       "gender_mode": "Geslacht",
       "mixed": "Gemengd",

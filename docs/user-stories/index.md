@@ -16,15 +16,16 @@
 | 06 | [Privacy, AVG en exports](06-privacy-and-exports.md) | Allen | 7 | 5 | 2 |
 | 07 | [Baandatabase en open data](07-course-database.md) | Organisator | 4 | 3 | 0 |
 | 08 | [Premium en toekomst](08-premium-and-future.md) | Organisator, club | 0 | 0 | 7 |
+| 09 | [Infrastructuur en developer experience](09-infrastructure-and-devx.md) | Ontwikkelaar | 9 | 1 | 0 |
 
-**Totaal:** 51 MVP, 41 Later, 9 Premium = 101 stories
+**Totaal:** 60 MVP, 42 Later, 9 Premium = 111 stories
 
 ## Voortgang
 
-**Huidige stand (MVP):** 0 🟢 Confirmed · 34 ✅ Done · 2 🔄 In Progress · 15 ⬜ To Do · 0 ⛔ Blocked = **67%**
+**Huidige stand (MVP):** 0 🟢 Confirmed · 39 ✅ Done · 2 🔄 In Progress · 19 ⬜ To Do · 0 ⛔ Blocked = **65%**
 
 | Epic | MVP | 🟢 | ✅ | 🔄 | ⬜ | % |
-|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|
 | Visie en scope | 5 | 0 | 4 | 1 | 0 | 80% |
 | Organisator | 12 | 0 | 11 | 0 | 1 | 92% |
 | Scorer | 10 | 0 | 7 | 1 | 2 | 70% |
@@ -32,7 +33,8 @@
 | Authenticatie | 5 | 0 | 4 | 0 | 1 | 80% |
 | Privacy/AVG | 7 | 0 | 4 | 1 | 2 | 57% |
 | Baandatabase | 4 | 0 | 4 | 0 | 0 | 100% |
-| **Totaal** | **51** | **0** | **34** | **2** | **15** | **67%** |
+| Infrastructuur | 9 | 0 | 5 | 0 | 4 | 56% |
+| **Totaal** | **60** | **0** | **39** | **2** | **19** | **65%** |
 
 > **Lifecycle:** ⬜ To Do → 🔄 In Progress → ✅ Done → 🟢 Confirmed  
 > Status per individuele story staat in [`progress.json`](progress.json). Werk na elke implementatiesessie bij.

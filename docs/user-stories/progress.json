@@ -135,6 +135,21 @@
         "PRM-06": { "title": "Beheerde hosting", "fase": "Premium", "status": "todo" },
         "PRM-07": { "title": "Prioriteitsondersteuning", "fase": "Premium", "status": "todo" }
       }
+    },
+    "09-infrastructure-and-devx.md": {
+      "epic": "Infrastructuur en developer experience",
+      "stories": {
+        "INFRA-01": { "title": "CI/CD pipeline uitbreiden (turbo caching, tests, dependabot)", "fase": "MVP", "status": "todo" },
+        "INFRA-02": { "title": "CSP dynamisch maken (Supabase URL uit env)", "fase": "MVP", "status": "done", "notes": "hardcoded URL vervangen door process.env.NEXT_PUBLIC_SUPABASE_URL met fallback" },
+        "INFRA-03": { "title": "packages/i18n/index.ts entry point ontbreekt", "fase": "MVP", "status": "done", "notes": "index.ts aangemaakt met getMessages() export" },
+        "INFRA-04": { "title": "Ontwikkelaarsdocumentatie aanvullen", "fase": "MVP", "status": "todo" },
+        "INFRA-05": { "title": "PWA / next-pwa configuratie verifiëren voor Next 14", "fase": "MVP", "status": "todo" },
+        "INFRA-06": { "title": "@vitejs/plugin-react verwijderd uit apps/web", "fase": "MVP", "status": "done", "notes": "Verwijderd als onderdeel van de thorough-analysis review" },
+        "INFRA-07": { "title": "packages/supabase lazy factories + env scheiding", "fase": "MVP", "status": "done", "notes": "Module-level throws vervangen door getBrowserClient(); createServerClient() gebruikt SUPABASE_URL naast NEXT_PUBLIC_SUPABASE_URL" },
+        "INFRA-08": { "title": "supabase-server.ts anon key fallback verwijderd", "fase": "MVP", "status": "done", "notes": "SUPABASE_SERVICE_ROLE_KEY fallback naar anon key verwijderd; throwt nu bij ontbrekende key" },
+        "INFRA-09": { "title": "CSP unsafe-eval/unsafe-inline vervangen door hashes/nonces", "fase": "Later", "status": "todo" },
+        "INFRA-10": { "title": "Dev magic link wachtwoord in omgevingsvariabele", "fase": "MVP", "status": "todo" }
+      }
     }
   }
 }

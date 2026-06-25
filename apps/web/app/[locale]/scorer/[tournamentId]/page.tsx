@@ -206,7 +206,7 @@ export default function TournamentScorerPage() {
                     <h3 className="font-semibold text-white">{flight.name}</h3>
                     <p className="text-sm text-gray-400 mt-0.5">
                       {flight.start_time &&
-                        `${new Date(flight.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })} · `}
+                        `${new Date(flight.start_time).toLocaleTimeString(locale === 'nl' ? 'nl-NL' : 'en-GB', { hour: '2-digit', minute: '2-digit' })} · `}
                       {flight.hole_count} {t('holes')} · {flight.players.length} {t('players')}
                     </p>
                     {flight.players.length > 0 && (
