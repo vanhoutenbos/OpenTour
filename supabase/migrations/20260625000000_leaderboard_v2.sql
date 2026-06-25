@@ -1,6 +1,6 @@
 -- ============================================================
 -- OpenTour — Migratie 010: Leaderboard v2
--- 
+--
 -- Voegt toe:
 -- - tournament_leaderboard: started_on_hole, today_holes, today_score,
 --   round_scores[], round_to_par[]
@@ -13,6 +13,8 @@
 -- TOURNAMENT_LEADERBOARD (vervangen)
 -- ============================================================
 DROP VIEW IF EXISTS tournament_leaderboard;
+
+-- Per-player-per-round subquery
 CREATE VIEW tournament_leaderboard AS
 WITH scored AS (
   SELECT
@@ -49,7 +51,8 @@ WITH scored AS (
       WHEN (s.strokes - CASE WHEN h.stroke_index <= ROUND(COALESCE(tp.handicap, 0))::INT THEN 1 ELSE 0 END) = h.par + 1  THEN 1
       ELSE 0
     END                       AS net_stableford,
-    MAX(s.round_number) OVER (PARTITION BY tp.id, t.id) AS max_round
+    -- Window function voor max_round (laatste ronde met scores)
+    MAX(s.round_number) OVER (PARTITION BY tp.id) AS max_round
   FROM tournament_players tp
   JOIN tournaments t    ON tp.tournament_id = t.id
   LEFT JOIN flights f   ON tp.flight_id = f.id
@@ -57,6 +60,7 @@ WITH scored AS (
   LEFT JOIN holes h     ON s.hole_id = h.id
   WHERE tp.status NOT IN ('withdrawn')
 ),
+-- Per-speler totalen
 aggregated AS (
   SELECT
     player_id, player_name, handicap, player_status,
@@ -69,56 +73,68 @@ aggregated AS (
     SUM(net_strokes) - SUM(par)   AS net_score_to_par,
     SUM(gross_stableford)         AS gross_stableford_points,
     SUM(net_stableford)           AS net_stableford_points,
-    max_round,
-    json_agg(
-      json_build_object(
-        'round', round_number,
-        'strokes', SUM(strokes) FILTER (WHERE round_number IS NOT NULL),
-        'to_par', SUM(hole_to_par) FILTER (WHERE round_number IS NOT NULL)
-      ) ORDER BY round_number
-    ) FILTER (WHERE round_number IS NOT NULL) AS round_data
+    -- max_round is same for all rows of a player (window function), take MAX to get it
+    MAX(max_round)                AS max_round
   FROM scored
   GROUP BY
-    player_id, player_name, handicap, player_status, flight_name,
-    started_on_hole, tournament_id, tournament_name, format,
-    scoring_type, max_round
+    player_id, player_name, handicap, player_status, flight_name, started_on_hole,
+    tournament_id, tournament_name, format, scoring_type
+),
+-- Per-speler-per-ronde totalen (apart om nested aggregate te voorkomen)
+round_totals AS (
+  SELECT
+    player_id,
+    tournament_id,
+    round_number,
+    SUM(strokes)  AS round_strokes,
+    SUM(hole_to_par) AS round_to_par
+  FROM scored
+  WHERE round_number IS NOT NULL
+  GROUP BY player_id, tournament_id, round_number
+),
+-- Genest: per-speler JSON van rondes
+player_rounds AS (
+  SELECT
+    player_id,
+    tournament_id,
+    json_agg(
+      json_build_object('round', round_number, 'strokes', round_strokes, 'to_par', round_to_par)
+      ORDER BY round_number
+    ) AS round_data
+  FROM round_totals
+  GROUP BY player_id, tournament_id
 )
 SELECT
-  player_id, player_name, handicap, player_status, flight_name,
-  COALESCE(started_on_hole, 1) AS started_on_hole,
-  tournament_id, tournament_name, format, scoring_type,
-  holes_played, total_strokes, score_to_par,
-  total_net_strokes, net_score_to_par,
-  gross_stableford_points, net_stableford_points,
-  CASE
-    WHEN max_round IS NOT NULL THEN
-      (SELECT COUNT(*) FROM jsonb_array_elements(round_data::jsonb) AS r
-       WHERE (r->>'round')::int = max_round AND r->>'strokes' IS NOT NULL)
-    ELSE 0
-  END                           AS today_holes,
-  CASE
-    WHEN max_round IS NOT NULL THEN
-      (SELECT (r->>'to_par')::int FROM jsonb_array_elements(round_data::jsonb) AS r
-       WHERE (r->>'round')::int = max_round)
-    ELSE NULL
-  END                           AS today_score,
+  a.player_id, a.player_name, a.handicap, a.player_status, a.flight_name,
+  COALESCE(a.started_on_hole, 1) AS started_on_hole,
+  a.tournament_id, a.tournament_name, a.format, a.scoring_type,
+  a.holes_played, a.total_strokes, a.score_to_par,
+  a.total_net_strokes, a.net_score_to_par,
+  a.gross_stableford_points, a.net_stableford_points,
+  COALESCE(
+    (SELECT COUNT(*) FROM jsonb_array_elements(pr.round_data::jsonb) AS r
+     WHERE (r->>'round')::int = a.max_round AND r->>'strokes' IS NOT NULL),
+  0) AS today_holes,
+  (SELECT (r->>'to_par')::int FROM jsonb_array_elements(pr.round_data::jsonb) AS r
+   WHERE (r->>'round')::int = a.max_round) AS today_score,
   (SELECT array_agg((r->>'strokes')::int ORDER BY (r->>'round')::int)
-   FROM jsonb_array_elements(round_data::jsonb) AS r) AS round_scores,
+   FROM jsonb_array_elements(pr.round_data::jsonb) AS r) AS round_scores,
   (SELECT array_agg((r->>'to_par')::int ORDER BY (r->>'round')::int)
-   FROM jsonb_array_elements(round_data::jsonb) AS r) AS round_to_par,
+   FROM jsonb_array_elements(pr.round_data::jsonb) AS r) AS round_to_par,
   ROW_NUMBER() OVER (
-    PARTITION BY tournament_id
+    PARTITION BY a.tournament_id
     ORDER BY
-      CASE WHEN player_status IN ('dns', 'dnf', 'dsq') THEN 1 ELSE 0 END ASC,
+      CASE WHEN a.player_status IN ('dns', 'dnf', 'dsq') THEN 1 ELSE 0 END ASC,
       CASE
-        WHEN format = 'stableford' AND scoring_type = 'net'   THEN -net_stableford_points
-        WHEN format = 'stableford' AND scoring_type = 'gross' THEN -gross_stableford_points
-        WHEN format = 'stroke'     AND scoring_type = 'net'   THEN total_net_strokes
-        ELSE total_strokes
+        WHEN a.format = 'stableford' AND a.scoring_type = 'net'   THEN -a.net_stableford_points
+        WHEN a.format = 'stableford' AND a.scoring_type = 'gross' THEN -a.gross_stableford_points
+        WHEN a.format = 'stroke'     AND a.scoring_type = 'net'   THEN a.total_net_strokes
+        ELSE a.total_strokes
       END ASC,
-      holes_played DESC
-  )                             AS position
-FROM aggregated
+      a.holes_played DESC
+  ) AS position
+FROM aggregated a
+LEFT JOIN player_rounds pr ON pr.player_id = a.player_id AND pr.tournament_id = a.tournament_id
 ORDER BY position;
 
 -- ============================================================
