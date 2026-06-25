@@ -29,7 +29,24 @@ interface Tee {
   color: string | null;
 }
 
-type Step = 'basics' | 'course' | 'loop_tee' | 'format' | 'confirm';
+interface CategoryDraft {
+  localId: string;
+  name: string;
+  gender: '' | 'male' | 'female' | 'mixed';
+  handicap_min: string;
+  handicap_max: string;
+}
+
+type Step = 'basics' | 'course' | 'loop_tee' | 'format' | 'categories' | 'confirm';
+
+const STEP_LABELS: Record<Step, string> = {
+  basics:     'Basis',
+  course:     'Baan',
+  loop_tee:   'Lus',
+  format:     'Format',
+  categories: 'Categorieën',
+  confirm:    'Bevestigen',
+};
 
 export default function NewTournamentPage() {
   const router = useRouter();
@@ -42,12 +59,20 @@ export default function NewTournamentPage() {
   const [loadingLoops, setLoadingLoops] = useState(false);
   const [loadingTees, setLoadingTees] = useState(false);
 
+  // Categorieën die lokaal worden opgebouwd vóór submit
+  const [categories, setCategories] = useState<CategoryDraft[]>([]);
+  const [catForm, setCatForm] = useState<Omit<CategoryDraft, 'localId'>>({
+    name: '', gender: '', handicap_min: '', handicap_max: '',
+  });
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+
   const STORAGE_KEY = 'opentour-tournament-new';
 
   const defaultForm = {
     name: '',
-    start_date: '',       // YYYY-MM-DD
-    start_time: '09:00',  // HH:MM — begintijd eerste flight
+    start_date: '',
+    start_time: '09:00',
     course_id: '',
     loop_id: '',
     tee_id: '',
@@ -74,13 +99,12 @@ export default function NewTournamentPage() {
   const clearForm = () => {
     sessionStorage.removeItem(STORAGE_KEY);
     setForm({ ...defaultForm });
+    setCategories([]);
   };
 
-  // Combineer datum + tijd naar een ISO datetime string
   const buildStartDatetime = (): string | null => {
     if (!form.start_date) return null;
-    const time = form.start_time || '00:00';
-    return `${form.start_date}T${time}:00`;
+    return `${form.start_date}T${form.start_time || '00:00'}:00`;
   };
 
   useEffect(() => {
@@ -111,30 +135,46 @@ export default function NewTournamentPage() {
     if (form.course_id) {
       setLoadingLoops(true);
       setLoadingTees(true);
-      supabase
-        .from('loops')
-        .select('*')
-        .eq('course_id', form.course_id)
-        .order('name')
-        .then(({ data }) => {
-          setLoops((data as Loop[]) ?? []);
-          setLoadingLoops(false);
-        });
-      supabase
-        .from('tees')
-        .select('*')
-        .eq('course_id', form.course_id)
-        .order('name')
-        .then(({ data }) => {
-          setTees((data as Tee[]) ?? []);
-          setLoadingTees(false);
-        });
+      supabase.from('loops').select('*').eq('course_id', form.course_id).order('name')
+        .then(({ data }) => { setLoops((data as Loop[]) ?? []); setLoadingLoops(false); });
+      supabase.from('tees').select('*').eq('course_id', form.course_id).order('name')
+        .then(({ data }) => { setTees((data as Tee[]) ?? []); setLoadingTees(false); });
     } else {
       setLoops([]);
       setTees([]);
     }
   }, [form.course_id]);
 
+  // ---- Categorie beheer (lokaal) ----
+  const openNewCat = () => {
+    setEditingCatId(null);
+    setCatForm({ name: '', gender: '', handicap_min: '', handicap_max: '' });
+    setShowCatForm(true);
+  };
+
+  const openEditCat = (cat: CategoryDraft) => {
+    setEditingCatId(cat.localId);
+    setCatForm({ name: cat.name, gender: cat.gender, handicap_min: cat.handicap_min, handicap_max: cat.handicap_max });
+    setShowCatForm(true);
+  };
+
+  const saveCat = () => {
+    if (!catForm.name.trim()) return;
+    if (editingCatId) {
+      setCategories(prev => prev.map(c =>
+        c.localId === editingCatId ? { ...c, ...catForm } : c
+      ));
+    } else {
+      setCategories(prev => [...prev, { localId: crypto.randomUUID(), ...catForm }]);
+    }
+    setShowCatForm(false);
+  };
+
+  const deleteCat = (localId: string) => {
+    setCategories(prev => prev.filter(c => c.localId !== localId));
+  };
+
+  // ---- Submit ----
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -143,13 +183,12 @@ export default function NewTournamentPage() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) { router.replace('/nl/login'); return; }
 
-    const startDatetime = buildStartDatetime();
-
-    const { data, error } = await supabase
+    // 1. Toernooi aanmaken
+    const { data, error: tournamentError } = await supabase
       .from('tournaments')
       .insert({
         name: form.name,
-        start_date: startDatetime,
+        start_date: buildStartDatetime(),
         course_id: form.course_id || null,
         loop_id: form.loop_id || null,
         format: form.format,
@@ -162,18 +201,42 @@ export default function NewTournamentPage() {
       .select('id')
       .single();
 
-    if (error || !data) {
+    if (tournamentError || !data) {
       setError('Aanmaken mislukt. Probeer het opnieuw.');
       setLoading(false);
       return;
+    }
+
+    // 2. Categorieën aanmaken (als die er zijn)
+    if (categories.length > 0) {
+      const { error: catError } = await supabase.from('tournament_categories').insert(
+        categories.map((c, i) => ({
+          tournament_id: data.id,
+          name: c.name,
+          gender: c.gender || null,
+          handicap_min: c.handicap_min ? parseFloat(c.handicap_min) : null,
+          handicap_max: c.handicap_max ? parseFloat(c.handicap_max) : null,
+          sort_order: i,
+        }))
+      );
+      if (catError) {
+        // Toernooi is al aangemaakt, stuur door maar meld de fout
+        setError(`Toernooi aangemaakt, maar categorieën opslaan mislukt: ${catError.message}`);
+        setLoading(false);
+        router.push(`/nl/tournament/${data.id}/manage`);
+        return;
+      }
     }
 
     clearForm();
     router.push(`/nl/tournament/${data.id}/manage`);
   };
 
-  const steps: Step[] = ['basics', 'course', 'loop_tee', 'format', 'confirm'];
+  const steps: Step[] = ['basics', 'course', 'loop_tee', 'format', 'categories', 'confirm'];
   const stepIndex = steps.indexOf(step);
+
+  const genderLabel = (g: CategoryDraft['gender']) =>
+    ({ male: 'Heren', female: 'Dames', mixed: 'Gemengd', '': '' })[g];
 
   return (
     <main className="min-h-screen bg-gray-950">
@@ -187,10 +250,7 @@ export default function NewTournamentPage() {
             ← Terug
           </button>
           <h1 className="text-lg font-semibold text-white flex-1">Nieuw toernooi</h1>
-          <button
-            onClick={clearForm}
-            className="text-sm text-gray-500 hover:text-red-400 transition-colors"
-          >
+          <button onClick={clearForm} className="text-sm text-gray-500 hover:text-red-400 transition-colors">
             Wis
           </button>
         </div>
@@ -211,7 +271,8 @@ export default function NewTournamentPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Stap 1: Basisinfo */}
+
+        {/* ── Stap 1: Basisinfo ── */}
         {step === 'basics' && (
           <div className="space-y-6">
             <div>
@@ -232,7 +293,6 @@ export default function NewTournamentPage() {
               />
             </div>
 
-            {/* Datum + tijd naast elkaar */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm text-gray-400 mb-1.5">Datum</label>
@@ -267,31 +327,19 @@ export default function NewTournamentPage() {
                     multi_rounds: !form.multi_rounds,
                     rounds: form.multi_rounds ? 1 : (form.rounds < 2 ? 2 : form.rounds),
                   })}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${
-                    form.multi_rounds ? 'bg-green-600' : 'bg-gray-600'
-                  }`}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${form.multi_rounds ? 'bg-green-600' : 'bg-gray-600'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                    form.multi_rounds ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${form.multi_rounds ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>
                 <span className="text-sm text-gray-300">Meerdere rondes</span>
               </label>
-
               {form.multi_rounds && (
                 <div className="mt-3">
                   <label className="block text-sm text-gray-400 mb-1.5">Aantal rondes</label>
                   <input
-                    type="number"
-                    min={2}
-                    max={99}
-                    value={form.rounds}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value);
-                      updateForm({ rounds: isNaN(v) ? 2 : Math.max(2, Math.min(99, v)) });
-                    }}
-                    className="w-24 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
-                               placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
+                    type="number" min={2} max={99} value={form.rounds}
+                    onChange={(e) => { const v = parseInt(e.target.value); updateForm({ rounds: isNaN(v) ? 2 : Math.max(2, Math.min(99, v)) }); }}
+                    className="w-24 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600 transition-colors"
                   />
                 </div>
               )}
@@ -300,15 +348,14 @@ export default function NewTournamentPage() {
             <button
               onClick={() => setStep('course')}
               disabled={!form.name.trim()}
-              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                         text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
             >
               Volgende →
             </button>
           </div>
         )}
 
-        {/* Stap 2: Baan kiezen */}
+        {/* ── Stap 2: Baan ── */}
         {step === 'course' && (
           <div className="space-y-6">
             <div>
@@ -321,9 +368,7 @@ export default function NewTournamentPage() {
                 <button
                   onClick={() => updateForm({ course_id: '', loop_id: '', tee_id: '' })}
                   className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                    form.course_id === ''
-                      ? 'bg-green-900/30 border-green-600 text-white'
-                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                    form.course_id === '' ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                   }`}
                 >
                   <span className="font-medium">Nog niet kiezen</span>
@@ -334,41 +379,31 @@ export default function NewTournamentPage() {
                     key={c.id}
                     onClick={() => updateForm({ course_id: c.id, loop_id: '', tee_id: '' })}
                     className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                      form.course_id === c.id
-                        ? 'bg-green-900/30 border-green-600 text-white'
-                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                      form.course_id === c.id ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                     }`}
                   >
                     <span className="font-medium">{c.name}</span>
-                    <span className="text-gray-500 text-sm block">
-                      {c.location ?? 'Locatie onbekend'} · {c.holes_count} holes
-                    </span>
+                    <span className="text-gray-500 text-sm block">{c.location ?? 'Locatie onbekend'} · {c.holes_count} holes</span>
                   </button>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 border border-dashed border-gray-700 rounded-2xl">
                 <p className="text-gray-400 text-sm mb-4">Nog geen banen beschikbaar.</p>
-                <a
-                  href="/nl/course/new"
-                  className="text-green-500 hover:text-green-400 text-sm underline"
-                >
-                  Baan aanmaken →
-                </a>
+                <a href="/nl/course/new" className="text-green-500 hover:text-green-400 text-sm underline">Baan aanmaken →</a>
               </div>
             )}
 
             <button
               onClick={() => setStep('loop_tee')}
-              className="w-full py-4 bg-green-700 hover:bg-green-600
-                         text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-4 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
             >
               Volgende →
             </button>
           </div>
         )}
 
-        {/* Stap 3: Lussen & Tees */}
+        {/* ── Stap 3: Lussen & Tees ── */}
         {step === 'loop_tee' && (
           <div className="space-y-6">
             <div>
@@ -401,16 +436,12 @@ export default function NewTournamentPage() {
                       key={loop.id}
                       onClick={() => updateForm({ loop_id: loop.id, tee_id: loop.tee_id || '' })}
                       className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                        form.loop_id === loop.id
-                          ? 'bg-green-900/30 border-green-600 text-white'
-                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                        form.loop_id === loop.id ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                       }`}
                     >
                       <span className="font-medium">{loop.name}</span>
                       <span className="text-gray-500 text-sm block">
-                        {loop.holes_count} holes · {
-                          { full_18: 'Full 18', front_9: 'Front 9', back_9: 'Back 9', custom: 'Aangepast' }[loop.loop_type]
-                        }
+                        {loop.holes_count} holes · {{ full_18: 'Full 18', front_9: 'Front 9', back_9: 'Back 9', custom: 'Aangepast' }[loop.loop_type]}
                       </span>
                     </button>
                   ))}
@@ -427,9 +458,7 @@ export default function NewTournamentPage() {
                       key={tee.id}
                       onClick={() => updateForm({ tee_id: tee.id })}
                       className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                        form.tee_id === tee.id
-                          ? 'bg-green-900/30 border-green-600 text-white'
-                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                        form.tee_id === tee.id ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                       }`}
                     >
                       <span className="font-medium">{tee.color || tee.name || 'Onbekend'}</span>
@@ -444,9 +473,7 @@ export default function NewTournamentPage() {
               <div className="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3">
                 <p className="text-white text-sm">
                   {loops.find(l => l.id === form.loop_id)?.holes_count ?? '?'} holes
-                  {form.tee_id && tees.find(t => t.id === form.tee_id)?.color
-                    ? ` · ${tees.find(t => t.id === form.tee_id)?.color} tee`
-                    : ''}
+                  {form.tee_id && tees.find(t => t.id === form.tee_id)?.color ? ` · ${tees.find(t => t.id === form.tee_id)?.color} tee` : ''}
                 </p>
               </div>
             )}
@@ -454,15 +481,14 @@ export default function NewTournamentPage() {
             <button
               onClick={() => setStep('format')}
               disabled={Boolean(form.course_id && loops.length > 0 && !form.loop_id)}
-              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                         text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
             >
               Volgende →
             </button>
           </div>
         )}
 
-        {/* Stap 4: Spelformat */}
+        {/* ── Stap 4: Spelformat ── */}
         {step === 'format' && (
           <div className="space-y-6">
             <div>
@@ -482,9 +508,7 @@ export default function NewTournamentPage() {
                     key={f.value}
                     onClick={() => updateForm({ format: f.value as typeof form.format })}
                     className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                      form.format === f.value
-                        ? 'bg-green-900/30 border-green-600 text-white'
-                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                      form.format === f.value ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                     }`}
                   >
                     <span className="font-medium">{f.label}</span>
@@ -505,9 +529,7 @@ export default function NewTournamentPage() {
                     key={s.value}
                     onClick={() => updateForm({ scoring_type: s.value as typeof form.scoring_type })}
                     className={`flex-1 py-3 px-4 rounded-xl border transition-colors text-left ${
-                      form.scoring_type === s.value
-                        ? 'bg-green-900/30 border-green-600 text-white'
-                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                      form.scoring_type === s.value ? 'bg-green-900/30 border-green-600 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
                     }`}
                   >
                     <span className="font-medium block">{s.label}</span>
@@ -518,16 +540,173 @@ export default function NewTournamentPage() {
             </div>
 
             <button
-              onClick={() => setStep('confirm')}
-              className="w-full py-4 bg-green-700 hover:bg-green-600
-                         text-white font-semibold rounded-xl transition-colors"
+              onClick={() => setStep('categories')}
+              className="w-full py-4 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
             >
               Volgende →
             </button>
           </div>
         )}
 
-        {/* Stap 5: Bevestigen */}
+        {/* ── Stap 5: Categorieën ── */}
+        {step === 'categories' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">Categorieën</h2>
+              <p className="text-gray-400 text-sm">
+                Voeg categorieën toe zoals Heren of Dames. Flights worden per categorie gegenereerd.
+              </p>
+            </div>
+
+            {/* Lijst van toegevoegde categorieën */}
+            {categories.length > 0 && (
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.localId}
+                    className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-white font-medium text-sm">{cat.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {[
+                          genderLabel(cat.gender),
+                          cat.handicap_min && cat.handicap_max ? `HCP ${cat.handicap_min}–${cat.handicap_max}` :
+                          cat.handicap_min ? `HCP ≥ ${cat.handicap_min}` :
+                          cat.handicap_max ? `HCP ≤ ${cat.handicap_max}` : '',
+                        ].filter(Boolean).join(' · ') || 'Geen filters'}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditCat(cat)}
+                        className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                      >
+                        Bewerken
+                      </button>
+                      <button
+                        onClick={() => deleteCat(cat.localId)}
+                        className="text-xs px-3 py-1.5 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-lg"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulier voor nieuwe/bewerkte categorie */}
+            {showCatForm ? (
+              <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-medium text-white">
+                  {editingCatId ? 'Categorie bewerken' : 'Categorie toevoegen'}
+                </h3>
+
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Naam *</label>
+                  <input
+                    type="text"
+                    value={catForm.name}
+                    onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="bijv. Heren, Dames, Senioren"
+                    autoFocus
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Geslacht</label>
+                  <div className="flex gap-2">
+                    {([['', 'Alle'], ['male', 'Heren'], ['female', 'Dames'], ['mixed', 'Gemengd']] as const).map(([val, label]) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setCatForm(f => ({ ...f, gender: val }))}
+                        className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                          catForm.gender === val ? 'bg-green-900/30 border-green-600 text-green-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">HCP min</label>
+                    <input
+                      type="number" step="0.1" min="-10" max="54"
+                      value={catForm.handicap_min}
+                      onChange={e => setCatForm(f => ({ ...f, handicap_min: e.target.value }))}
+                      placeholder="bijv. 0"
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">HCP max</label>
+                    <input
+                      type="number" step="0.1" min="-10" max="54"
+                      value={catForm.handicap_max}
+                      onChange={e => setCatForm(f => ({ ...f, handicap_max: e.target.value }))}
+                      placeholder="bijv. 54"
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => setShowCatForm(false)}
+                    className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm"
+                  >
+                    Annuleren
+                  </button>
+                  <button
+                    onClick={saveCat}
+                    disabled={!catForm.name.trim()}
+                    className="flex-1 py-2.5 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold"
+                  >
+                    {editingCatId ? 'Opslaan' : 'Toevoegen'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={openNewCat}
+                className="w-full py-3 border border-dashed border-gray-600 hover:border-green-600 text-gray-400 hover:text-green-400 rounded-xl text-sm transition-colors"
+              >
+                + Categorie toevoegen
+              </button>
+            )}
+
+            {/* Navigatie */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setStep('confirm')}
+                className="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-xl transition-colors text-sm"
+              >
+                Overslaan
+              </button>
+              <button
+                onClick={() => setStep('confirm')}
+                disabled={categories.length === 0}
+                className="flex-1 py-4 bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors"
+              >
+                Volgende →
+              </button>
+            </div>
+
+            {categories.length === 0 && (
+              <p className="text-center text-gray-600 text-xs -mt-2">
+                Je kunt categorieën ook later aanmaken via het beheerscherm.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── Stap 6: Bevestigen ── */}
         {step === 'confirm' && (
           <div className="space-y-6">
             <div>
@@ -537,21 +716,31 @@ export default function NewTournamentPage() {
 
             <div className="bg-gray-900 border border-gray-800 rounded-2xl divide-y divide-gray-800">
               {[
-                { label: 'Naam',        value: form.name },
-                { label: 'Datum',       value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
-                { label: 'Starttijd',   value: form.start_time ? `${form.start_time} (eerste flight)` : 'Niet ingesteld' },
-                { label: 'Baan',        value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
-                { label: 'Loop',        value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
-                { label: 'Afslag',      value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
-                { label: 'Format',      value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
-                { label: 'Scoring',     value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
-                { label: 'Rondes',      value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
+                { label: 'Naam',      value: form.name },
+                { label: 'Datum',     value: form.start_date ? new Date(form.start_date).toLocaleDateString('nl-NL') : 'Nog niet ingesteld' },
+                { label: 'Starttijd', value: form.start_time ? `${form.start_time} (eerste flight)` : 'Niet ingesteld' },
+                { label: 'Baan',      value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
+                { label: 'Loop',      value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
+                { label: 'Afslag',    value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
+                { label: 'Format',    value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
+                { label: 'Scoring',   value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
+                { label: 'Rondes',    value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between px-4 py-3">
                   <span className="text-gray-400 text-sm">{label}</span>
                   <span className="text-white text-sm font-medium">{value}</span>
                 </div>
               ))}
+
+              {/* Categorieën samenvatting */}
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-gray-400 text-sm">Categorieën</span>
+                <span className="text-white text-sm font-medium">
+                  {categories.length === 0
+                    ? <span className="text-gray-500">Geen (later aanmaken)</span>
+                    : categories.map(c => c.name).join(', ')}
+                </span>
+              </div>
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -559,13 +748,13 @@ export default function NewTournamentPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                         text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-4 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
             >
               {loading ? 'Aanmaken...' : '🏌️ Toernooi aanmaken →'}
             </button>
           </div>
         )}
+
       </div>
     </main>
   );
