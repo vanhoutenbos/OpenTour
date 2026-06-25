@@ -190,7 +190,6 @@ export default async function LeaderboardPage({ params }: Props) {
           courseName={courseName}
           rounds={tournament.rounds}
           flights={flights}
-          playerCount={undefined}
           flightCount={flights.length}
         />
       </Suspense>
