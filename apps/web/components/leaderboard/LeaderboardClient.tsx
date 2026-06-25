@@ -38,7 +38,7 @@ interface Props {
   status: string;
   startDate?: string | null;
   endDate?: string | null;
-  courseName?: string;
+  courseName?: string | null;
   rounds: number;
   flights?: FlightInfo[];
   playerCount?: number;
