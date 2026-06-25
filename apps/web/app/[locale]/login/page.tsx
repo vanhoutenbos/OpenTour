@@ -1,17 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const IS_DEV = process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true';
 
-export default function LoginPage() {
+export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [devLoading, setDevLoading] = useState(false);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        router.replace(`/${locale}/dashboard`);
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+  }, [locale, router]);
+
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <p className="text-gray-400">Laden...</p>
+      </main>
+    );
+  }
 
   const handleLogin = async () => {
     if (!email) return;
