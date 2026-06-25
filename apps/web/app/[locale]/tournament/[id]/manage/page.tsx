@@ -945,126 +945,139 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
         {/* ===== TAB: Flights ===== */}
         {activeTab === 'flights' && (
           <div className="space-y-4">
-            {/* Flight generator */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-sm font-medium text-white mb-3">Flights genereren</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
-                  <input
-                    type="datetime-local"
-                    value={flightForm.start_time}
-                    onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={flightForm.interval_minutes}
-                    onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={4}
-                    value={flightForm.max_players}
-                    onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
-                  <div className="flex gap-3 pt-1">
-                    {startHoleOptions.map(hole => (
-                      <label key={hole} className="flex items-center gap-2 cursor-pointer">
-                        <button
-                          type="button"
-                          onClick={() => toggleStartHole(hole)}
-                          className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
-                            flightForm.start_holes.includes(hole)
-                              ? 'bg-green-900/30 border-green-600 text-green-400'
-                              : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
-                          }`}
-                        >
-                          {hole}
-                        </button>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={generateFlights}
-                  disabled={flightGenerating || !flightForm.start_time || categories.length === 0}
-                  className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
-                >
-                  {flightGenerating ? 'Genereren...' : 'Flights genereren'}
-                </button>
-                {flights.length > 0 && (
-                  <button
-                    onClick={deleteAllFlights}
-                    className="py-3 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
-                  >
-                    Alle flights verwijderen
-                  </button>
-                )}
-              </div>
-              {flightError && (
-                <p className="text-red-400 text-sm mt-3">{flightError}</p>
-              )}
-              {categories.length === 0 && (
-                <p className="text-yellow-400 text-sm mt-3">
-                  Maak eerst categorieën aan voordat je flights genereert.
+            {categories.length === 0 ? (
+              /* Geen categorieën: toon informatief leeg scherm */
+              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+                <span className="text-5xl">🗂️</span>
+                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Maak eerst categorieën aan</h3>
+                <p className="text-gray-400 text-sm mb-1 max-w-xs mx-auto">
+                  Flights worden gegenereerd op basis van categorieën, zoals Heren, Dames of handicapklassen.
                 </p>
-              )}
-            </div>
-
-            {/* Flights list */}
-            {flights.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">
-                {categories.length === 0
-                  ? 'Maak eerst categorieën aan.'
-                  : 'Nog geen flights gegenereerd.'}
-              </p>
+                <p className="text-gray-500 text-sm mb-6">
+                  Ga naar het tabblad <span className="text-gray-300 font-medium">Categorieën</span> om te beginnen.
+                </p>
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className="px-6 py-3 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+                >
+                  Categorieën aanmaken →
+                </button>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {flights.map((f) => {
-                  const catName = categories.find(c => c.id === f.category_id)?.name;
-                  const playersInFlight = players.filter(p => p.flight_id === f.id);
-                  return (
-                    <div
-                      key={f.id}
-                      className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
-                    >
-                      <div>
-                        <p className="text-white font-medium text-sm">{f.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                          {f.tee_number && ` · Hole ${f.tee_number}`}
-                          {catName && ` · ${catName}`}
-                          {` · ${playersInFlight.length}/${f.max_players} spelers`}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        {playersInFlight.slice(0, 4).map(pl => (
-                          <span key={pl.id} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
-                            {pl.name.split(' ')[0]}
-                          </span>
+              <>
+                {/* Flight generator */}
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                  <h3 className="text-sm font-medium text-white mb-3">Flights genereren</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                      <input
+                        type="datetime-local"
+                        value={flightForm.start_time}
+                        onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={flightForm.interval_minutes}
+                        onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={4}
+                        value={flightForm.max_players}
+                        onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                      <div className="flex gap-3 pt-1">
+                        {startHoleOptions.map(hole => (
+                          <label key={hole} className="flex items-center gap-2 cursor-pointer">
+                            <button
+                              type="button"
+                              onClick={() => toggleStartHole(hole)}
+                              className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
+                                flightForm.start_holes.includes(hole)
+                                  ? 'bg-green-900/30 border-green-600 text-green-400'
+                                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                              }`}
+                            >
+                              {hole}
+                            </button>
+                          </label>
                         ))}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={generateFlights}
+                      disabled={flightGenerating || !flightForm.start_time}
+                      className="flex-1 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
+                    >
+                      {flightGenerating ? 'Genereren...' : 'Flights genereren'}
+                    </button>
+                    {flights.length > 0 && (
+                      <button
+                        onClick={deleteAllFlights}
+                        className="py-3 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
+                      >
+                        Alle flights verwijderen
+                      </button>
+                    )}
+                  </div>
+                  {flightError && (
+                    <p className="text-red-400 text-sm mt-3">{flightError}</p>
+                  )}
+                </div>
+
+                {/* Flights list */}
+                {flights.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">Nog geen flights gegenereerd.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {flights.map((f) => {
+                      const catName = categories.find(c => c.id === f.category_id)?.name;
+                      const playersInFlight = players.filter(p => p.flight_id === f.id);
+                      return (
+                        <div
+                          key={f.id}
+                          className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-white font-medium text-sm">{f.name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                              {f.tee_number && ` · Hole ${f.tee_number}`}
+                              {catName && ` · ${catName}`}
+                              {` · ${playersInFlight.length}/${f.max_players} spelers`}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            {playersInFlight.slice(0, 4).map(pl => (
+                              <span key={pl.id} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
+                                {pl.name.split(' ')[0]}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
