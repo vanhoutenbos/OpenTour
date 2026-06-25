@@ -15,19 +15,25 @@ interface Props {
   strokeIndex: number;
   currentStrokes: number | null;
   onSubmit: (strokes: number) => void;
+  onChange?: (strokes: number) => void;
   disabled?: boolean;
+  hideSave?: boolean;
 }
 
 const HIGH_SCORE_THRESHOLD: Record<number, number> = { 3: 10, 4: 11, 5: 12 };
 
-export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSubmit, disabled }: Props) {
+export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSubmit, onChange, disabled, hideSave }: Props) {
   const [strokes, setStrokes] = useState<number>(currentStrokes ?? par);
   const [showWarning, setShowWarning] = useState(false);
 
   const threshold = HIGH_SCORE_THRESHOLD[par] ?? 12;
 
   const adjust = (delta: number) => {
-    setStrokes((prev) => Math.max(1, Math.min(99, prev + delta)));
+    setStrokes((prev) => {
+      const next = Math.max(1, Math.min(99, prev + delta));
+      onChange?.(next);
+      return next;
+    });
   };
 
   const handleSubmit = () => {
@@ -90,15 +96,17 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
       </div>
 
       {/* Bevestigen */}
-      <button
-        onClick={handleSubmit}
-        disabled={disabled}
-        className="w-full py-4 bg-green-700 text-white text-lg font-semibold rounded-xl
-                   hover:bg-green-600 active:scale-98 disabled:opacity-50
-                   transition-all touch-manipulation"
-      >
-        Opslaan →
-      </button>
+      {!hideSave && (
+        <button
+          onClick={handleSubmit}
+          disabled={disabled}
+          className="w-full py-4 bg-green-700 text-white text-lg font-semibold rounded-xl
+                     hover:bg-green-600 active:scale-98 disabled:opacity-50
+                     transition-all touch-manipulation"
+        >
+          Opslaan →
+        </button>
+      )}
 
       {/* Hoge score waarschuwing */}
       {showWarning && (

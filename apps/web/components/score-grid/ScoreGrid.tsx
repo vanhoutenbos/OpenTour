@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { saveScoreLocally, getPendingScores } from '@/lib/offline-db';
 
 interface Player {
   id: string;
@@ -82,6 +83,15 @@ export default function ScoreGrid({
         scoresMap.set(key, score.strokes);
       });
 
+      const pendingScores = await getPendingScores();
+      const sorted = pendingScores.sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      sorted.forEach((score) => {
+        const key = `${score.player_id}-${score.hole_id}`;
+        scoresMap.set(key, score.strokes);
+      });
+
       setScores(scoresMap);
     } catch (error) {
       console.error('Fout bij laden van scores:', error);
@@ -109,35 +119,24 @@ export default function ScoreGrid({
     try {
       setIsSaving(true);
 
-      const scoreInserts = [];
-      for (const [key, strokes] of scores) {
-        const [playerId, holeId] = key.split('-');
-        scoreInserts.push({
+      const changes = debouncedChanges.current;
+      for (const [key, strokes] of Object.entries(changes)) {
+        const [playerId, holeId] = key.split('-') as [string, string];
+        await saveScoreLocally({
           tournament_id: tournamentId,
           player_id: playerId,
           hole_id: holeId,
           round_number: 1,
-          strokes: strokes,
-          recorded_by: (await supabase.auth.getUser()).data.user?.id,
-          is_verified: false,
+          strokes,
+          updated_at: new Date().toISOString(),
         });
-      }
-
-      const { error } = await supabase.from('scores').upsert(scoreInserts, {
-        onConflict: 'tournament_id, player_id, hole_id, round_number',
-        count: 'exact',
-      });
-
-      if (error) {
-        console.error('Fout bij opslaan van scores:', error);
-        throw error;
       }
 
       saveScheduled.current = false;
       debouncedChanges.current = {};
       setLastSaved(new Date());
     } catch (error) {
-      console.error('Fout bij opslaan:', error);
+      console.error('Fout bij lokaal opslaan:', error);
     } finally {
       setIsSaving(false);
     }

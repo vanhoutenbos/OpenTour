@@ -7,6 +7,9 @@ import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import ScoreGrid from '@/components/score-grid/ScoreGrid';
 import { SyncStatusBar } from '@/components/scorer/SyncStatusBar';
+import { ScoringModeSelector } from '@/components/scorer/ScoringModeSelector';
+import { HoleByHoleView } from '@/components/scorer/HoleByHoleView';
+import { HolePerFlightView } from '@/components/scorer/HolePerFlightView';
 import {
   getPendingScores,
   markScoreSynced,
@@ -53,6 +56,7 @@ export default function FlightScorePage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [scoringMode, setScoringMode] = useState<'follow' | 'holes_per_flight' | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -263,34 +267,52 @@ export default function FlightScorePage() {
               {players.length} {t('players')} · {holes.length} {t('holes')}
             </p>
           </div>
-          <Link
-            href={`/${locale}/scorer/${tournamentId}`}
-            className="text-sm text-gray-500 hover:text-gray-300"
-          >
-            {t('back_to_flights')}
-          </Link>
+          <div className="flex items-center gap-3">
+            {scoringMode && (
+              <button
+                onClick={() => setScoringMode(null)}
+                className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {t('mode.follow_flight')} / {t('mode.holes_per_flight')}
+              </button>
+            )}
+            <Link
+              href={`/${locale}/scorer/${tournamentId}`}
+              className="text-sm text-gray-500 hover:text-gray-300"
+            >
+              {t('back_to_flights')}
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <ScoreGrid
-          tournamentId={tournamentId}
-          players={players}
-          holes={holes}
-          tournamentFormat={tournament.format}
-          scoringType={tournament.scoring_type}
-          tournamentRounds={tournament.rounds}
-        />
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {scoringMode === null && (
+          <ScoringModeSelector onSelect={setScoringMode} />
+        )}
 
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setShowConfirm(true)}
-            className="px-8 py-4 bg-green-700 hover:bg-green-600 text-white font-semibold
-                       text-lg rounded-xl transition-colors min-h-[48px]"
-          >
-            {t('submit_final')}
-          </button>
-        </div>
+        {scoringMode === 'follow' && (
+          <HoleByHoleView
+            tournamentId={tournamentId}
+            players={players}
+            holes={holes}
+            tournament={tournament}
+            locale={locale}
+            onComplete={() => setShowConfirm(true)}
+            onBack={() => setScoringMode(null)}
+          />
+        )}
+
+        {scoringMode === 'holes_per_flight' && (
+          <HolePerFlightView
+            tournamentId={tournamentId}
+            players={players}
+            holes={holes}
+            tournamentFormat={tournament.format}
+            scoringType={tournament.scoring_type}
+            onBack={() => router.push(`/${locale}/scorer/${tournamentId}`)}
+          />
+        )}
       </div>
 
       {showConfirm && (

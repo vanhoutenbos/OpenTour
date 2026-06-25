@@ -193,7 +193,8 @@
     "hole_nav": {
       "grid": "Hole overzicht",
       "completed": "Ingevuld",
-      "empty": "Nog niet ingevuld"
+      "empty": "Nog niet ingevuld",
+      "verified": "Definitief"
     },
     "auto_advance": {
       "next_hole": "Volgende hole",
