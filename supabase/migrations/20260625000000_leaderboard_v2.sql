@@ -247,4 +247,15 @@ GROUP BY
   mp.player_b_id, tpb.name;
 
 -- Realtime voor live updates
-ALTER PUBLICATION supabase_realtime ADD TABLE IF NOT EXISTS scores;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'scores'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE scores;
+  END IF;
+END;
+$$;
