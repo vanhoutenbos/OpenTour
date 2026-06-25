@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import '../globals.css';
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
