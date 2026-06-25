@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
+import { LiveBadge } from '@/components/leaderboard/LiveBadge';
+import { PauseBanner } from '@/components/leaderboard/PauseBanner';
 import ScoreGrid from '@/components/score-grid/ScoreGrid';
 
 interface Tournament {
@@ -609,6 +612,33 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
                 <p className="text-yellow-200 text-sm mt-1">{tournament.pause_reason}</p>
               </div>
             )}
+
+            {/* Leaderboard widget */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+                {tournament.status === 'active' && <LiveBadge />}
+              </div>
+              {tournament.status === 'paused' && tournament.pause_reason && (
+                <PauseBanner reason={tournament.pause_reason} />
+              )}
+              <LeaderboardClient
+                tournamentId={params.id}
+                tournamentName={tournament.name}
+                format={tournament.format}
+                scoringType={tournament.scoring_type}
+                isActive={tournament.status === 'active'}
+              />
+              <div className="mt-4 text-center">
+                <Link
+                  href={`/nl/tournament/${params.id}`}
+                  target="_blank"
+                  className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                >
+                  Volledig leaderboard bekijken →
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 
