@@ -128,6 +128,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
   const [pauseReason, setPauseReason] = useState('');
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [hasScores, setHasScores] = useState(false);
+  const [overviewView, setOverviewView] = useState<'leaderboard' | 'startlist'>('leaderboard');
 
   // Edit form
   const [editForm, setEditForm] = useState({
@@ -243,6 +245,12 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       .order('start_time');
     setFlights((f as Flight[]) ?? []);
 
+    const { count } = await supabase
+      .from('scores')
+      .select('*', { count: 'exact', head: true })
+      .eq('tournament_id', params.id);
+    setHasScores((count ?? 0) > 0);
+
     if (t.course_id) {
       const [teeData, holeData] = await Promise.all([
         supabase.from('tees').select('id, name, color').eq('course_id', t.course_id).order('name'),
@@ -251,6 +259,10 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
       setTees((teeData.data as Tee[]) ?? []);
       setHoles((holeData.data as Hole[]) ?? []);
     }
+
+    const hasScoreData = (count ?? 0) > 0;
+    const showStartlist = t.status === 'draft' && !hasScoreData && (f ?? []).length > 0;
+    setOverviewView(showStartlist ? 'startlist' : 'leaderboard');
 
     setLoading(false);
   };
@@ -629,6 +641,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
         {/* ===== TAB: Overzicht ===== */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
+            {/* Stat cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: 'Spelers', value: players.length },
@@ -643,39 +656,142 @@ export default function ManageTournamentPage({ params }: { params: { id: string 
               ))}
             </div>
 
+            {/* Pause banner */}
             {tournament.status === 'paused' && tournament.pause_reason && (
-              <div className="bg-yellow-900/30 border border-yellow-700 rounded-xl p-4">
-                <p className="text-yellow-300 text-sm font-medium">⏸ Gepauzeerd</p>
-                <p className="text-yellow-200 text-sm mt-1">{tournament.pause_reason}</p>
-              </div>
+              <PauseBanner reason={tournament.pause_reason} />
             )}
 
-            {/* Leaderboard widget */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white">Leaderboard</h2>
-                {tournament.status === 'active' && <LiveBadge />}
+            {flights.length > 0 ? (
+              <>
+                {/* Sub-tabs: Leaderboard / Startlijst */}
+                <div className="flex gap-1 border-b border-gray-800">
+                  <button
+                    onClick={() => setOverviewView('leaderboard')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                      overviewView === 'leaderboard'
+                        ? 'border-green-500 text-white'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Leaderboard
+                  </button>
+                  <button
+                    onClick={() => setOverviewView('startlist')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                      overviewView === 'startlist'
+                        ? 'border-green-500 text-white'
+                        : 'border-transparent text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Startlijst
+                  </button>
+                </div>
+
+                {/* Leaderboard content */}
+                {overviewView === 'leaderboard' && (
+                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+                      {tournament.status === 'active' && <LiveBadge />}
+                    </div>
+                    <LeaderboardClient
+                      tournamentId={params.id}
+                      tournamentName={tournament.name}
+                      format={tournament.format}
+                      scoringType={tournament.scoring_type}
+                      isActive={tournament.status === 'active'}
+                    />
+                    <div className="mt-4 text-center">
+                      <Link
+                        href={`/nl/tournament/${params.id}`}
+                        target="_blank"
+                        className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                      >
+                        Volledig leaderboard bekijken →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Startlijst content */}
+                {overviewView === 'startlist' && (
+                  <div className="space-y-4">
+                    {flights.map((f) => {
+                      const catName = categories.find(c => c.id === f.category_id)?.name;
+                      const playersInFlight = players.filter(p => p.flight_id === f.id);
+                      return (
+                        <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                {f.start_time && new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                                {f.tee_number && ` · Hole ${f.tee_number}`}
+                                {catName && ` · ${catName}`}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-500">{playersInFlight.length} spelers</span>
+                          </div>
+                          <div className="space-y-1">
+                            {playersInFlight.length === 0 ? (
+                              <p className="text-xs text-gray-500 italic">Geen spelers</p>
+                            ) : (
+                              playersInFlight.map(pl => (
+                                <div key={pl.id} className="bg-gray-800 rounded-lg px-3 py-2 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-white">{pl.name}</span>
+                                    {pl.handicap !== null && (
+                                      <span className="text-gray-500 text-xs">HCP {pl.handicap}</span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-gray-500">
+                                    {pl.gender === 'male' ? 'M' : pl.gender === 'female' ? 'V' : ''}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              /* No flights: show leaderboard only */
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+                  {tournament.status === 'active' && <LiveBadge />}
+                </div>
+                <LeaderboardClient
+                  tournamentId={params.id}
+                  tournamentName={tournament.name}
+                  format={tournament.format}
+                  scoringType={tournament.scoring_type}
+                  isActive={tournament.status === 'active'}
+                />
+                {tournament.status === 'draft' && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setActiveTab('flights')}
+                      className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                    >
+                      Genereer flights om de startlijst te tonen →
+                    </button>
+                  </div>
+                )}
+                <div className="mt-4 text-center">
+                  <Link
+                    href={`/nl/tournament/${params.id}`}
+                    target="_blank"
+                    className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                  >
+                    Volledig leaderboard bekijken →
+                  </Link>
+                </div>
               </div>
-              {tournament.status === 'paused' && tournament.pause_reason && (
-                <PauseBanner reason={tournament.pause_reason} />
-              )}
-              <LeaderboardClient
-                tournamentId={params.id}
-                tournamentName={tournament.name}
-                format={tournament.format}
-                scoringType={tournament.scoring_type}
-                isActive={tournament.status === 'active'}
-              />
-              <div className="mt-4 text-center">
-                <Link
-                  href={`/nl/tournament/${params.id}`}
-                  target="_blank"
-                  className="text-sm text-green-500 hover:text-green-400 transition-colors"
-                >
-                  Volledig leaderboard bekijken →
-                </Link>
-              </div>
-            </div>
+            )}
           </div>
         )}
 

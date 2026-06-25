@@ -2,11 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-<<<<<<< Updated upstream
 import { saveScoreLocally, getPendingScores } from '@/lib/offline-db';
-=======
-import { saveScoreLocally } from '@/lib/offline-db';
->>>>>>> Stashed changes
 
 interface Player {
   id: string;
@@ -131,12 +127,7 @@ export default function ScoreGrid({
     try {
       setIsSaving(true);
 
-<<<<<<< Updated upstream
-      const changes = debouncedChanges.current;
-      for (const [key, strokes] of Object.entries(changes)) {
-        const [playerId, holeId] = key.split('-') as [string, string];
-        await saveScoreLocally({
-=======
+      // Eerst proberen direct naar Supabase te schrijven
       const { data: userData } = await supabase.auth.getUser();
       const recordedBy = userData.user?.id;
       const scoreInserts = [];
@@ -146,33 +137,27 @@ export default function ScoreGrid({
         if (parts.length < 2) continue;
         const [playerId, holeId] = parts as [string, string];
         scoreInserts.push({
->>>>>>> Stashed changes
           tournament_id: tournamentId,
           player_id: playerId,
           hole_id: holeId,
           round_number: 1,
-<<<<<<< Updated upstream
           strokes,
-          updated_at: new Date().toISOString(),
-        });
-      }
-
-=======
-          strokes: strokes,
           recorded_by: recordedBy,
           is_verified: false,
+          updated_at: new Date().toISOString(),
         });
       }
 
       const { error } = await supabase.from('scores').upsert(scoreInserts, {
         onConflict: 'tournament_id, player_id, hole_id, round_number',
-        count: 'exact',
       });
 
       if (error) {
         console.error('Direct upsert mislukt, val terug op offline-db:', error);
+        throw error;
       }
-
+    } catch {
+      // Fallback: lokaal opslaan voor latere sync
       for (const [key, strokes] of Object.entries(changes)) {
         const parts = key.split('-');
         if (parts.length < 2) continue;
@@ -182,18 +167,14 @@ export default function ScoreGrid({
           player_id: playerId,
           hole_id: holeId,
           round_number: 1,
-          strokes: strokes,
+          strokes,
           updated_at: new Date().toISOString(),
         });
       }
-
->>>>>>> Stashed changes
+    } finally {
       saveScheduled.current = false;
       debouncedChanges.current = {};
       setLastSaved(new Date());
-    } catch (error) {
-      console.error('Fout bij lokaal opslaan:', error);
-    } finally {
       setIsSaving(false);
     }
   };
