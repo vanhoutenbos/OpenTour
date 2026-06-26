@@ -138,9 +138,12 @@ export default function ScoreGrid({
       const scoreInserts = [];
 
       for (const [key, strokes] of Object.entries(changes)) {
-        const parts = key.split('-');
-        if (parts.length < 2) continue;
-        const [playerId, holeId] = parts as [string, string];
+        // Keys are formatted as `${playerId}-${holeId}` where both are UUIDs (36 chars each).
+        // Splitting on '-' is wrong because UUIDs contain '-' themselves.
+        // Instead, slice at the known UUID boundary: first 36 chars = playerId, skip the separator, rest = holeId.
+        if (key.length < 73) continue; // 36 + 1 + 36 = 73 minimum
+        const playerId = key.slice(0, 36);
+        const holeId = key.slice(37);
         scoreInserts.push({
           tournament_id: tournamentId,
           player_id: playerId,
@@ -163,9 +166,9 @@ export default function ScoreGrid({
       }
     } catch {
       for (const [key, strokes] of Object.entries(changes)) {
-        const parts = key.split('-');
-        if (parts.length < 2) continue;
-        const [playerId, holeId] = parts as [string, string];
+        if (key.length < 73) continue;
+        const playerId = key.slice(0, 36);
+        const holeId = key.slice(37);
         await saveScoreLocally({
           tournament_id: tournamentId,
           player_id: playerId,

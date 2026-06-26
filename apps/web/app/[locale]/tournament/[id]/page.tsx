@@ -157,11 +157,6 @@ export default async function LeaderboardPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
-      {/* Sponsor top banner */}
-      <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto px-4 pt-4">
-        <SponsorBanner position="top" />
-      </div>
-
       {/* Pause banner */}
       {tournament.status === 'paused' && tournament.pause_reason && (
         <div className="bg-yellow-900/40 border-b border-yellow-700 px-4 py-3">

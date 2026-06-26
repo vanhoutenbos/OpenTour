@@ -441,8 +441,20 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   };
 
   const deleteAllFlights = async () => {
-    await supabase.from('tournament_players').delete().eq('tournament_id', params.id);
-    await supabase.from('flights').delete().eq('tournament_id', params.id);
+    const { error: updateErr } = await supabase
+      .from('tournament_players')
+      .update({ flight_id: null })
+      .eq('tournament_id', params.id);
+    console.log('[deleteAllFlights] update tournament_players:', updateErr);
+    if (updateErr) { setFlightError(userError(updateErr, 'Kon spelers niet ontkoppelen van flights.')); return; }
+
+    const { error: deleteErr, count } = await supabase
+      .from('flights')
+      .delete({ count: 'exact' })
+      .eq('tournament_id', params.id);
+    console.log('[deleteAllFlights] delete flights:', deleteErr, 'count:', count);
+    if (deleteErr) { setFlightError(userError(deleteErr, 'Kon flights niet verwijderen.')); return; }
+
     await loadData();
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
@@ -17,7 +17,6 @@ interface Tournament {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const params = useParams();
   const format = useFormatter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +25,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
+    let loaded = false;
 
     const loadDashboard = async (userId: string, email: string | undefined) => {
-      if (cancelled) return;
+      if (cancelled || loaded) return;
+      loaded = true;
       setUser({ email });
       const { data: rows } = await supabase
         .from('tournaments')
@@ -41,35 +42,18 @@ export default function DashboardPage() {
       }
     };
 
-    // getSession() leest de lokale cookie — snel en genoeg voor de dashboard check.
-    // getUser() (server-side verificatie) doen we alleen als er geen lokale sessie is.
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (cancelled) return;
-      if (session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else {
-        // Geen lokale sessie — controleer nog eenmaal server-side
-        const { data: { user } } = await supabase.auth.getUser();
-        if (cancelled) return;
-        if (user) {
-          loadDashboard(user.id, user.email ?? undefined);
-        } else {
-          setLoading(false);
-          router.replace('/nl/login');
-        }
-      }
-    });
-
-    // Luister op uitloggen zodat we direct redirecten
+    // onAuthStateChange gebruikt geen lock — vuurt direct met de huidige sessie
+    // via INITIAL_SESSION (als er een sessie is) of SIGNED_IN na login.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === 'SIGNED_OUT') {
+
+      if (session?.user) {
+        // INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED — allemaal laden
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+        // Geen sessie bij initieel laden of uitloggen → terug naar login
+        setLoading(false);
         router.replace('/nl/login');
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Sessie ververst — laad opnieuw als user nog niet gezet is
-        if (!user) {
-          loadDashboard(session.user.id, session.user.email ?? undefined);
-        }
       }
     });
 
@@ -80,7 +64,6 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = async () => {
-    console.log('[Dashboard] User logout clicked');
     await getSupabaseBrowser().auth.signOut();
     router.replace('/nl/login');
   };
@@ -123,7 +106,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
           <Link
-            href="/nl/tournament/new"
+            href={`/nl/tournament/new`}
             className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm
                        font-semibold rounded-xl transition-colors"
           >
@@ -139,7 +122,7 @@ export default function DashboardPage() {
               Maak je eerste toernooi aan en deel het leaderboard met deelnemers.
             </p>
             <Link
-              href="/nl/tournament/new"
+              href={`/nl/tournament/new`}
               className="px-6 py-3 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
             >
               Toernooi aanmaken →

@@ -29,27 +29,16 @@ export function Navbar() {
         .from('profiles')
         .select('display_name')
         .eq('id', userId)
-        .maybeSingle();   // .single() throws PGRST116 als profiel ontbreekt
+        .maybeSingle();
       return data?.display_name ?? null;
     }
 
-    // getUser() verifieert server-side — betrouwbaarder dan getSession() voor initiële load
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const display_name = await fetchProfile(user.id);
-        setUser({ email: user.email ?? '', display_name });
-      } else {
-        setUser(null);
-      }
-    });
-
+    // onAuthStateChange vuurt INITIAL_SESSION direct met de huidige sessie — geen lock nodig
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // INITIAL_SESSION negeren — wordt al afgehandeld door getUser() hierboven
-      if (event === 'INITIAL_SESSION') return;
       if (session?.user) {
         const display_name = await fetchProfile(session.user.id);
         setUser({ email: session.user.email ?? '', display_name });
-      } else {
+      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
         setUser(null);
       }
     });

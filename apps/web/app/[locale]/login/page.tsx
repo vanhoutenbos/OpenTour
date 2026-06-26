@@ -12,41 +12,18 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
   const [devLoading, setDevLoading] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-
-    // Timeout: als Supabase niet binnen 3s antwoordt, toon gewoon de loginpagina
-    const timeout = setTimeout(() => setCheckingAuth(false), 3000);
-
-    // getSession() is voldoende voor de login redirect check — alleen lokale cookie lezen
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        clearTimeout(timeout);
-        if (session?.user) {
-          router.replace(`/${locale}/dashboard`);
-        } else {
-          setCheckingAuth(false);
-        }
-      })
-      .catch(() => {
-        clearTimeout(timeout);
-        setCheckingAuth(false);
-      });
-
-    return () => clearTimeout(timeout);
+    // onAuthStateChange gebruikt geen lock — veilig naast setSession() en getSession()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        router.replace(`/${locale}/dashboard`);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, [locale, router]);
-
-  if (checkingAuth) {
-    return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Laden...</p>
-      </main>
-    );
-  }
 
   const handleLogin = async () => {
     if (!email) return;
@@ -63,7 +40,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     });
 
     if (error) {
-      setError(error.message.includes('rate limit') 
+      setError(error.message.includes('rate limit')
         ? 'Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.'
         : 'Inloggen mislukt. Controleer je e-mailadres.');
     } else {
@@ -77,28 +54,41 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     setDevLoading(true);
     setError(null);
 
-    const res = await fetch('/api/dev-magic-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    if (data.success) {
-      const supabase = getSupabaseBrowser();
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
+      const res = await fetch('/api/dev-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+        signal: controller.signal,
       });
-      if (sessionError) {
-        setError(`Session instellen mislukt: ${sessionError.message}`);
-        setDevLoading(false);
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
+
+      if (data.success) {
+        const supabase = getSupabaseBrowser();
+        // setSession() triggert onAuthStateChange met SIGNED_IN → navigeert naar dashboard
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+        if (sessionError) {
+          setError(`Session instellen mislukt: ${sessionError.message}`);
+          setDevLoading(false);
+        }
+        // Bij succes: onAuthStateChange handler hierboven doet de redirect
       } else {
-        // Gebruik router.push zodat Next.js de navigatie beheert na setSession
-        router.push(`/${locale}/dashboard`);
+        setError(data.error ?? 'Dev login mislukt');
+        setDevLoading(false);
       }
-    } else {
-      setError(data.error ?? 'Dev login mislukt');
+    } catch (err) {
+      const message = err instanceof Error && err.name === 'AbortError'
+        ? 'Timeout — probeer opnieuw'
+        : 'Dev login mislukt';
+      setError(message);
       setDevLoading(false);
     }
   };
