@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 const DISALLOWED = /[0O1I]/g;
@@ -9,6 +9,7 @@ const DISALLOWED = /[0O1I]/g;
 export default function ScorerPage() {
   const t = useTranslations('scorer');
   const router = useRouter();
+  const { locale } = useParams<{ locale: string }>();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export default function ScorerPage() {
       }
 
       if (data.valid && data.tournamentId) {
-        router.push(`./scorer/${data.tournamentId}`);
+        router.push(`/${locale}/scorer/${data.tournamentId}`);
       }
     } catch {
       setError(t('network_error'));
