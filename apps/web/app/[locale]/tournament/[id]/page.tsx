@@ -33,11 +33,12 @@ interface CourseRow {
 
 interface FlightRow {
   id: string;
-  name: string;
+  name: string | null;
   start_time: string | null;
   tee_number: number;
   category_id: string | null;
   max_players: number;
+  sort_order: number | null;
 }
 
 interface CategoryRow {
@@ -125,6 +126,7 @@ async function getFlightsWithPlayers(tournamentId: string) {
       name: f.name,
       start_time: f.start_time,
       tee_number: f.tee_number,
+      sort_order: f.sort_order,
       category_name: catName,
       players: players
         .filter((p) => p.flight_id === f.id && p.status !== 'withdrawn')

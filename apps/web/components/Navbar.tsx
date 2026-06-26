@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -20,6 +20,19 @@ export function Navbar() {
 
   const [user, setUser] = useState<{ email: string; display_name: string | null } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -115,39 +128,85 @@ export function Navbar() {
               </svg>
             </a>
 
-            {/* Locale switcher */}
-            <Link
-              href={pathname.replace(`/${locale}`, `/${otherLocale}`)}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-gray-800 transition-colors border border-gray-700"
-            >
-              {otherLocale}
-            </Link>
-
-            {/* Auth / Mobile toggle */}
-            {user ? (
-              <>
-                <Link
-                  href={`/${locale}/profile`}
-                  className="hidden md:inline-flex"
-                >
-                  <Avatar name={user.display_name} size="sm" />
-                </Link>
-                <button
-                  onClick={async () => {
-                    await getSupabaseBrowser().auth.signOut();
-                  }}
-                  className="hidden md:inline-flex px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
-                >
-                  {t('logout')}
-                </button>
-              </>
-            ) : (
+            {/* Login button (not logged in, desktop) */}
+            {!user && (
               <Link
                 href={`/${locale}/login`}
                 className="hidden md:inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-green-700 hover:bg-green-600 text-white transition-all hover:shadow-lg hover:shadow-green-900/50"
               >
                 {t('login')}
               </Link>
+            )}
+
+            {/* Profile dropdown (logged in, desktop) */}
+            {user && (
+              <div ref={profileRef} className="relative hidden md:block">
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  aria-label="Open profile menu"
+                  aria-expanded={profileOpen}
+                  aria-haspopup="true"
+                >
+                  <Avatar name={user.display_name} size="sm" />
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-gray-900 border border-gray-700/60 shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                    {/* User info header */}
+                    <div className="px-4 py-3 border-b border-gray-800">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {user.display_name || user.email}
+                      </p>
+                      {user.display_name && (
+                        <p className="text-xs text-gray-400 truncate mt-0.5">{user.email}</p>
+                      )}
+                    </div>
+
+                    {/* Language */}
+                    <div className="px-2 py-2 border-b border-gray-800">
+                      <p className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        {t('language')}
+                      </p>
+                      {locales.map((l) => (
+                        <Link
+                          key={l.code}
+                          href={pathname.replace(`/${locale}`, `/${l.code}`)}
+                          onClick={() => setProfileOpen(false)}
+                          className={`flex items-center justify-between px-2 py-2 rounded-lg text-sm transition-colors ${
+                            locale === l.code
+                              ? 'text-white bg-gray-800'
+                              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                          }`}
+                        >
+                          {l.code === 'nl' ? 'Nederlands' : 'English'}
+                          {locale === l.code && (
+                            <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Logout */}
+                    <div className="px-2 py-2">
+                      <button
+                        onClick={async () => {
+                          setProfileOpen(false);
+                          await getSupabaseBrowser().auth.signOut();
+                        }}
+                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+                      >
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        {t('logout')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Hamburger */}
@@ -219,49 +278,67 @@ export function Navbar() {
             </a>
 
             <div className="border-t border-gray-800 pt-1">
-              {user ? (
-                <>
-                  <Link
-                    href={`/${locale}/dashboard`}
-                    onClick={() => setMenuOpen(false)}
-                    className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(`/${locale}/dashboard`)
-                        ? 'text-green-400 bg-green-900/30'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    {t('dashboard')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/profile`}
-                    onClick={() => setMenuOpen(false)}
-                    className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(`/${locale}/profile`)
-                        ? 'text-green-400 bg-green-900/30'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    {t('profile')}
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      await getSupabaseBrowser().auth.signOut();
-                      setMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
-                  >
-                    {t('logout')}
-                  </button>
-                </>
-              ) : (
+              {/* Language switcher */}
+              <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {t('language')}
+              </p>
+              {locales.map((l) => (
                 <Link
-                  href={`/${locale}/login`}
+                  key={l.code}
+                  href={pathname.replace(`/${locale}`, `/${l.code}`)}
                   onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-center bg-green-700 hover:bg-green-600 text-white transition-colors"
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    locale === l.code
+                      ? 'text-white bg-gray-800'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
                 >
-                  {t('login')}
+                  {l.code === 'nl' ? 'Nederlands' : 'English'}
+                  {locale === l.code && (
+                    <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </Link>
-              )}
+              ))}
+
+              <div className="border-t border-gray-800 mt-1 pt-1">
+                {user ? (
+                  <>
+                    <Link
+                      href={`/${locale}/dashboard`}
+                      onClick={() => setMenuOpen(false)}
+                      className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        isActive(`/${locale}/dashboard`)
+                          ? 'text-green-400 bg-green-900/30'
+                          : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      {t('dashboard')}
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        await getSupabaseBrowser().auth.signOut();
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      {t('logout')}
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href={`/${locale}/login`}
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-center bg-green-700 hover:bg-green-600 text-white transition-colors"
+                  >
+                    {t('login')}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -17,8 +17,9 @@ interface Tournament {
 
 interface FlightRow {
   id: string;
-  name: string;
+  name: string | null;
   start_time: string | null;
+  sort_order: number | null;
 }
 
 interface PlayerRow {
@@ -30,7 +31,8 @@ interface PlayerRow {
 
 interface Flight {
   id: string;
-  name: string;
+  name: string | null;
+  sort_order: number | null;
   start_time: string | null;
   players: { id: string; name: string; handicap: number | null }[];
   hole_count: number;
@@ -73,7 +75,7 @@ export default function TournamentScorerPage() {
 
         const flightsRes = await supabase
           .from('flights')
-          .select('id, name, start_time')
+          .select('id, name, start_time, sort_order')
           .eq('tournament_id', tournamentId)
           .order('start_time', { ascending: true, nullsFirst: false });
 
@@ -112,6 +114,7 @@ export default function TournamentScorerPage() {
         const flights: Flight[] = flightRows.map((f) => ({
           id: f.id,
           name: f.name,
+          sort_order: f.sort_order,
           start_time: f.start_time,
           players: playersByFlight.get(f.id) ?? [],
           hole_count: holeCount,
@@ -203,7 +206,9 @@ export default function TournamentScorerPage() {
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white">{flight.name}</h3>
+                    <h3 className="font-semibold text-white">
+                      {flight.name ?? `Flight ${flight.sort_order}`}
+                    </h3>
                     <p className="text-sm text-gray-400 mt-0.5">
                       {flight.start_time &&
                         `${new Date(flight.start_time).toLocaleTimeString(locale === 'nl' ? 'nl-NL' : 'en-GB', { hour: '2-digit', minute: '2-digit' })} · `}

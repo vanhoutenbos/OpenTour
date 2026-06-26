@@ -89,11 +89,12 @@ interface TournamentCategory {
 
 interface Flight {
   id: string;
-  name: string;
+  name: string | null;
   start_time: string | null;
   tee_number: number;
   category_id: string | null;
   max_players: number;
+  sort_order?: number | null;
 }
 
 type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'corrections' | 'codes';
@@ -185,8 +186,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const loadData = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) { router.replace('/nl/login'); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { router.replace('/nl/login'); return; }
 
     const { data: t } = await supabase
       .from('tournaments')
@@ -244,7 +245,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
     const { data: f } = await supabase
       .from('flights')
-      .select('id, name, start_time, tee_number, category_id, max_players')
+      .select('id, name, start_time, tee_number, category_id, max_players, sort_order')
       .eq('tournament_id', params.id)
       .order('start_time');
     setFlights((f as Flight[]) ?? []);
@@ -759,7 +760,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                         <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div>
-                              <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                              <h4 className="text-white font-semibold text-sm">
+                                {f.name ?? `Flight ${f.sort_order}`}
+                              </h4>
                               <p className="text-xs text-gray-400 mt-0.5">
                                 {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                 {f.tee_number && ` · Hole ${f.tee_number}`}
@@ -1503,7 +1506,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             {/* Flight header */}
                             <div className="flex items-center justify-between mb-3">
                               <div>
-                                <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                                <h4 className="text-white font-semibold text-sm">
+                                  {f.name ?? `Flight ${f.sort_order}`}
+                                </h4>
                                 <p className="text-xs text-gray-400 mt-0.5">
                                   {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                   {f.tee_number && ` · Hole ${f.tee_number}`}
@@ -1615,7 +1620,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       const playerCount = players.filter(p => p.flight_id === f.id).length;
                       return (
                         <option key={f.id} value={f.id}>
-                          {f.name} ({playerCount} spelers{catName ? ` · ${catName}` : ''})
+                          {f.name ?? `Flight ${f.sort_order}`}{`(${playerCount} spelers${catName ? ` · ${catName}` : ''})`}
                         </option>
                       );
                     })}

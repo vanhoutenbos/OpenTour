@@ -7,7 +7,8 @@
       "dashboard": "Dashboard",
       "profile": "Profile",
       "login": "Log in",
-      "logout": "Log out"
+      "logout": "Log out",
+      "language": "Language"
     },
     "actions": {
       "save": "Save",

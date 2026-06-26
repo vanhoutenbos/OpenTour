@@ -94,7 +94,12 @@ export function LeaderboardTable({
 
     // Filter op flight
     if (selectedFlight) {
-      list = list.filter((e) => e.flight_name === selectedFlight);
+      list = list.filter((e) => {
+        const order = e.flight_sort_order;
+        const name = e.flight_name;
+        const key = order != null ? `order:${order}` : `name:${name}`;
+        return key === selectedFlight;
+      });
     }
 
     // Filter op favorieten
@@ -220,9 +225,9 @@ export function LeaderboardTable({
                       }`}>
                         {entry.player_name}
                       </span>
-                      {entry.flight_name && (
+                      {(entry.flight_name || entry.flight_sort_order != null) && (
                         <span className="hidden lg:inline text-xs text-gray-600 ml-1">
-                          {entry.flight_name}
+                          {entry.flight_name ?? `Flight ${entry.flight_sort_order}`}
                         </span>
                       )}
                       {isInactive && (

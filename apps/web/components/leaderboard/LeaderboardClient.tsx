@@ -16,9 +16,10 @@ type LeaderboardTab = 'leaderboard' | 'matchplay' | 'teetimes' | 'coursestats';
 
 interface FlightInfo {
   id: string;
-  name: string;
+  name: string | null;
   start_time: string | null;
   tee_number: number;
+  sort_order?: number | null;
   category_name?: string | undefined;
   players: {
     id: string;
@@ -122,11 +123,23 @@ export function LeaderboardClient({
   }, [poll, isActive]);
 
   const uniqueFlights = useMemo(() => {
-    const f = new Set<string>();
+    // Bouw een gesorteerde lijst van unieke flights op basis van sort_order
+    // Sleutel = sort_order (of flight_name als fallback), label = "Flight N" of de naam
+    const seen = new Map<number | string, { key: string; label: string; sortOrder: number }>();
     entries.forEach((e) => {
-      if (e.flight_name) f.add(e.flight_name);
+      const order = e.flight_sort_order;
+      const name = e.flight_name;
+      if (order == null && !name) return;
+      const key = order != null ? `order:${order}` : `name:${name}`;
+      if (!seen.has(key)) {
+        seen.set(key, {
+          key,
+          label: name ?? `Flight ${order}`,
+          sortOrder: order ?? 9999,
+        });
+      }
     });
-    return Array.from(f).sort();
+    return Array.from(seen.values()).sort((a, b) => a.sortOrder - b.sortOrder);
   }, [entries]);
 
   // Filter de entries voor de LeaderboardTable
@@ -138,7 +151,12 @@ export function LeaderboardClient({
       list = list.filter((e) => e.player_name.toLowerCase().includes(q));
     }
     if (selectedFlight) {
-      list = list.filter((e) => e.flight_name === selectedFlight);
+      list = list.filter((e) => {
+        const order = e.flight_sort_order;
+        const name = e.flight_name;
+        const key = order != null ? `order:${order}` : `name:${name}`;
+        return key === selectedFlight;
+      });
     }
     if (showFavoritesOnly) {
       list = list.filter((e) => isFavorite(e.player_id));

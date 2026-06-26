@@ -42,16 +42,23 @@ export default function DashboardPage() {
       }
     };
 
-    // onAuthStateChange gebruikt geen lock — vuurt direct met de huidige sessie
-    // via INITIAL_SESSION (als er een sessie is) of SIGNED_IN na login.
+    // Haal de sessie direct op bij mount — dit is betrouwbaar na een F5
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else {
+        setLoading(false);
+        router.replace('/nl/login');
+      }
+    });
+
+    // onAuthStateChange voor live auth events (login/logout/token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-
-      if (session?.user) {
-        // INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED — allemaal laden
+      if (event === 'SIGNED_IN' && session?.user) {
         loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
-        // Geen sessie bij initieel laden of uitloggen → terug naar login
+      } else if (event === 'SIGNED_OUT') {
         setLoading(false);
         router.replace('/nl/login');
       }

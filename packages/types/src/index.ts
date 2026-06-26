@@ -84,12 +84,13 @@ export interface Tournament {
 export interface Flight {
   id: string;
   tournament_id: string;
-  name: string;
+  name: string | null;
   start_time?: string;
   tee_number: number;
   tee_id?: string;
   category_id?: string;
   max_players: number;
+  sort_order?: number | null;
   created_at: string;
 }
 
@@ -162,6 +163,7 @@ export interface LeaderboardEntry {
   handicap?: number;
   player_status: PlayerStatus;
   flight_name?: string;
+  flight_sort_order?: number | null;
   tournament_id: string;
   tournament_name: string;
   format: TournamentFormat;

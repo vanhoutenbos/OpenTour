@@ -16,7 +16,11 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    // onAuthStateChange gebruikt geen lock — veilig naast setSession() en getSession()
+    // Als er al een sessie is (bijv. na F5), direct doorsturen
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) router.replace(`/${locale}/dashboard`);
+    });
+    // onAuthStateChange voor live events (na magic link callback)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         router.replace(`/${locale}/dashboard`);

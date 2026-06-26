@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 interface Props {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  flights: string[];
+  flights: { key: string; label: string }[];
   selectedFlight: string;
   onFlightChange: (flight: string) => void;
   showFavoritesOnly: boolean;
@@ -62,17 +62,19 @@ export function FilterBar({
         />
       </div>
 
-      {/* Flight filter */}
-      <select
-        value={selectedFlight}
-        onChange={(e) => onFlightChange(e.target.value)}
-        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
-      >
-        <option value="">{t('filter.all')}</option>
-        {flights.map((f) => (
-          <option key={f} value={f}>{f}</option>
-        ))}
-      </select>
+      {/* Flight filter — alleen tonen als er meerdere flights zijn */}
+      {flights.length > 0 && (
+        <select
+          value={selectedFlight}
+          onChange={(e) => onFlightChange(e.target.value)}
+          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+        >
+          <option value="">{t('filter.all')}</option>
+          {flights.map((f) => (
+            <option key={f.key} value={f.key}>{f.label}</option>
+          ))}
+        </select>
+      )}
 
       {/* Favorites toggle */}
       <button

@@ -7,7 +7,8 @@
       "dashboard": "Dashboard",
       "profile": "Profiel",
       "login": "Inloggen",
-      "logout": "Uitloggen"
+      "logout": "Uitloggen",
+      "language": "Taal"
     },
     "actions": {
       "save": "Opslaan",

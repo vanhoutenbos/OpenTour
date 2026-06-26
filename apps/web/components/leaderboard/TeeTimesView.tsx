@@ -4,9 +4,10 @@ import { useFormatter } from 'next-intl';
 
 interface FlightInfo {
   id: string;
-  name: string;
+  name: string | null;
   start_time: string | null;
   tee_number: number;
+  sort_order?: number | null;
   category_name?: string | undefined;
   players: {
     id: string;
@@ -43,9 +44,11 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
-            {flight.name}
-          </span>
+          {(flight.name || flight.sort_order != null) && (
+            <span className="text-xs font-bold text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
+              {flight.name ?? `Flight ${flight.sort_order}`}
+            </span>
+          )}
           {flight.start_time && (
             <span className="text-xs text-gray-400">
               {format.dateTime(new Date(flight.start_time), {
