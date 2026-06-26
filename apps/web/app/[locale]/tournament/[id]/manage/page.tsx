@@ -193,7 +193,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       .from('tournaments')
       .select('*')
       .eq('id', params.id)
-      .eq('created_by', userData.user.id)
+      .eq('created_by', session.user.id)
       .single();
 
     if (!t) { router.replace('/nl/dashboard'); return; }
