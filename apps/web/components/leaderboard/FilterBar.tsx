@@ -10,9 +10,10 @@ interface Props {
   selectedFlight: string;
   onFlightChange: (flight: string) => void;
   showFavoritesOnly: boolean;
-  onFavoritesToggle: () => void;
+  onFavoritesToggle?: () => void;
   playerCount: number;
   favoriteCount: number;
+  hideFavorites?: boolean;
   lastUpdated: Date | null;
   isActive: boolean;
 }
@@ -29,6 +30,7 @@ export function FilterBar({
   favoriteCount,
   lastUpdated,
   isActive,
+  hideFavorites = false,
 }: Props) {
   const t = useTranslations('leaderboard');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -74,8 +76,8 @@ export function FilterBar({
         ))}
       </select>
 
-      {/* Favorites toggle */}
-      <button
+      {/* Favorites toggle — alleen op publieke pagina */}
+      {!hideFavorites && <button
         onClick={onFavoritesToggle}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
           showFavoritesOnly

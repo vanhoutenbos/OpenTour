@@ -265,12 +265,13 @@ export function LeaderboardClient({
                   flights={uniqueFlights}
                   selectedFlight={selectedFlight}
                   onFlightChange={setSelectedFlight}
-                  showFavoritesOnly={showFavoritesOnly}
-                  onFavoritesToggle={() => setShowFavoritesOnly((v) => !v)}
+                  showFavoritesOnly={hideExtras ? false : showFavoritesOnly}
+                  onFavoritesToggle={hideExtras ? undefined : () => setShowFavoritesOnly((v) => !v)}
                   playerCount={filteredEntries.length}
-                  favoriteCount={favoriteCount}
+                  favoriteCount={hideExtras ? 0 : favoriteCount}
                   lastUpdated={lastUpdated}
                   isActive={isActive}
+                  hideFavorites={hideExtras}
                 />
 
                 <div className="mt-4">
@@ -278,14 +279,15 @@ export function LeaderboardClient({
                     entries={entries}
                     format={scoringFormat}
                     scoringType={scoringType}
-                    isFavorite={isFavorite}
-                    onToggleFavorite={toggleFavorite}
+                    isFavorite={hideExtras ? () => false : isFavorite}
+                    onToggleFavorite={hideExtras ? undefined : toggleFavorite}
                     searchQuery={searchQuery}
                     selectedFlight={selectedFlight}
-                    showFavoritesOnly={showFavoritesOnly}
+                    showFavoritesOnly={hideExtras ? false : showFavoritesOnly}
                     selectedRound={selectedRound}
                     tournamentId={tournamentId}
                     tournamentRounds={rounds}
+                    hideFavorites={hideExtras}
                   />
                 </div>
               </>
