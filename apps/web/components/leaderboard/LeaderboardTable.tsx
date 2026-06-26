@@ -59,7 +59,7 @@ interface Props {
   format: string;
   scoringType: string;
   isFavorite: (playerId: string) => boolean;
-  onToggleFavorite?: (playerId: string) => void;
+  onToggleFavorite?: ((playerId: string) => void) | undefined;
   hideFavorites?: boolean;
   searchQuery: string;
   selectedFlight: string;
