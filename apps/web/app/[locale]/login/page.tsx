@@ -22,6 +22,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     // Timeout: als Supabase niet binnen 3s antwoordt, toon gewoon de loginpagina
     const timeout = setTimeout(() => setCheckingAuth(false), 3000);
 
+    // getSession() is voldoende voor de login redirect check — alleen lokale cookie lezen
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         clearTimeout(timeout);
@@ -91,13 +92,15 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
       });
       if (sessionError) {
         setError(`Session instellen mislukt: ${sessionError.message}`);
+        setDevLoading(false);
       } else {
-        window.location.href = '/nl/dashboard';
+        // Gebruik router.push zodat Next.js de navigatie beheert na setSession
+        router.push(`/${locale}/dashboard`);
       }
     } else {
       setError(data.error ?? 'Dev login mislukt');
+      setDevLoading(false);
     }
-    setDevLoading(false);
   };
 
   return (

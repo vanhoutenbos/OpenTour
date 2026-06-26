@@ -41,14 +41,22 @@ export default function DashboardPage() {
       }
     };
 
-    // getUser() verifieert de sessie server-side via de cookie — betrouwbaarder dan getSession()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    // getSession() leest de lokale cookie — snel en genoeg voor de dashboard check.
+    // getUser() (server-side verificatie) doen we alleen als er geen lokale sessie is.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (cancelled) return;
-      if (user) {
-        loadDashboard(user.id, user.email ?? undefined);
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
       } else {
-        setLoading(false);
-        router.replace('/nl/login');
+        // Geen lokale sessie — controleer nog eenmaal server-side
+        const { data: { user } } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (user) {
+          loadDashboard(user.id, user.email ?? undefined);
+        } else {
+          setLoading(false);
+          router.replace('/nl/login');
+        }
       }
     });
 
