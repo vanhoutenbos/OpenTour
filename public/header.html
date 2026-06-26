@@ -1,0 +1,85 @@
+<nav class="site-nav">
+  <div class="nav-container">
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/leaderboard">Leaderboard</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/legal/privacy.md">Privacy</a></li>
+    </ul>
+    <div class="nav-toggle" onclick="toggleKiosk()">Kiosk Mode</div>
+  </div>
+</nav>
+
+<style>
+.site-nav {
+  background-color: #222;
+  color: white;
+  padding: 10px 20px;
+}
+
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.nav-links li {
+  margin-right: 20px;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+.nav-toggle {
+  background-color: #444;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.nav-toggle:hover {
+  background-color: #555;
+}
+
+.kiosk-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background-color: black;
+  color: white;
+  overflow: hidden;
+}
+
+.kiosk-mode .nav-container {
+  display: none;
+}
+</style>
+
+<script>
+function toggleKiosk() {
+  const kioskMode = document.body.classList.toggle('kiosk-mode');
+  // Store preference in localStorage for persistence
+  localStorage.setItem('kioskMode', kioskMode);
+}
+
+// Apply saved kiosk mode preference on load
+if (localStorage.getItem('kioskMode') === 'true') {
+  document.body.classList.add('kiosk-mode');
+}
+</script>
