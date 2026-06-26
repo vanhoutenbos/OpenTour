@@ -1,45 +1,43 @@
 # OpenTour 🏌️
 
-> Open source golf toernooi- en live scoreplatform — gratis voor kleine organisaties, betaald bij schaal.
+> Open source golf tournament and live scoring platform — free for small organizations, paid at scale.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![CI](https://github.com/vanhoutenbos/opentour/actions/workflows/pr.yml/badge.svg)](https://github.com/vanhoutenbos/opentour/actions)
 
-## Wat is OpenTour?
+> 🇳🇱 **Are you Dutch?** Welkom! Als je liever je vraagt stelt in het Nederlands, ga je rang! Zorg alleen wel dat je de tag `Dutch` eraan hangt, dan begrijpen onze Engelse lezers dat ze die moeten skippen! ;)
+*If you see an issue with the tag `Dutch` than it might be a bit harder to read since the Issue will be mostly spoken in `Dutch`.
 
-OpenTour stelt iedereen in staat om professioneel uitziende golfevenementen te organiseren en te volgen — van een informele vriendenwedstrijd of laddercompetitie tot een officieel clubtoernooi met honderden deelnemers en live leaderboard.
+## What is OpenTour?
 
-**Kernprincipes:**
-- 🆓 **Echt gratis** voor kleine organisaties, vriendgroepen en laddercompetities — geen verborgen betaalmuren
-- 📡 **Live leaderboard** zonder app of account — gewoon via een gedeelde link
-- 📴 **Offline-first** scores invoeren — golfbanen hebben doorgaans slecht bereik
-- 🌍 **Open source** (AGPL-3.0) — zelf te hosten, aanpasbaar, transparant
-- 🇳🇱 **Nederlands-first** — NL én EN vanaf dag 1
+OpenTour lets anyone organize and follow professional-looking golf events — from a casual match between friends or a ladder competition to an official club tournament with hundreds of participants and a live leaderboard.
 
-## Functionaliteiten (MVP)
+**Core principles:**
 
-- ✅ Toernooi aanmaken (stroke play, stableford, matchplay)
-- ✅ Spelers toevoegen (handmatig of via CSV)
-- ✅ Flights en starttijden genereren
-- ✅ Scores invoeren via PWA (offline-first, IndexedDB)
-- ✅ Live leaderboard (polling elke 30 seconden, geen account nodig)
-- ✅ Toegangscodes voor recorders (8 tekens, geen account vereist)
-- ✅ Laddercompetities en informele rondes bijhouden
-- ✅ DNS / DNF / DSQ spelerstatus
+- 🆓 **Actually free** for small organizations, friend groups, and ladder competitions — no hidden paywalls
+- 📡 **Live leaderboard** with no app or account needed — just a shared link
+- 📴 **Offline-first** score entry — golf courses typically have poor signal
+- 🌍 **Open source** (AGPL-3.0) — self-hostable, customizable, transparent
+- 🇳🇱 **Dutch-born** — built with NL and EN support from day one
 
-## Technische stack
+## Current focus
 
-| Laag | Technologie |
+We are currently focussed on getting a 1.0 version running, hunting bugs, squashing them and driving 300 yards!
+Feel free to take a peek at the [Milestone](https://github.com/vanhoutenbos/OpenTour/milestone/1) and if you feel like it help us test or build a cool feature!
+
+## Tech stack that OpenTour uses
+
+| Layer | Technology |
 |---|---|
 | Frontend | Next.js 14 (App Router) |
 | Scorer app | PWA (Service Worker + IndexedDB via Dexie.js) |
 | Backend | Supabase (Postgres + Auth + RLS) |
 | Edge / Cache | Cloudflare Workers + Cache API |
-| Hosting | Vercel (gratis tier) |
+| Hosting | Vercel (free tier) |
 | Monorepo | Turborepo |
-| Licentie | AGPL-3.0 |
+| License | AGPL-3.0 |
 
-## Snel starten
+## Quick start
 
 ```bash
 git clone https://github.com/vanhoutenbos/opentour
@@ -48,26 +46,31 @@ npm install
 npm run dev
 ```
 
-Zie [docs/SETUP.md](docs/SETUP.md) voor de volledige installatiegids inclusief Supabase en Cloudflare configuratie.
+See [docs/SETUP.md](docs/SETUP.md) for the full setup guide, including Supabase and Cloudflare configuration.
 
 ## Self-hosting
 
-OpenTour is volledig zelf te hosten via Docker Compose (Supabase OSS). Zie [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md).
+OpenTour can be fully self-hosted via Docker Compose (Supabase OSS). See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md).
 
-Minimale vereisten: 2GB RAM, 1 vCPU, 20GB schijf (~€4/maand op Hetzner CX22).
+Minimum requirements: 2GB RAM, 1 vCPU, 20GB disk.
 
-## Bijdragen
+### BYOD
 
-Bijdragen zijn welkom! Zie [CONTRIBUTING.md](CONTRIBUTING.md) voor richtlijnen.
+In theory it should be possible to bring your own device (your PC) run a docker instance on it, expose it to the internet and have the whole ecosystem hosted on your own server!
+I haven't tested this though!
 
-- 🐛 Bugs melden via [GitHub Issues](https://github.com/vanhoutenbos/opentour/issues)
-- 💡 Ideeën bespreken via [GitHub Discussions](https://github.com/vanhoutenbos/opentour/discussions)
-- 🌐 Vertalingen via community bijdragen (zie `packages/i18n/`)
+## Contributing
 
-## Licentie
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-[AGPL-3.0](LICENSE) — vrij te gebruiken en zelf te hosten. Aanpassingen die als webservice worden aangeboden moeten open source blijven.
+- 🐛 Report bugs via [GitHub Issues](https://github.com/vanhoutenbos/opentour/issues)
+- 💡 Discuss ideas via [GitHub Discussions](https://github.com/vanhoutenbos/opentour/discussions)
+- 🌐 Translations via community contributions (see `packages/i18n/`)
+
+## License
+
+[AGPL-3.0](LICENSE) — free to use and self-host. Modifications offered as a web service must remain open source.
 
 ---
 
-*OpenTour — de golfapp die je nodig hebt.*
+*OpenTour — the golf app you need.*
