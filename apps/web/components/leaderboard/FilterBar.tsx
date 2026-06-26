@@ -10,7 +10,7 @@ interface Props {
   selectedFlight: string;
   onFlightChange: (flight: string) => void;
   showFavoritesOnly: boolean;
-  onFavoritesToggle?: () => void;
+  onFavoritesToggle?: (() => void) | undefined;
   playerCount: number;
   favoriteCount: number;
   hideFavorites?: boolean;
