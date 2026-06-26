@@ -59,7 +59,8 @@ interface Props {
   format: string;
   scoringType: string;
   isFavorite: (playerId: string) => boolean;
-  onToggleFavorite: (playerId: string) => void;
+  onToggleFavorite?: (playerId: string) => void;
+  hideFavorites?: boolean;
   searchQuery: string;
   selectedFlight: string;
   showFavoritesOnly: boolean;
@@ -74,6 +75,7 @@ export function LeaderboardTable({
   scoringType,
   isFavorite,
   onToggleFavorite,
+  hideFavorites = false,
   searchQuery,
   selectedFlight,
   showFavoritesOnly,
@@ -174,18 +176,20 @@ export function LeaderboardTable({
                   } ${isLastFavorite ? 'border-b-0' : ''}`}
                   onClick={() => setExpandedPlayer(expanded ? null : entry.player_id)}
                 >
-                  {/* Favoriet ster */}
-                  <td className="py-3 text-center">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onToggleFavorite(entry.player_id); }}
-                      className={`text-base transition-all hover:scale-110 ${
-                        fav ? 'text-yellow-400 drop-shadow-glow' : 'text-gray-600 hover:text-gray-400'
-                      }`}
-                      title={fav ? 'Uit favorieten' : 'Toevoegen aan favorieten'}
-                    >
-                      {fav ? '★' : '☆'}
-                    </button>
-                  </td>
+                  {/* Favoriet ster — alleen op publieke pagina */}
+                  {!hideFavorites && (
+                    <td className="py-3 text-center">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(entry.player_id); }}
+                        className={`text-base transition-all hover:scale-110 ${
+                          fav ? 'text-yellow-400 drop-shadow-glow' : 'text-gray-600 hover:text-gray-400'
+                        }`}
+                        title={fav ? 'Uit favorieten' : 'Toevoegen aan favorieten'}
+                      >
+                        {fav ? '★' : '☆'}
+                      </button>
+                    </td>
+                  )}
 
                   {/* Positie + movement */}
                   <td className="py-3 pr-2 text-center">

@@ -172,7 +172,12 @@ export function LeaderboardClient({
     return list;
   }, [entries, searchQuery, selectedFlight, showFavoritesOnly, isFavorite]);
 
-  // Subtab configuratie
+  // Als ingebed in het organisatorscherm: altijd leaderboard tab, geen navigatie
+  useEffect(() => {
+    if (hideExtras) setActiveTab('leaderboard');
+  }, [hideExtras]);
+
+  // Subtab configuratie — alleen zichtbaar op de publieke leaderboard pagina
   const tabs: { key: LeaderboardTab; label: string; show: boolean }[] = [
     { key: 'leaderboard', label: 'Leaderboard', show: true },
     { key: 'teetimes', label: 'Tee Times', show: true },
@@ -180,7 +185,7 @@ export function LeaderboardClient({
     { key: 'coursestats', label: 'Course Stats', show: true },
   ];
 
-  const visibleTabs = tabs.filter((t) => t.show);
+  const visibleTabs = hideExtras ? [] : tabs.filter((t) => t.show);
 
   return (
     <div className="space-y-0">
@@ -278,12 +283,13 @@ export function LeaderboardClient({
                   flights={uniqueFlights}
                   selectedFlight={selectedFlight}
                   onFlightChange={setSelectedFlight}
-                  showFavoritesOnly={showFavoritesOnly}
-                  onFavoritesToggle={() => setShowFavoritesOnly((v) => !v)}
+                  showFavoritesOnly={hideExtras ? false : showFavoritesOnly}
+                  onFavoritesToggle={hideExtras ? undefined : () => setShowFavoritesOnly((v) => !v)}
                   playerCount={filteredEntries.length}
-                  favoriteCount={favoriteCount}
+                  favoriteCount={hideExtras ? 0 : favoriteCount}
                   lastUpdated={lastUpdated}
                   isActive={isActive}
+                  hideFavorites={hideExtras}
                 />
 
                 <div className="mt-4">
@@ -291,14 +297,15 @@ export function LeaderboardClient({
                     entries={entries}
                     format={scoringFormat}
                     scoringType={scoringType}
-                    isFavorite={isFavorite}
-                    onToggleFavorite={toggleFavorite}
+                    isFavorite={hideExtras ? () => false : isFavorite}
+                    onToggleFavorite={hideExtras ? undefined : toggleFavorite}
                     searchQuery={searchQuery}
                     selectedFlight={selectedFlight}
-                    showFavoritesOnly={showFavoritesOnly}
+                    showFavoritesOnly={hideExtras ? false : showFavoritesOnly}
                     selectedRound={selectedRound}
                     tournamentId={tournamentId}
                     tournamentRounds={rounds}
+                    hideFavorites={hideExtras}
                   />
                 </div>
               </>

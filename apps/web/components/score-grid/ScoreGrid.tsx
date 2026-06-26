@@ -277,16 +277,19 @@ export default function ScoreGrid({
                   </td>
                   {sortedHoles.map((hole) => {
                     const key = `${player.id}-${hole.id}`;
-                    const strokes = scores.get(key) || (hole.par as number);
+                    const strokes = scores.get(key);  // undefined = geen score ingevoerd
+                    const hasScore = strokes !== undefined;
 
-                    let cellClass = 'bg-gray-800 border-gray-700';
-                    if (tournamentFormat === 'stroke') {
-                      cellClass += ` ${getStrokeplayClassification(strokes, hole.par as number)}`;
-                    } else if (tournamentFormat === 'stableford') {
-                      const points = getStablefordPoints(strokes, hole.par as number);
-                      if (points === 0) cellClass += ' text-gray-600';
-                      else if (points === 4) cellClass += ' font-bold text-green-400';
-                      else cellClass += ' text-green-300';
+                    let cellClass = 'bg-gray-800 border-gray-700 text-gray-400';
+                    if (hasScore) {
+                      if (tournamentFormat === 'stroke') {
+                        cellClass = `bg-gray-800 border-gray-700 ${getStrokeplayClassification(strokes!, hole.par as number)}`;
+                      } else if (tournamentFormat === 'stableford') {
+                        const points = getStablefordPoints(strokes!, hole.par as number);
+                        if (points === 0) cellClass = 'bg-gray-800 border-gray-700 text-gray-600';
+                        else if (points === 4) cellClass = 'bg-gray-800 border-gray-700 font-bold text-green-400';
+                        else cellClass = 'bg-gray-800 border-gray-700 text-green-300';
+                      }
                     }
 
                     return (
@@ -300,14 +303,21 @@ export default function ScoreGrid({
                           type="number"
                           min="1"
                           max="99"
-                          value={strokes}
-                          onChange={(e) =>
-                            updateScore(
-                              player.id,
-                              hole.id,
-                              parseInt(e.target.value) || 1
-                            )
-                          }
+                          value={strokes ?? ''}
+                          placeholder={String(hole.par)}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!isNaN(val) && val >= 1 && val <= 99) {
+                              updateScore(player.id, hole.id, val);
+                            } else if (e.target.value === '') {
+                              // Lege input: verwijder score uit lokale state maar sla niet op
+                              setScores(prev => {
+                                const next = new Map(prev);
+                                next.delete(`${player.id}-${hole.id}`);
+                                return next;
+                              });
+                            }
+                          }}
                           onFocus={(e) => e.target.select()}
                           className={`w-16 px-2 py-2 text-center font-mono rounded border transition-all ${cellClass} hover:border-green-500 focus:outline-none focus:border-green-400 focus:w-20`}
                         />
@@ -318,9 +328,9 @@ export default function ScoreGrid({
                     <td className="px-4 py-3 text-center font-mono text-lg">
                       {sortedHoles.reduce((sum, hole) => {
                         const key = `${player.id}-${hole.id}`;
-                        const strokes = scores.get(key) || (hole.par as number);
-                        const points = getStablefordPoints(strokes, hole.par as number);
-                        return sum + (points || 0);
+                        const strokes = scores.get(key);
+                        if (strokes === undefined) return sum;
+                        return sum + getStablefordPoints(strokes, hole.par as number);
                       }, 0)}
                     </td>
                   )}
