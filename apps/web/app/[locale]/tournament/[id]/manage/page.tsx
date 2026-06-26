@@ -180,6 +180,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   });
   const [flightGenerating, setFlightGenerating] = useState(false);
   const [flightError, setFlightError] = useState<string | null>(null);
+  const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
+  const [editingFlightName, setEditingFlightName] = useState('');
   const [showFlightSettings, setShowFlightSettings] = useState(false);
   const [sortBy, setSortBy] = useState<'handicap_asc' | 'random'>('handicap_asc');
   const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
@@ -557,6 +559,22 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const sc = statusConfig[tournament.status] ?? statusConfig['draft']!;
   const courseName = courses.find(c => c.id === tournament.course_id)?.name ?? 'Niet gekozen';
 
+  const flightLabel = (f: { name: string | null; start_time: string | null; tee_number: number | null; sort_order?: number | null }, index?: number) => {
+    if (f.name?.trim()) return f.name.trim();
+    const parts: string[] = [];
+    if (f.start_time) parts.push(new Date(f.start_time).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+    if (f.tee_number) parts.push(`Hole ${f.tee_number}`);
+    if (parts.length) return parts.join(' · ');
+    return `Flight ${f.sort_order ?? (index ?? 0) + 1}`;
+  };
+
+  const saveFlightName = async (flightId: string) => {
+    const trimmed = editingFlightName.trim();
+    await supabase.from('flights').update({ name: trimmed || null }).eq('id', flightId);
+    setFlights(prev => prev.map(f => f.id === flightId ? { ...f, name: trimmed || null } : f));
+    setEditingFlightId(null);
+  };
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'overview', label: 'Overzicht' },
     { key: 'edit', label: 'Bewerken' },
@@ -760,9 +778,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                         <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div>
-                              <h4 className="text-white font-semibold text-sm">
-                                {f.name ?? `Flight ${f.sort_order}`}
-                              </h4>
+                              {f.name?.trim() && (
+                                <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                              )}
                               <p className="text-xs text-gray-400 mt-0.5">
                                 {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                 {f.tee_number && ` · Hole ${f.tee_number}`}
@@ -1505,10 +1523,36 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           >
                             {/* Flight header */}
                             <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h4 className="text-white font-semibold text-sm">
-                                  {f.name ?? `Flight ${f.sort_order}`}
-                                </h4>
+                              <div className="flex-1 min-w-0">
+                                {editingFlightId === f.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      value={editingFlightName}
+                                      onChange={e => setEditingFlightName(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') saveFlightName(f.id);
+                                        if (e.key === 'Escape') setEditingFlightId(null);
+                                      }}
+                                      placeholder="Naam (optioneel)"
+                                      autoFocus
+                                      className="px-2 py-1 bg-gray-800 border border-green-600 rounded-lg text-white text-sm focus:outline-none w-40"
+                                    />
+                                    <button onClick={() => saveFlightName(f.id)} className="text-green-400 text-sm hover:text-green-300">✓</button>
+                                    <button onClick={() => setEditingFlightId(null)} className="text-gray-500 text-sm hover:text-gray-300">✕</button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => { setEditingFlightId(f.id); setEditingFlightName(f.name ?? ''); }}
+                                    className="group flex items-center gap-1.5 text-left"
+                                    title="Klik om naam te bewerken"
+                                  >
+                                    {f.name?.trim() && (
+                                      <h4 className="text-white font-semibold text-sm group-hover:text-green-400 transition-colors">{f.name}</h4>
+                                    )}
+                                    <span className="text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
+                                  </button>
+                                )}
                                 <p className="text-xs text-gray-400 mt-0.5">
                                   {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                   {f.tee_number && ` · Hole ${f.tee_number}`}
@@ -1620,7 +1664,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       const playerCount = players.filter(p => p.flight_id === f.id).length;
                       return (
                         <option key={f.id} value={f.id}>
-                          {f.name ?? `Flight ${f.sort_order}`}{`(${playerCount} spelers${catName ? ` · ${catName}` : ''})`}
+                          {flightLabel(f, flights.indexOf(f))} ({playerCount} spelers{catName ? ` · ${catName}` : ''})
                         </option>
                       );
                     })}
