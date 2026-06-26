@@ -79,22 +79,24 @@ export function FilterBar({
       )}
 
       {/* Favorites toggle — alleen op publieke pagina */}
-      {!hideFavorites && <button
-        onClick={onFavoritesToggle}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-          showFavoritesOnly
-            ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-600/40'
-            : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'
-        }`}
-      >
-        <span className={showFavoritesOnly ? '' : 'opacity-40'}>★</span>
-        <span>{t('favorites')}</span>
-        {favoriteCount > 0 && (
-          <span className="text-xs bg-yellow-600/30 text-yellow-400 px-1.5 py-0.5 rounded-full">
-            {favoriteCount}
-          </span>
-        )}
-      </button>
+      {!hideFavorites && (
+        <button
+          onClick={onFavoritesToggle}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showFavoritesOnly
+              ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-600/40'
+              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'
+          }`}
+        >
+          <span className={showFavoritesOnly ? '' : 'opacity-40'}>★</span>
+          <span>{t('favorites')}</span>
+          {favoriteCount > 0 && (
+            <span className="text-xs bg-yellow-600/30 text-yellow-400 px-1.5 py-0.5 rounded-full">
+              {favoriteCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Stats rechts */}
       <div className="hidden sm:flex items-center gap-3 ml-auto text-xs text-gray-500">
