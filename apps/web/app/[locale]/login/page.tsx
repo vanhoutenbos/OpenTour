@@ -11,21 +11,32 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [devLoading, setDevLoading] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    // Als er al een sessie is (bijv. na F5), direct doorsturen
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) router.replace(`/${locale}/dashboard`);
-    });
-    // onAuthStateChange voor live events (na magic link callback)
+
+    // getUser() doet een server-roundtrip en refresht de token als nodig
+    // Veel betrouwbaarder dan getSession() die alleen lokaal kijkt
+    supabase.auth.getUser()
+      .then(({ data }) => {
+        if (data.user) {
+          router.replace(`/${locale}/dashboard`);
+        } else {
+          setCheckingAuth(false);
+        }
+      })
+      .catch(() => setCheckingAuth(false));
+
+    // Live events voor na magic link callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         router.replace(`/${locale}/dashboard`);
       }
     });
+
     return () => subscription.unsubscribe();
   }, [locale, router]);
 
@@ -59,48 +70,52 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     setError(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
       const res = await fetch('/api/dev-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
 
       if (data.success) {
+        // Sessie staat nu als cookie op de response — setSession() in de browser
+        // zodat de Supabase client ook client-side gesynchroniseerd is
         const supabase = getSupabaseBrowser();
-        // setSession() triggert onAuthStateChange met SIGNED_IN → navigeert naar dashboard
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        if (sessionError) {
-          setError(`Session instellen mislukt: ${sessionError.message}`);
-          setDevLoading(false);
+        // Haal de sessie op die de server net als cookie heeft gezet
+        // via een getUser() call — dat triggert ook autoRefresh setup
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          router.replace(`/${locale}/dashboard`);
+        } else {
+          // Fallback: wacht op onAuthStateChange
+          // (cookie is gezet, volgende page load pakt hem op)
+          router.replace(`/${locale}/dashboard`);
         }
-        // Bij succes: onAuthStateChange handler hierboven doet de redirect
       } else {
         setError(data.error ?? 'Dev login mislukt');
         setDevLoading(false);
       }
-    } catch (err) {
-      const message = err instanceof Error && err.name === 'AbortError'
-        ? 'Timeout — probeer opnieuw'
-        : 'Dev login mislukt';
-      setError(message);
+    } catch {
+      setError('Dev login mislukt — probeer opnieuw');
       setDevLoading(false);
     }
   };
 
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-gray-400">
+          <span className="w-5 h-5 border-2 border-gray-600 border-t-gray-300 rounded-full animate-spin" />
+          <span className="text-sm">Sessie controleren...</span>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
           <h1 className="text-2xl font-bold text-white mt-2">
@@ -143,9 +158,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 />
               </div>
 
-              {error && (
-                <p className="text-red-400 text-sm">{error}</p>
-              )}
+              {error && <p className="text-red-400 text-sm">{error}</p>}
 
               <button
                 onClick={handleLogin}
@@ -156,7 +169,6 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 {loading ? 'Versturen...' : 'Stuur inloglink →'}
               </button>
 
-              {/* Dev-only: direct inloggen zonder e-mail */}
               {IS_DEV && (
                 <div className="pt-4 border-t border-gray-700">
                   <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
@@ -166,7 +178,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                     className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
                                text-white text-sm font-medium rounded-xl transition-colors"
                   >
-                    {devLoading ? 'Bezig met inloggen...' : 'Direct inloggen (geen e-mail)'}
+                    {devLoading ? 'Bezig...' : 'Direct inloggen (geen e-mail)'}
                   </button>
                 </div>
               )}

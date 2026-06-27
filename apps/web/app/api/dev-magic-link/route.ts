@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEV_PASSWORD = 'dev-password-opentour-2025';
@@ -21,40 +22,34 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = createClient(
+    // Admin client: user aanmaken of bijwerken
+    const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Create user if not exists, or update password if already exists
-    const { data: userList } = await supabase.auth.admin.listUsers();
+    const { data: userList } = await adminSupabase.auth.admin.listUsers();
     const existingUser = userList?.users.find((u) => u.email === email);
 
     if (existingUser) {
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        existingUser.id,
-        { password: DEV_PASSWORD }
-      );
-      if (updateError) {
-        throw new Error(`Password updaten mislukt: ${updateError.message}`);
-      }
+      await adminSupabase.auth.admin.updateUserById(existingUser.id, {
+        password: DEV_PASSWORD,
+      });
     } else {
-      const { error: createError } = await supabase.auth.admin.createUser({
+      await adminSupabase.auth.admin.createUser({
         email,
         password: DEV_PASSWORD,
         email_confirm: true,
         user_metadata: { display_name: email.split('@')[0] },
       });
-      if (createError) {
-        throw new Error(`User aanmaken mislukt: ${createError.message}`);
-      }
     }
 
-    // Sign in with password — the client will use these tokens to set session
+    // Inloggen en sessie verkrijgen
     const anonSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
     const { data, error: signInError } = await anonSupabase.auth.signInWithPassword({
@@ -63,15 +58,39 @@ export async function POST(request: NextRequest) {
     });
 
     if (signInError || !data.session) {
-      throw new Error(`Inloggen mislukt: ${signInError?.message ?? 'Geen session'}`);
+      throw new Error(`Inloggen mislukt: ${signInError?.message ?? 'Geen sessie'}`);
     }
 
-    return NextResponse.json({
-      success: true,
-      email,
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-    });
+    // Sessie als cookie op de response zetten via SSR client
+    // Zo leest de middleware hem direct op de volgende request
+    const response = NextResponse.json({ success: true, email });
+
+    const maxAge = 400 * 24 * 60 * 60;
+    const cookieOpts = { path: '/', sameSite: 'lax' as const, httpOnly: false, secure: true, maxAge };
+
+    // Supabase SSR verwacht de sessie in twee cookies: access + refresh
+    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      .replace('https://', '')
+      .split('.')[0];
+
+    response.cookies.set(
+      `sb-${projectRef}-auth-token`,
+      JSON.stringify(data.session),
+      cookieOpts
+    );
+    response.cookies.set(
+      `sb-session`,
+      JSON.stringify({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+        expires_at: data.session.expires_at,
+        token_type: 'bearer',
+        user: data.session.user,
+      }),
+      cookieOpts
+    );
+
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Onbekende fout';
     return NextResponse.json({ error: message }, { status: 500 });
