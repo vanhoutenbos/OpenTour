@@ -1,10 +1,19 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import Link from 'next/link';
 
 const DISALLOWED = /[0O1I]/g;
+
+interface OwnTournament {
+  id: string;
+  name: string;
+  status: string;
+  start_date: string | null;
+}
 
 export default function ScorerPage() {
   const t = useTranslations('scorer');
@@ -13,6 +22,28 @@ export default function ScorerPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Ingelogde organisator: eigen toernooien ophalen
+  const [ownTournaments, setOwnTournaments] = useState<OwnTournament[]>([]);
+  const [isOrganizer, setIsOrganizer] = useState(false);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: tournaments } = await supabase
+        .from('tournaments')
+        .select('id, name, status, start_date')
+        .eq('created_by', data.user.id)
+        .in('status', ['active', 'draft'])
+        .order('start_date', { ascending: false })
+        .limit(5);
+      if (tournaments && tournaments.length > 0) {
+        setIsOrganizer(true);
+        setOwnTournaments(tournaments);
+      }
+    });
+  }, []);
 
   const handleCodeChange = useCallback((value: string) => {
     const cleaned = value.toUpperCase().replace(DISALLOWED, '').slice(0, 8);
@@ -51,11 +82,18 @@ export default function ScorerPage() {
     } finally {
       setLoading(false);
     }
-  }, [code, router, t]);
+  }, [code, locale, router, t]);
+
+  const statusLabel = (status: string) =>
+    status === 'active' ? (
+      <span className="text-xs font-medium text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">Live</span>
+    ) : (
+      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">Concept</span>
+    );
 
   return (
     <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm space-y-4">
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
           <h1 className="text-2xl font-bold text-white mt-2">
@@ -64,9 +102,42 @@ export default function ScorerPage() {
           <p className="text-gray-400 text-sm mt-2">{t('page_title')}</p>
         </div>
 
+        {/* Eigen toernooien — alleen zichtbaar als organisator */}
+        {isOrganizer && (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+            <p className="text-sm text-gray-400 mb-3">Jouw toernooien</p>
+            <div className="space-y-2">
+              {ownTournaments.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/${locale}/scorer/${t.id}`}
+                  className="flex items-center justify-between w-full px-4 py-3 bg-gray-800 hover:bg-gray-750 hover:border-green-700 border border-gray-700 rounded-xl transition-colors group"
+                >
+                  <span className="text-white text-sm font-medium group-hover:text-green-400 transition-colors truncate pr-2">
+                    {t.name}
+                  </span>
+                  {statusLabel(t.status)}
+                </Link>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 mt-3 text-center">
+              Als organisator kun je direct scores invoeren zonder code.
+            </p>
+          </div>
+        )}
+
+        {/* Code invoer */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-1">{t('code_title')}</h2>
-          <p className="text-gray-400 text-sm mb-6">{t('code_description')}</p>
+          {isOrganizer ? (
+            <h2 className="text-sm font-medium text-gray-400 mb-4">
+              Of voer een toegangscode in
+            </h2>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold text-white mb-1">{t('code_title')}</h2>
+              <p className="text-gray-400 text-sm mb-6">{t('code_description')}</p>
+            </>
+          )}
 
           <div className="space-y-4">
             <div>
@@ -74,7 +145,7 @@ export default function ScorerPage() {
                 type="text"
                 inputMode="text"
                 autoComplete="off"
-                autoFocus
+                autoFocus={!isOrganizer}
                 value={code}
                 onChange={(e) => handleCodeChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
