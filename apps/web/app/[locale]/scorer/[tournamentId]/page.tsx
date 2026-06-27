@@ -49,10 +49,23 @@ export default function TournamentScorerPage() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOrganizer, setIsOrganizer] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
+
+    // Check of de ingelogde user de organisator is van dit toernooi
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: t } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq('id', tournamentId)
+        .eq('created_by', data.user.id)
+        .maybeSingle();
+      if (t && !cancelled) setIsOrganizer(true);
+    });
 
     const load = async () => {
       try {
@@ -177,12 +190,25 @@ export default function TournamentScorerPage() {
             {formatLabel} · {scoringLabel} · {tournament.rounds} ronde
             {tournament.rounds > 1 ? 'n' : ''}
           </p>
-          <Link
-            href={`/${locale}/scorer`}
-            className="text-sm text-gray-500 hover:text-gray-300 mt-2 inline-block"
-          >
-            {t('other_code')}
-          </Link>
+          <div className="flex items-center gap-4 mt-2">
+            <Link
+              href={`/${locale}/scorer`}
+              className="text-sm text-gray-500 hover:text-gray-300"
+            >
+              {t('other_code')}
+            </Link>
+            {isOrganizer && (
+              <>
+                <span className="text-gray-700">·</span>
+                <Link
+                  href={`/${locale}/tournament/${tournamentId}/manage`}
+                  className="text-sm text-green-600 hover:text-green-400"
+                >
+                  Beheer →
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -64,10 +64,22 @@ export default function FlightScorePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedHole, setSelectedHole] = useState<number | null>(null);
+  const [isOrganizer, setIsOrganizer] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
+
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: t } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq('id', tournamentId)
+        .eq('created_by', data.user.id)
+        .maybeSingle();
+      if (t && !cancelled) setIsOrganizer(true);
+    });
 
     const load = async () => {
       try {
@@ -326,6 +338,14 @@ export default function FlightScorePage() {
             >
               {t('back_to_flights')}
             </Link>
+            {isOrganizer && (
+              <Link
+                href={`/${locale}/tournament/${tournamentId}/manage`}
+                className="text-sm text-green-600 hover:text-green-400"
+              >
+                Beheer →
+              </Link>
+            )}
           </div>
         </div>
       </div>
