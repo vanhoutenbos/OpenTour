@@ -13,13 +13,11 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [devLoading, setDevLoading] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
 
-    // getUser() doet een server-roundtrip en refresht de token als nodig
-    // Veel betrouwbaarder dan getSession() die alleen lokaal kijkt
+    // getUser() valideert server-side en refresht token als nodig
     supabase.auth.getUser()
       .then(({ data }) => {
         if (data.user) {
@@ -30,7 +28,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
       })
       .catch(() => setCheckingAuth(false));
 
-    // Live events voor na magic link callback
+    // Vang redirect na echte magic link op
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         router.replace(`/${locale}/dashboard`);
@@ -40,8 +38,40 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
     return () => subscription.unsubscribe();
   }, [locale, router]);
 
-  const handleLogin = async () => {
-    if (!email) return;
+  // Dev: direct inloggen zonder e-mail
+  const handleDevLogin = async () => {
+    if (!email || loading) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/dev-magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error ?? 'Inloggen mislukt');
+        setLoading(false);
+        return;
+      }
+
+      // Cookies zijn gezet door de server. Hard redirect zodat de
+      // browser de nieuwe cookies meestuurt en middleware ze verwerkt.
+      window.location.href = `/${locale}/dashboard`;
+
+    } catch {
+      setError('Verbindingsfout — probeer opnieuw');
+      setLoading(false);
+    }
+  };
+
+  // Productie: magic link via e-mail
+  const handleMagicLink = async () => {
+    if (!email || loading) return;
     setLoading(true);
     setError(null);
 
@@ -56,49 +86,12 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
     if (error) {
       setError(error.message.includes('rate limit')
-        ? 'Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.'
+        ? 'Te veel pogingen. Probeer het over 5 minuten opnieuw.'
         : 'Inloggen mislukt. Controleer je e-mailadres.');
+      setLoading(false);
     } else {
       setSent(true);
-    }
-    setLoading(false);
-  };
-
-  const handleDevLink = async () => {
-    if (!email) return;
-    setDevLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/dev-magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        // Sessie staat nu als cookie op de response — setSession() in de browser
-        // zodat de Supabase client ook client-side gesynchroniseerd is
-        const supabase = getSupabaseBrowser();
-        // Haal de sessie op die de server net als cookie heeft gezet
-        // via een getUser() call — dat triggert ook autoRefresh setup
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          router.replace(`/${locale}/dashboard`);
-        } else {
-          // Fallback: wacht op onAuthStateChange
-          // (cookie is gezet, volgende page load pakt hem op)
-          router.replace(`/${locale}/dashboard`);
-        }
-      } else {
-        setError(data.error ?? 'Dev login mislukt');
-        setDevLoading(false);
-      }
-    } catch {
-      setError('Dev login mislukt — probeer opnieuw');
-      setDevLoading(false);
+      setLoading(false);
     }
   };
 
@@ -116,6 +109,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   return (
     <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
+
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
           <h1 className="text-2xl font-bold text-white mt-2">
@@ -128,18 +122,27 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
             <span className="text-4xl">📧</span>
             <h2 className="text-lg font-semibold text-white mt-3 mb-2">Check je e-mail</h2>
             <p className="text-gray-400 text-sm">
-              We hebben een inloglink gestuurd naar <strong className="text-white">{email}</strong>.
-              Klik op de link om in te loggen.
+              We hebben een inloglink gestuurd naar{' '}
+              <strong className="text-white">{email}</strong>.
             </p>
             <p className="text-gray-500 text-xs mt-4">
-              Link is 24 uur geldig. Geen e-mail ontvangen? Check je spam.
+              Link is 24 uur geldig. Geen e-mail? Check je spam.
             </p>
           </div>
         ) : (
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+
+            {IS_DEV && (
+              <div className="mb-4 px-3 py-2 bg-yellow-900/30 border border-yellow-700/50 rounded-xl">
+                <p className="text-yellow-500 text-xs font-medium">⚠️ Development modus</p>
+              </div>
+            )}
+
             <h2 className="text-lg font-semibold text-white mb-1">Inloggen</h2>
             <p className="text-gray-400 text-sm mb-6">
-              Voer je e-mailadres in — we sturen je een inloglink.
+              {IS_DEV
+                ? 'Voer een e-mailadres in en log direct in zonder e-mailverificatie.'
+                : 'Voer je e-mailadres in — we sturen je een inloglink.'}
             </p>
 
             <div className="space-y-4">
@@ -148,8 +151,8 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                  onKeyDown={(e) => e.key === 'Enter' && (IS_DEV ? handleDevLogin() : handleMagicLink())}
                   placeholder="jij@voorbeeld.nl"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
                              placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
@@ -158,29 +161,38 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 />
               </div>
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && (
+                <p className="text-red-400 text-sm">{error}</p>
+              )}
 
-              <button
-                onClick={handleLogin}
-                disabled={loading || !email}
-                className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                           text-white font-semibold rounded-xl transition-colors"
-              >
-                {loading ? 'Versturen...' : 'Stuur inloglink →'}
-              </button>
-
-              {IS_DEV && (
-                <div className="pt-4 border-t border-gray-700">
-                  <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
-                  <button
-                    onClick={handleDevLink}
-                    disabled={devLoading || !email}
-                    className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
-                               text-white text-sm font-medium rounded-xl transition-colors"
-                  >
-                    {devLoading ? 'Bezig...' : 'Direct inloggen (geen e-mail)'}
-                  </button>
-                </div>
+              {IS_DEV ? (
+                // Dev modus: alleen directe login knop, geen mail versturen
+                <button
+                  onClick={handleDevLogin}
+                  disabled={loading || !email}
+                  className="w-full py-3 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-50
+                             text-white font-semibold rounded-xl transition-colors"
+                >
+                  {loading ? (
+                    <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    'Direct inloggen →'
+                  )}
+                </button>
+              ) : (
+                // Productie: alleen magic link
+                <button
+                  onClick={handleMagicLink}
+                  disabled={loading || !email}
+                  className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50
+                             text-white font-semibold rounded-xl transition-colors"
+                >
+                  {loading ? (
+                    <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    'Stuur inloglink →'
+                  )}
+                </button>
               )}
             </div>
           </div>

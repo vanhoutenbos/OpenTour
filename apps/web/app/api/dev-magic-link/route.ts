@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-const DEV_PASSWORD = 'dev-password-opentour-2025';
+const DEV_PASSWORD = 'dev-opentour-2025!';
 
 export async function POST(request: NextRequest) {
   if (process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK !== 'true') {
@@ -12,87 +12,85 @@ export async function POST(request: NextRequest) {
   let email: string;
   try {
     const body = await request.json();
-    email = body.email;
+    email = (body.email ?? '').trim();
   } catch {
-    return NextResponse.json({ error: 'Ongeldige request body' }, { status: 400 });
+    return NextResponse.json({ error: 'Ongeldige request' }, { status: 400 });
   }
 
   if (!email) {
     return NextResponse.json({ error: 'Email verplicht' }, { status: 400 });
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
   try {
-    // Admin client: user aanmaken of bijwerken
-    const adminSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    // 1. User aanmaken of wachtwoord resetten via admin client
+    const admin = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    const { data: userList } = await adminSupabase.auth.admin.listUsers();
-    const existingUser = userList?.users.find((u) => u.email === email);
+    const { data: { users } } = await admin.auth.admin.listUsers();
+    const existing = users.find((u) => u.email === email);
 
-    if (existingUser) {
-      await adminSupabase.auth.admin.updateUserById(existingUser.id, {
-        password: DEV_PASSWORD,
-      });
+    if (existing) {
+      await admin.auth.admin.updateUserById(existing.id, { password: DEV_PASSWORD });
     } else {
-      await adminSupabase.auth.admin.createUser({
+      const { error: createErr } = await admin.auth.admin.createUser({
         email,
         password: DEV_PASSWORD,
         email_confirm: true,
         user_metadata: { display_name: email.split('@')[0] },
       });
+      if (createErr) throw createErr;
     }
 
-    // Inloggen en sessie verkrijgen
-    const anonSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    // 2. Inloggen om access + refresh token te krijgen
+    const anon = createClient(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    const { data, error: signInError } = await anonSupabase.auth.signInWithPassword({
+    const { data, error: signInErr } = await anon.auth.signInWithPassword({
       email,
       password: DEV_PASSWORD,
     });
 
-    if (signInError || !data.session) {
-      throw new Error(`Inloggen mislukt: ${signInError?.message ?? 'Geen sessie'}`);
+    if (signInErr || !data.session) {
+      throw new Error(signInErr?.message ?? 'Geen sessie na inloggen');
     }
 
-    // Sessie als cookie op de response zetten via SSR client
-    // Zo leest de middleware hem direct op de volgende request
-    const response = NextResponse.json({ success: true, email });
+    // 3. Sessie in cookies schrijven via createServerClient
+    // Dit gebruikt exact dezelfde cookie namen als de middleware,
+    // zodat de volgende request direct herkend wordt als ingelogd.
+    const response = NextResponse.json({ success: true });
 
-    const maxAge = 400 * 24 * 60 * 60;
-    const cookieOpts = { path: '/', sameSite: 'lax' as const, httpOnly: false, secure: true, maxAge };
+    const serverClient = createServerClient(supabaseUrl, anonKey, {
+      cookies: {
+        get: (name) => request.cookies.get(name)?.value,
+        set: (name, value, options) => {
+          response.cookies.set(name, value, {
+            ...options,
+            maxAge: 400 * 24 * 60 * 60, // 400 dagen
+            path: '/',
+            sameSite: 'lax',
+            httpOnly: false,
+          });
+        },
+        remove: (name, options) => {
+          response.cookies.set(name, '', { ...options, maxAge: 0, path: '/' });
+        },
+      },
+    });
 
-    // Supabase SSR verwacht de sessie in twee cookies: access + refresh
-    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!
-      .replace('https://', '')
-      .split('.')[0];
-
-    response.cookies.set(
-      `sb-${projectRef}-auth-token`,
-      JSON.stringify(data.session),
-      cookieOpts
-    );
-    response.cookies.set(
-      `sb-session`,
-      JSON.stringify({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at,
-        token_type: 'bearer',
-        user: data.session.user,
-      }),
-      cookieOpts
-    );
+    // setSession schrijft de tokens via de cookies.set callback hierboven
+    await serverClient.auth.setSession(data.session);
 
     return response;
+
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Onbekende fout';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[dev-magic-link]', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
