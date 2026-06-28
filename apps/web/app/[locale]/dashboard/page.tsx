@@ -34,14 +34,23 @@ export default function DashboardPage() {
       if (cancelled || loaded) return;
       loaded = true;
       setUser({ email });
-      const { data: rows } = await supabase
-        .from('tournaments')
-        .select('id, name, status, format, start_date, created_at')
-        .eq('created_by', userId)
-        .order('created_at', { ascending: false });
-      if (!cancelled) {
-        setTournaments((rows as Tournament[]) ?? []);
-        setLoading(false);
+      try {
+        const { data: rows, error } = await supabase
+          .from('tournaments')
+          .select('id, name, status, format, start_date, created_at')
+          .eq('created_by', userId)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('[dashboard] tournaments query error:', error);
+        }
+        if (!cancelled) {
+          setTournaments((rows as Tournament[]) ?? []);
+        }
+      } catch (err) {
+        console.error('[dashboard] tournaments query exception:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
