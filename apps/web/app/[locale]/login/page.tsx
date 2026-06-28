@@ -11,15 +11,13 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Geen auth check bij mount — de middleware heeft dat al gedaan.
-  // Als je hier bent, ben je niet ingelogd. Punt.
-
   const handleDevLogin = async () => {
     if (!email || loading) return;
     setLoading(true);
     setError(null);
 
     try {
+      // Stap 1: server maakt user aan en geeft credentials terug
       const res = await fetch('/api/dev-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,7 +32,21 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         return;
       }
 
-      // Hard redirect — browser stuurt de nieuwe cookies mee
+      // Stap 2: log direct in via de browser client met het bekende wachtwoord
+      // Dit initialiseert de Supabase sessie correct in de browser
+      const supabase = getSupabaseBrowser();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (signInError) {
+        setError(`Inloggen mislukt: ${signInError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      // Sessie is nu correct gezet — redirect naar dashboard
       window.location.href = `/${locale}/dashboard`;
 
     } catch {
@@ -75,7 +87,7 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
           <span className="text-4xl">📧</span>
           <h2 className="text-lg font-semibold text-white mt-3 mb-2">Check je e-mail</h2>
           <p className="text-gray-400 text-sm">
-            We hebben een inloglink gestuurd naar{' '}
+            We stuurden een inloglink naar{' '}
             <strong className="text-white">{email}</strong>.
           </p>
           <p className="text-gray-500 text-xs mt-4">
@@ -89,7 +101,6 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   return (
     <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
           <h1 className="text-2xl font-bold text-white mt-2">
@@ -120,8 +131,9 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === 'Enter' && (IS_DEV ? handleDevLogin() : handleMagicLink())}
                 placeholder="jij@voorbeeld.nl"
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
-                           placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl
+                           text-white placeholder-gray-500 focus:outline-none
+                           focus:border-green-600 transition-colors"
                 autoComplete="email"
                 autoFocus
               />
@@ -134,22 +146,30 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
                 onClick={handleDevLogin}
                 disabled={loading || !email}
                 className="w-full py-3 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-50
-                           text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                           text-white font-semibold rounded-xl transition-colors
+                           flex items-center justify-center gap-2"
               >
-                {loading
-                  ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : 'Direct inloggen →'}
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Bezig...
+                  </>
+                ) : 'Direct inloggen →'}
               </button>
             ) : (
               <button
                 onClick={handleMagicLink}
                 disabled={loading || !email}
                 className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                           text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                           text-white font-semibold rounded-xl transition-colors
+                           flex items-center justify-center gap-2"
               >
-                {loading
-                  ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : 'Stuur inloglink →'}
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Versturen...
+                  </>
+                ) : 'Stuur inloglink →'}
               </button>
             )}
           </div>

@@ -1,15 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEV_PASSWORD = 'dev-opentour-2025!';
 
 export async function POST(request: NextRequest) {
-  // NEXT_PUBLIC_ vars worden alleen in de browser bundle ingebakken,
-  // niet beschikbaar in API routes. Check beide varianten.
   const devEnabled =
     process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true' ||
     process.env.ENABLE_DEV_MAGIC_LINK === 'true';
+
   if (!devEnabled) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
@@ -27,11 +25,11 @@ export async function POST(request: NextRequest) {
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const anonKey     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   try {
-    // 1. User aanmaken of wachtwoord resetten via admin client
+    // 1. Zorg dat de user bestaat met bekend wachtwoord
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -51,47 +49,16 @@ export async function POST(request: NextRequest) {
       if (createErr) throw createErr;
     }
 
-    // 2. Inloggen om access + refresh token te krijgen
-    const anon = createClient(supabaseUrl, anonKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    const { data, error: signInErr } = await anon.auth.signInWithPassword({
+    // 2. Geef het wachtwoord terug aan de client zodat die zelf
+    //    kan inloggen via signInWithPassword — dat initialiseert
+    //    de Supabase browser client sessie correct zonder cookie-magie
+    return NextResponse.json({
+      success: true,
       email,
       password: DEV_PASSWORD,
+      supabaseUrl,
+      anonKey,
     });
-
-    if (signInErr || !data.session) {
-      throw new Error(signInErr?.message ?? 'Geen sessie na inloggen');
-    }
-
-    // 3. Sessie in cookies schrijven via createServerClient
-    // Dit gebruikt exact dezelfde cookie namen als de middleware,
-    // zodat de volgende request direct herkend wordt als ingelogd.
-    const response = NextResponse.json({ success: true });
-
-    const serverClient = createServerClient(supabaseUrl, anonKey, {
-      cookies: {
-        get: (name: string) => request.cookies.get(name)?.value,
-        set: (name: string, value: string, options: Record<string, unknown>) => {
-          response.cookies.set(name, value, {
-            ...options,
-            maxAge: 400 * 24 * 60 * 60,
-            path: '/',
-            sameSite: 'lax' as const,
-            httpOnly: false,
-          });
-        },
-        remove: (name: string, options: Record<string, unknown>) => {
-          response.cookies.set(name, '', { ...options, maxAge: 0, path: '/' });
-        },
-      },
-    });
-
-    // setSession schrijft de tokens via de cookies.set callback hierboven
-    await serverClient.auth.setSession(data.session);
-
-    return response;
 
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
