@@ -67,17 +67,17 @@ export async function POST(request: NextRequest) {
 
     const serverClient = createServerClient(supabaseUrl, anonKey, {
       cookies: {
-        get: (name) => request.cookies.get(name)?.value,
-        set: (name, value, options) => {
+        get: (name: string) => request.cookies.get(name)?.value,
+        set: (name: string, value: string, options: Record<string, unknown>) => {
           response.cookies.set(name, value, {
             ...options,
-            maxAge: 400 * 24 * 60 * 60, // 400 dagen
+            maxAge: 400 * 24 * 60 * 60,
             path: '/',
-            sameSite: 'lax',
+            sameSite: 'lax' as const,
             httpOnly: false,
           });
         },
-        remove: (name, options) => {
+        remove: (name: string, options: Record<string, unknown>) => {
           response.cookies.set(name, '', { ...options, maxAge: 0, path: '/' });
         },
       },
