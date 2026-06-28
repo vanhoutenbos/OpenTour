@@ -43,13 +43,19 @@ export async function middleware(request: NextRequest) {
   const isProtected = PROTECTED.some(p => pathname.includes(p));
   if (isProtected && !user) {
     const locale = pathname.split('/')[1] ?? 'nl';
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    const redirect = NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    // Kopieer vernieuwde auth-cookies mee naar de redirect response
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c.name, c.value, { path: '/' }));
+    return redirect;
   }
 
   // Al ingelogd op login pagina → stuur door naar dashboard
   if (pathname.endsWith('/login') && user) {
     const locale = pathname.split('/')[1] ?? 'nl';
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+    const redirect = NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
+    // Kopieer vernieuwde auth-cookies mee naar de redirect response
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c.name, c.value, { path: '/' }));
+    return redirect;
   }
 
   return response;

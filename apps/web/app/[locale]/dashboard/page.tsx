@@ -44,14 +44,18 @@ export default function DashboardPage() {
 
     // getUser() doet een server-roundtrip — werkt aantoonbaar correct
     // (de debug route /api/debug-session bewijst dat de sessie er is).
-    // getSession() las de cookie maar triggerde loadDashboard niet.
     supabase.auth.getUser().then(({ data, error }) => {
       if (cancelled) return;
+      console.log('[dashboard] getUser result:', { userId: data?.user?.id, email: data?.user?.email, error: error?.message });
       if (data.user && !error) {
         loadDashboard(data.user.id, data.user.email ?? undefined);
       } else {
+        console.warn('[dashboard] geen user gevonden, redirect naar login');
         window.location.href = '/nl/login';
       }
+    }).catch((err) => {
+      console.error('[dashboard] getUser() fout:', err);
+      if (!cancelled) window.location.href = '/nl/login';
     });
 
     // Luister ook naar auth events voor logout / token refresh

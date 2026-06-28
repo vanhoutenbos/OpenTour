@@ -25,6 +25,7 @@ $P2 = "da944a9c"   # Nice-to-have / later
 # Size option IDs
 $XS = "6c6483d2"
 $S  = "f784b110"
+$S  = "f784b110"
 $M  = "7515a9f1"
 $L  = "817d0097"
 $XL = "db339eb2"
