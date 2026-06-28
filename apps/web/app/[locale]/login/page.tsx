@@ -32,21 +32,25 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         return;
       }
 
-      // Stap 2: log direct in via de browser client met het bekende wachtwoord
-      // Dit initialiseert de Supabase sessie correct in de browser
+      // Stap 2: log direct in via de browser client
       const supabase = getSupabaseBrowser();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (signInError) {
-        setError(`Inloggen mislukt: ${signInError.message}`);
+      if (signInError || !signInData.session) {
+        setError(`Inloggen mislukt: ${signInError?.message ?? 'geen sessie'}`);
         setLoading(false);
         return;
       }
 
-      // Sessie is nu correct gezet — redirect naar dashboard
+      // Wacht kort zodat de browser client de cookies kan schrijven
+      // voordat we een page reload doen (document.cookie is synchroon
+      // maar de supabase storage.setItem is intern async)
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Hard redirect — browser stuurt cookies mee, middleware valideert
       window.location.href = `/${locale}/dashboard`;
 
     } catch {

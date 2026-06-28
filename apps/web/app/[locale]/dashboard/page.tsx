@@ -42,8 +42,15 @@ export default function DashboardPage() {
       }
     };
 
-    // Luister naar auth events — werkt ook als de sessie net via
-    // dev-magic-link cookie is gezet en de client hem nog moet oppakken
+    // Stap 1: probeer sessie direct op te halen (snel pad na login)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      }
+    });
+
+    // Stap 2: luister naar auth events als fallback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
@@ -53,15 +60,18 @@ export default function DashboardPage() {
       }
     });
 
-    // Haal ook direct de huidige sessie op als fallback
-    // (onAuthStateChange kan INITIAL_SESSION missen als client al geïnitialiseerd was)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled || !session?.user) return;
-      loadDashboard(session.user.id, session.user.email ?? undefined);
-    });
+    // Stap 3: als na 3 seconden nog steeds loading, heeft middleware
+    // ons hier binnengelaten maar heeft de client de sessie niet.
+    // Doe een harde refresh zodat middleware opnieuw valideert.
+    const timeout = setTimeout(() => {
+      if (!cancelled && !loaded) {
+        window.location.reload();
+      }
+    }, 3000);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [router]);
