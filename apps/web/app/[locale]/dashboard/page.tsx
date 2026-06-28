@@ -27,6 +27,9 @@ export default function DashboardPage() {
     let cancelled = false;
     let loaded = false;
 
+    // Tijdelijke debug: welke cookies ziet de browser client?
+    console.log('[dashboard] document.cookie keys:', document.cookie.split(';').map(c => c.trim().split('=')[0]));
+
     const loadDashboard = async (userId: string, email: string | undefined) => {
       if (cancelled || loaded) return;
       loaded = true;
