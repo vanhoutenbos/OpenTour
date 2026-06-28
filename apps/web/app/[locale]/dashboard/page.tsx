@@ -42,36 +42,28 @@ export default function DashboardPage() {
       }
     };
 
-    // Stap 1: probeer sessie direct op te halen (snel pad na login)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // getUser() doet een server-roundtrip — werkt aantoonbaar correct
+    // (de debug route /api/debug-session bewijst dat de sessie er is).
+    // getSession() las de cookie maar triggerde loadDashboard niet.
+    supabase.auth.getUser().then(({ data, error }) => {
       if (cancelled) return;
-      if (session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
-      }
-    });
-
-    // Stap 2: luister naar auth events als fallback
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cancelled) return;
-      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else if (event === 'SIGNED_OUT') {
+      if (data.user && !error) {
+        loadDashboard(data.user.id, data.user.email ?? undefined);
+      } else {
         window.location.href = '/nl/login';
       }
     });
 
-    // Stap 3: als na 3 seconden nog steeds loading, heeft middleware
-    // ons hier binnengelaten maar heeft de client de sessie niet.
-    // Doe een harde refresh zodat middleware opnieuw valideert.
-    const timeout = setTimeout(() => {
-      if (!cancelled && !loaded) {
-        window.location.reload();
+    // Luister ook naar auth events voor logout / token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+      if (event === 'SIGNED_OUT') {
+        window.location.href = '/nl/login';
       }
-    }, 3000);
+    });
 
     return () => {
       cancelled = true;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [router]);
