@@ -5,7 +5,12 @@ import { NextRequest, NextResponse } from 'next/server';
 const DEV_PASSWORD = 'dev-opentour-2025!';
 
 export async function POST(request: NextRequest) {
-  if (process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK !== 'true') {
+  // NEXT_PUBLIC_ vars worden alleen in de browser bundle ingebakken,
+  // niet beschikbaar in API routes. Check beide varianten.
+  const devEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true' ||
+    process.env.ENABLE_DEV_MAGIC_LINK === 'true';
+  if (!devEnabled) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 

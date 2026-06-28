@@ -42,25 +42,22 @@ export default function DashboardPage() {
       }
     };
 
-    // Middleware garandeert dat we hier alleen komen als we ingelogd zijn.
-    // Geen extra getUser() nodig — gewoon direct data laden.
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Luister naar auth events — werkt ook als de sessie net via
+    // dev-magic-link cookie is gezet en de client hem nog moet oppakken
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (session?.user) {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
         loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else {
-        // Sessie toch weg (bijv. uitgelogd op ander tabblad)
+      } else if (event === 'SIGNED_OUT') {
         window.location.href = '/nl/login';
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cancelled) return;
-      if (event === 'SIGNED_OUT') {
-        window.location.href = '/nl/login';
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
-      }
+    // Haal ook direct de huidige sessie op als fallback
+    // (onAuthStateChange kan INITIAL_SESSION missen als client al geïnitialiseerd was)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled || !session?.user) return;
+      loadDashboard(session.user.id, session.user.email ?? undefined);
     });
 
     return () => {
