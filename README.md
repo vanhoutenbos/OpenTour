@@ -5,7 +5,7 @@
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![CI](https://github.com/vanhoutenbos/opentour/actions/workflows/pr.yml/badge.svg)](https://github.com/vanhoutenbos/opentour/actions)
 
-> 🇳🇱 **Are you Dutch?** Welkom! Als je liever je vraagt stelt in het Nederlands, ga je rang! Zorg alleen wel dat je de tag `Dutch` eraan hangt, dan begrijpen onze Engelse lezers dat ze die moeten skippen! ;)
+> 🇳🇱 **Are you Dutch?** Welkom! Als je liever je vraagt stelt in het Nederlands, ga je gang! Zorg alleen wel dat je de tag `Dutch` eraan hangt, dan begrijpen onze Engelse lezers dat ze die moeten skippen! ;)
 *If you see an issue with the tag `Dutch` than it might be a bit harder to read since the Issue will be mostly spoken in `Dutch`.
 
 ## What is OpenTour?
