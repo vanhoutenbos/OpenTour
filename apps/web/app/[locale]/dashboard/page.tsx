@@ -42,27 +42,24 @@ export default function DashboardPage() {
       }
     };
 
-    // getUser() doet een server-roundtrip en triggert automatisch
-    // token refresh als de access token verlopen is maar de refresh
-    // token nog geldig is. Veel betrouwbaarder dan getSession().
-    supabase.auth.getUser().then(({ data, error }) => {
+    // Middleware garandeert dat we hier alleen komen als we ingelogd zijn.
+    // Geen extra getUser() nodig — gewoon direct data laden.
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
-      if (data.user && !error) {
-        loadDashboard(data.user.id, data.user.email ?? undefined);
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
       } else {
-        setLoading(false);
-        router.replace('/nl/login');
+        // Sessie toch weg (bijv. uitgelogd op ander tabblad)
+        window.location.href = '/nl/login';
       }
     });
 
-    // onAuthStateChange voor live token refresh events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === 'TOKEN_REFRESHED' && session?.user) {
+      if (event === 'SIGNED_OUT') {
+        window.location.href = '/nl/login';
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         loadDashboard(session.user.id, session.user.email ?? undefined);
-      } else if (event === 'SIGNED_OUT') {
-        setLoading(false);
-        router.replace('/nl/login');
       }
     });
 
