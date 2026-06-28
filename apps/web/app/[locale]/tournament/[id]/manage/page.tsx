@@ -188,7 +188,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const loadData = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
     if (!session?.user) { router.replace('/nl/login'); return; }
 
     const { data: t } = await supabase

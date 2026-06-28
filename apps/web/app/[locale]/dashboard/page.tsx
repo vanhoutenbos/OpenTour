@@ -42,21 +42,23 @@ export default function DashboardPage() {
       }
     };
 
-    // Haal de sessie direct op bij mount — dit is betrouwbaar na een F5
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // getUser() doet een server-roundtrip en triggert automatisch
+    // token refresh als de access token verlopen is maar de refresh
+    // token nog geldig is. Veel betrouwbaarder dan getSession().
+    supabase.auth.getUser().then(({ data, error }) => {
       if (cancelled) return;
-      if (session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
+      if (data.user && !error) {
+        loadDashboard(data.user.id, data.user.email ?? undefined);
       } else {
         setLoading(false);
         router.replace('/nl/login');
       }
     });
 
-    // onAuthStateChange voor live auth events (login/logout/token refresh)
+    // onAuthStateChange voor live token refresh events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
         loadDashboard(session.user.id, session.user.email ?? undefined);
       } else if (event === 'SIGNED_OUT') {
         setLoading(false);
