@@ -54,27 +54,26 @@ export default function DashboardPage() {
       }
     };
 
-    // getUser() doet een server-roundtrip — werkt aantoonbaar correct
-    // (de debug route /api/debug-session bewijst dat de sessie er is).
-    supabase.auth.getUser().then(({ data, error }) => {
+    // getSession() leest de cookie die de middleware al heeft gerefresht.
+    // Geen extra server-roundtrip — snel en betrouwbaar.
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
-      console.log('[dashboard] getUser result:', { userId: data?.user?.id, email: data?.user?.email, error: error?.message });
-      if (data.user && !error) {
-        loadDashboard(data.user.id, data.user.email ?? undefined);
+      if (session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
       } else {
-        console.warn('[dashboard] geen user gevonden, redirect naar login');
-        window.location.href = '/nl/login';
+        setLoading(false);
+        router.replace('/nl/login');
       }
-    }).catch((err) => {
-      console.error('[dashboard] getUser() fout:', err);
-      if (!cancelled) window.location.href = '/nl/login';
     });
 
-    // Luister ook naar auth events voor logout / token refresh
+    // Vang live events op: inloggen vanuit ander tabblad, uitloggen, token refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === 'SIGNED_OUT') {
-        window.location.href = '/nl/login';
+      if (event === 'SIGNED_IN' && session?.user) {
+        loadDashboard(session.user.id, session.user.email ?? undefined);
+      } else if (event === 'SIGNED_OUT') {
+        setLoading(false);
+        router.replace('/nl/login');
       }
     });
 
