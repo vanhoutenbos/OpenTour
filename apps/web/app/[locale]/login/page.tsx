@@ -121,17 +121,23 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white mb-1">Inloggen</h2>
             <p className="text-gray-400 text-sm mb-6">
-              Voer je e-mailadres in — we sturen je een inloglink.
+              {IS_DEV ? 'Voer een e-mailadres in en log direct in.' : 'Voer je e-mailadres in — we sturen je een inloglink.'}
             </p>
 
             <div className="space-y-4">
+              {IS_DEV && (
+                <div className="px-3 py-2 bg-yellow-900/30 border border-yellow-700/50 rounded-xl">
+                  <p className="text-yellow-500 text-xs font-medium">⚠️ Development modus — geen e-mail nodig</p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm text-gray-400 mb-1.5">E-mailadres</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  onKeyDown={(e) => e.key === 'Enter' && (IS_DEV ? handleDevLink() : handleLogin())}
                   placeholder="jij@voorbeeld.nl"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
                              placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
@@ -142,27 +148,24 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
 
-              <button
-                onClick={handleLogin}
-                disabled={loading || !email}
-                className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50
-                           text-white font-semibold rounded-xl transition-colors"
-              >
-                {loading ? 'Versturen...' : 'Stuur inloglink →'}
-              </button>
-
-              {IS_DEV && (
-                <div className="pt-4 border-t border-gray-700">
-                  <p className="text-xs text-yellow-500 mb-2">⚠️ Development only</p>
-                  <button
-                    onClick={handleDevLink}
-                    disabled={devLoading || !email}
-                    className="w-full py-2 bg-yellow-800 hover:bg-yellow-700 disabled:opacity-50
-                               text-white text-sm font-medium rounded-xl transition-colors"
-                  >
-                    {devLoading ? 'Bezig met inloggen...' : 'Direct inloggen (geen e-mail)'}
-                  </button>
-                </div>
+              {IS_DEV ? (
+                <button
+                  onClick={handleDevLink}
+                  disabled={devLoading || !email}
+                  className="w-full py-3 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-50
+                             text-white font-semibold rounded-xl transition-colors"
+                >
+                  {devLoading ? 'Bezig met inloggen...' : 'Direct inloggen →'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  disabled={loading || !email}
+                  className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50
+                             text-white font-semibold rounded-xl transition-colors"
+                >
+                  {loading ? 'Versturen...' : 'Stuur inloglink →'}
+                </button>
               )}
             </div>
           </div>
