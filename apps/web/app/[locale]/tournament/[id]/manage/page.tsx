@@ -158,6 +158,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   });
   const [showPlayerDetails, setShowPlayerDetails] = useState(false);
 
+  // Speler bewerken
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editPlayerForm, setEditPlayerForm] = useState({
+    name: '', handicap: '', gender: '',
+    initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
+    street: '', houseNumber: '', houseNumberAddition: '',
+    postalCode: '', city: '', country: '',
+    email: '', phone: '', ngfNumber: '',
+  });
+  const [playerSaving, setPlayerSaving] = useState(false);
+  const [playerDeletingId, setPlayerDeletingId] = useState<string | null>(null);
+
   // Categories
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
@@ -345,6 +357,85 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     });
     setShowPlayerDetails(false);
     await loadData();
+  };
+
+  // ---- Speler bewerken ----
+  const openPlayerEdit = (p: Player) => {
+    setEditingPlayerId(p.id);
+    setEditPlayerForm({
+      name: p.name,
+      handicap: p.handicap?.toString() ?? '',
+      gender: p.gender ?? '',
+      initials: p.initials ?? '',
+      callName: p.call_name ?? '',
+      prefix: p.prefix ?? '',
+      lastName: p.last_name ?? '',
+      dateOfBirth: p.date_of_birth ?? '',
+      street: p.street ?? '',
+      houseNumber: p.house_number ?? '',
+      houseNumberAddition: p.house_number_addition ?? '',
+      postalCode: p.postal_code ?? '',
+      city: p.city ?? '',
+      country: p.country ?? '',
+      email: p.email ?? '',
+      phone: p.phone ?? '',
+      ngfNumber: p.ngf_number ?? '',
+    });
+  };
+
+  const closePlayerEdit = () => setEditingPlayerId(null);
+
+  const savePlayerEdit = async (playerId: string) => {
+    if (!editPlayerForm.name.trim()) return;
+    setPlayerSaving(true);
+
+    const { error } = await supabase.from('tournament_players').update({
+      name: editPlayerForm.name.trim(),
+      handicap: editPlayerForm.handicap ? parseFloat(editPlayerForm.handicap) : null,
+      gender: editPlayerForm.gender || null,
+      initials: editPlayerForm.initials || null,
+      call_name: editPlayerForm.callName || null,
+      prefix: editPlayerForm.prefix || null,
+      last_name: editPlayerForm.lastName || null,
+      date_of_birth: editPlayerForm.dateOfBirth || null,
+      street: editPlayerForm.street || null,
+      house_number: editPlayerForm.houseNumber || null,
+      house_number_addition: editPlayerForm.houseNumberAddition || null,
+      postal_code: editPlayerForm.postalCode || null,
+      city: editPlayerForm.city || null,
+      country: editPlayerForm.country || null,
+      email: editPlayerForm.email || null,
+      phone: editPlayerForm.phone || null,
+      ngf_number: editPlayerForm.ngfNumber || null,
+    }).eq('id', playerId);
+
+    setPlayerSaving(false);
+    if (!error) {
+      setEditingPlayerId(null);
+      await loadData();
+    }
+  };
+
+  const updatePlayerStatus = async (playerId: string, status: string) => {
+    // Optimistische update voor directe feedback
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status } : p));
+    const { error } = await supabase
+      .from('tournament_players')
+      .update({ status })
+      .eq('id', playerId);
+    if (error) {
+      await loadData();
+    }
+  };
+
+  const deletePlayer = async (playerId: string) => {
+    setPlayerDeletingId(playerId);
+    const { error } = await supabase.from('tournament_players').delete().eq('id', playerId);
+    setPlayerDeletingId(null);
+    if (!error) {
+      setPlayers(prev => prev.filter(p => p.id !== playerId));
+      if (editingPlayerId === playerId) setEditingPlayerId(null);
+    }
   };
 
   // ---- Categories ----
@@ -1038,30 +1129,148 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               <p className="text-center text-gray-500 py-8">Nog geen spelers toegevoegd.</p>
             ) : (
               <div className="space-y-2">
-                {players.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
-                  >
-                    <div>
-                      <span className="text-white font-medium">{p.name}</span>
-                      {p.handicap !== null && (
-                        <span className="text-gray-400 text-sm ml-2">HCP {p.handicap}</span>
-                      )}
-                      {p.gender && (
-                        <span className="text-gray-500 text-sm ml-2">({genderLabel(p.gender)})</span>
+                {players.map((p) => {
+                  const isEditing = editingPlayerId === p.id;
+                  const statusConfig: Record<string, { label: string; color: string }> = {
+                    registered: { label: 'Aangemeld',    color: 'bg-gray-700 text-gray-300' },
+                    confirmed:  { label: 'Bevestigd',    color: 'bg-blue-900/40 text-blue-300' },
+                    withdrawn:  { label: 'Teruggetrokken', color: 'bg-gray-800 text-gray-500' },
+                    dns:        { label: 'DNS',          color: 'bg-yellow-900/40 text-yellow-300' },
+                    dnf:        { label: 'DNF',          color: 'bg-orange-900/40 text-orange-300' },
+                    dsq:        { label: 'DSQ',          color: 'bg-red-900/40 text-red-300' },
+                  };
+                  const sc = statusConfig[p.status] ?? statusConfig.registered!;
+
+                  return (
+                    <div
+                      key={p.id}
+                      className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden"
+                    >
+                      {/* Samengevouwen rij — klik om te bewerken */}
+                      <button
+                        onClick={() => isEditing ? closePlayerEdit() : openPlayerEdit(p)}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-850 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-white font-medium truncate">{p.name}</span>
+                          {p.handicap !== null && (
+                            <span className="text-gray-400 text-sm shrink-0">HCP {p.handicap}</span>
+                          )}
+                          {p.gender && (
+                            <span className="text-gray-500 text-sm shrink-0">({genderLabel(p.gender)})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          {p.category_id && (
+                            <span className="text-xs text-green-400 hidden sm:inline">
+                              {categories.find(c => c.id === p.category_id)?.name ?? ''}
+                            </span>
+                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.color}`}>
+                            {sc.label}
+                          </span>
+                          <span className={`text-gray-500 transition-transform ${isEditing ? 'rotate-180' : ''}`}>▾</span>
+                        </div>
+                      </button>
+
+                      {/* Uitgeklapt bewerkpaneel */}
+                      {isEditing && (
+                        <div className="border-t border-gray-800 px-4 py-4 space-y-4">
+
+                          {/* Status snelkeuze */}
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(['registered', 'confirmed', 'dns', 'dnf', 'dsq', 'withdrawn'] as const).map(s => (
+                                <button
+                                  key={s}
+                                  onClick={() => updatePlayerStatus(p.id, s)}
+                                  className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
+                                    p.status === s
+                                      ? statusConfig[s]!.color + ' ring-1 ring-inset ring-current'
+                                      : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                                  }`}
+                                >
+                                  {statusConfig[s]!.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Basisvelden */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <InputField label="Naam *" value={editPlayerForm.name} onChange={v => setEditPlayerForm(f => ({ ...f, name: v }))} />
+                            <InputField label="Handicap" type="number" value={editPlayerForm.handicap} onChange={v => setEditPlayerForm(f => ({ ...f, handicap: v }))} />
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Geslacht</label>
+                              <select
+                                value={editPlayerForm.gender}
+                                onChange={e => setEditPlayerForm(f => ({ ...f, gender: e.target.value }))}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+                              >
+                                <option value="">Onbekend</option>
+                                <option value="male">Man</option>
+                                <option value="female">Vrouw</option>
+                                <option value="unknown">Onbekend</option>
+                              </select>
+                            </div>
+                            <InputField label="Voorletters" value={editPlayerForm.initials} onChange={v => setEditPlayerForm(f => ({ ...f, initials: v }))} />
+                            <InputField label="Roepnaam" value={editPlayerForm.callName} onChange={v => setEditPlayerForm(f => ({ ...f, callName: v }))} />
+                            <InputField label="Tussenvoegsel" value={editPlayerForm.prefix} onChange={v => setEditPlayerForm(f => ({ ...f, prefix: v }))} />
+                            <InputField label="Achternaam" value={editPlayerForm.lastName} onChange={v => setEditPlayerForm(f => ({ ...f, lastName: v }))} />
+                            <InputField label="Geboortedatum" type="date" value={editPlayerForm.dateOfBirth} onChange={v => setEditPlayerForm(f => ({ ...f, dateOfBirth: v }))} />
+                            <InputField label="E-mailadres" type="email" value={editPlayerForm.email} onChange={v => setEditPlayerForm(f => ({ ...f, email: v }))} />
+                            <InputField label="Mobiel" value={editPlayerForm.phone} onChange={v => setEditPlayerForm(f => ({ ...f, phone: v }))} />
+                            <InputField label="NGF nummer" value={editPlayerForm.ngfNumber} onChange={v => setEditPlayerForm(f => ({ ...f, ngfNumber: v }))} />
+                          </div>
+
+                          {/* Adres */}
+                          <div className="border-t border-gray-800 pt-3">
+                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Adres</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                              <InputField label="Straat" value={editPlayerForm.street} onChange={v => setEditPlayerForm(f => ({ ...f, street: v }))} />
+                              <InputField label="Huisnummer" value={editPlayerForm.houseNumber} onChange={v => setEditPlayerForm(f => ({ ...f, houseNumber: v }))} />
+                              <InputField label="Toevoeging" value={editPlayerForm.houseNumberAddition} onChange={v => setEditPlayerForm(f => ({ ...f, houseNumberAddition: v }))} />
+                              <InputField label="Postcode" value={editPlayerForm.postalCode} onChange={v => setEditPlayerForm(f => ({ ...f, postalCode: v }))} />
+                              <InputField label="Plaats" value={editPlayerForm.city} onChange={v => setEditPlayerForm(f => ({ ...f, city: v }))} />
+                              <InputField label="Land" value={editPlayerForm.country} onChange={v => setEditPlayerForm(f => ({ ...f, country: v }))} />
+                            </div>
+                          </div>
+
+                          {/* Acties */}
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                            <button
+                              onClick={() => {
+                                if (confirm(`Weet je zeker dat je ${p.name} wilt verwijderen?`)) {
+                                  deletePlayer(p.id);
+                                }
+                              }}
+                              disabled={playerDeletingId === p.id}
+                              className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50 px-3 py-2"
+                            >
+                              {playerDeletingId === p.id ? 'Verwijderen...' : '🗑 Speler verwijderen'}
+                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={closePlayerEdit}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg"
+                              >
+                                Annuleren
+                              </button>
+                              <button
+                                onClick={() => savePlayerEdit(p.id)}
+                                disabled={playerSaving || !editPlayerForm.name.trim()}
+                                className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                              >
+                                {playerSaving ? 'Opslaan...' : 'Opslaan'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {p.category_id && (
-                        <span className="text-xs text-green-400">
-                          {categories.find(c => c.id === p.category_id)?.name ?? ''}
-                        </span>
-                      )}
-                      <span className="text-xs text-gray-500 capitalize">{p.status}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
