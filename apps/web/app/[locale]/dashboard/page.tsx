@@ -22,17 +22,15 @@ export default function DashboardPage() {
   const format = useFormatter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string | undefined } | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
     let loaded = false;
 
-    const loadDashboard = async (userId: string, email: string | undefined) => {
+    const loadDashboard = async (userId: string) => {
       if (cancelled || loaded) return;
       loaded = true;
-      setUser({ email });
       try {
         const { data: rows, error } = await supabase
           .from('tournaments')
@@ -58,7 +56,7 @@ export default function DashboardPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
       if (session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
+        loadDashboard(session.user.id);
       } else {
         setLoading(false);
         router.replace(`/${locale}/login`);
@@ -69,7 +67,7 @@ export default function DashboardPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (event === 'SIGNED_IN' && session?.user) {
-        loadDashboard(session.user.id, session.user.email ?? undefined);
+        loadDashboard(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setLoading(false);
         router.replace(`/${locale}/login`);
@@ -81,11 +79,6 @@ export default function DashboardPage() {
       subscription.unsubscribe();
     };
   }, [locale, router]);
-
-  const handleLogout = async () => {
-    await getSupabaseBrowser().auth.signOut();
-    router.replace(`/${locale}/login`);
-  };
 
   const statusLabel: Record<string, { label: string; className: string }> = {
     draft:    { label: 'Concept',     className: 'bg-gray-700 text-gray-300' },
@@ -104,23 +97,6 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-gray-950">
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">
-            Open<span className="text-green-500">Tour</span>
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400 hidden sm:block">{user?.email}</span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Uitloggen
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
