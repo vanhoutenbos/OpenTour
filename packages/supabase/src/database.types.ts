@@ -168,6 +168,7 @@ export interface Database {
           player_a_id: string;
           player_b_id: string;
           flight_id: string | null;
+          round_number: number;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['matchplay_pairings']['Row'], 'id' | 'created_at'>;

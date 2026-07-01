@@ -31,6 +31,7 @@ interface FlightInfo {
 
 interface Props {
   tournamentId: string;
+  activeMatchplayRound?: number;
   tournamentName: string;
   tournamentDescription?: string | null;
   format: string;
@@ -50,6 +51,7 @@ interface Props {
 export function LeaderboardClient({
   tournamentId,
   tournamentName,
+  activeMatchplayRound,
   tournamentDescription,
   format: scoringFormat,
   scoringType,
@@ -244,7 +246,7 @@ export function LeaderboardClient({
 
         {/* MATCHPLAY */}
         {activeTab === 'matchplay' && (
-          <MatchplayView tournamentId={tournamentId} />
+          <MatchplayView tournamentId={tournamentId} activeRound={activeMatchplayRound} />
         )}
 
         {/* COURSE STATS */}

@@ -9,6 +9,7 @@ import { userError } from '@/lib/errors';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
 import { PauseBanner } from '@/components/leaderboard/PauseBanner';
+import { clampRound, normalizeActiveRound } from '@/components/leaderboard/matchplayUtils';
 import ScoreGrid from '@/components/score-grid/ScoreGrid';
 
 interface Tournament {
@@ -87,6 +88,15 @@ interface TournamentCategory {
   sort_order: number;
 }
 
+interface MatchplayPairingSummary {
+  id: string;
+  player_a_id: string;
+  player_b_id: string;
+  player_a_name: string;
+  player_b_name: string;
+  round_number: number;
+}
+
 interface Flight {
   id: string;
   name: string | null;
@@ -134,6 +144,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [copied, setCopied] = useState<string | null>(null);
   const [hasScores, setHasScores] = useState(false);
   const [overviewView, setOverviewView] = useState<'leaderboard' | 'startlist'>('leaderboard');
+  const [matchplayPairings, setMatchplayPairings] = useState<MatchplayPairingSummary[]>([]);
+  const [matchplayBusy, setMatchplayBusy] = useState(false);
+  const [activeMatchplayRound, setActiveMatchplayRound] = useState(1);
 
   // Edit form
   const [editForm, setEditForm] = useState({
@@ -237,7 +250,25 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id')
       .eq('tournament_id', params.id)
       .order('name');
-    setPlayers((p as Player[]) ?? []);
+    const playerRows = (p as Player[]) ?? [];
+    setPlayers(playerRows);
+
+    const { data: pairingRows } = await supabase
+      .from('matchplay_pairings')
+      .select('id, player_a_id, player_b_id, round_number')
+      .eq('tournament_id', params.id)
+      .order('created_at');
+    const playerNameMap = new Map(playerRows.map((player) => [player.id, player.name]));
+    setMatchplayPairings((pairingRows ?? []).map((pairing: { id: string; player_a_id: string; player_b_id: string; round_number: number | null }) => ({
+      id: pairing.id,
+      player_a_id: pairing.player_a_id,
+      player_b_id: pairing.player_b_id,
+      player_a_name: playerNameMap.get(pairing.player_a_id) ?? 'Onbekend',
+      player_b_name: playerNameMap.get(pairing.player_b_id) ?? 'Onbekend',
+      round_number: normalizeActiveRound(pairing.round_number, t.rounds || 1),
+    })));
+
+    setActiveMatchplayRound(normalizeActiveRound(1, t.rounds || 1));
 
     const { data: c } = await supabase
       .from('access_codes')
@@ -600,6 +631,70 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     await loadData();
   };
 
+  // ---- Matchplay pairings ----
+  const generateMatchplayPairings = async () => {
+    if (!tournament || tournament.format !== 'match') return;
+
+    setMatchplayBusy(true);
+    const activePlayers = players
+      .filter((player) => !['withdrawn', 'dns', 'dnf', 'dsq'].includes(player.status));
+
+    if (activePlayers.length < 2) {
+      setMatchplayBusy(false);
+      return;
+    }
+
+    const playersByFlight = new Map<string | null, Player[]>();
+    activePlayers.forEach((player) => {
+      const key = player.flight_id ?? null;
+      const group = playersByFlight.get(key) ?? [];
+      group.push(player);
+      playersByFlight.set(key, group);
+    });
+
+    const pairings = [] as Array<{ tournament_id: string; player_a_id: string; player_b_id: string; flight_id: string | null; round_number: number }>;
+    Array.from(playersByFlight.values()).forEach((flightPlayers) => {
+      const sortedPlayers = [...flightPlayers].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+      for (let index = 0; index < sortedPlayers.length - (sortedPlayers.length % 2); index += 2) {
+        pairings.push({
+          tournament_id: params.id,
+          player_a_id: sortedPlayers[index]!.id,
+          player_b_id: sortedPlayers[index + 1]!.id,
+          flight_id: sortedPlayers[index]!.flight_id ?? null,
+          round_number: 1,
+        });
+      }
+    });
+
+    await supabase.from('matchplay_pairings').delete().eq('tournament_id', params.id);
+    if (pairings.length > 0) {
+      await supabase.from('matchplay_pairings').insert(pairings);
+    }
+
+    await loadData();
+    setMatchplayBusy(false);
+  };
+
+  const clearMatchplayPairings = async () => {
+    setMatchplayBusy(true);
+    await supabase.from('matchplay_pairings').delete().eq('tournament_id', params.id);
+    await loadData();
+    setMatchplayBusy(false);
+  };
+
+  const updateMatchplayPairingRound = async (pairingId: string, nextRound: number) => {
+    const safeRound = normalizeActiveRound(nextRound, tournament?.rounds ?? 1);
+    setMatchplayPairings(prev => prev.map((pairing) => pairing.id === pairingId ? { ...pairing, round_number: safeRound } : pairing));
+    await supabase.from('matchplay_pairings').update({ round_number: safeRound }).eq('id', pairingId);
+  };
+
+  const updateActiveMatchplayRound = async (nextRound: number) => {
+    const safeRound = normalizeActiveRound(nextRound, tournament?.rounds ?? 1);
+    setActiveMatchplayRound(safeRound);
+    await supabase.from('tournaments').update({ rounds: tournament?.rounds ?? safeRound }).eq('id', params.id);
+    await loadData();
+  };
+
   // ---- Codes ----
   const generateCode = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -809,6 +904,86 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               <PauseBanner reason={tournament.pause_reason} />
             )}
 
+            {tournament.format === 'match' && (
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Matchplay flow</h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Genereer de eerste 1-op-1 paringen voor het toernooi. Zodra scores per hole zijn ingevoerd, verschijnt de stand direct op het publieke leaderboard.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={generateMatchplayPairings}
+                      disabled={matchplayBusy}
+                      className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                    >
+                      {matchplayBusy ? 'Bezig...' : 'Genereer paringen'}
+                    </button>
+                    <button
+                      onClick={clearMatchplayPairings}
+                      disabled={matchplayBusy}
+                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                    >
+                      Wis paringen
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-800 bg-gray-950/70 px-3 py-3">
+                  <label className="text-sm text-gray-400">Actieve ronde</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={tournament.rounds}
+                    value={activeMatchplayRound}
+                    onChange={(event) => setActiveMatchplayRound(Number(event.target.value) || 1)}
+                    className="w-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white"
+                  />
+                  <button
+                    onClick={() => updateActiveMatchplayRound(activeMatchplayRound)}
+                    className="rounded-lg bg-gray-800 px-3 py-2 text-sm text-white hover:bg-gray-700"
+                  >
+                    Opslaan ronde
+                  </button>
+                  <span className="text-sm text-gray-500">Huidige toernooirondes: {tournament.rounds}</span>
+                </div>
+
+                {matchplayPairings.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nog geen paringen aangemaakt. Gebruik de knop hierboven om de eerste bracket op te bouwen.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {matchplayPairings.map((pairing, index) => (
+                      <div key={pairing.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-800 bg-gray-950/70 px-3 py-2 text-sm">
+                        <div>
+                          <p className="font-medium text-white">{index + 1}. {pairing.player_a_name} vs {pairing.player_b_name}</p>
+                          <p className="text-xs text-gray-500">live zodra scores binnenkomen</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-500">Ronde</label>
+                          <select
+                            value={pairing.round_number}
+                            onChange={(event) => updateMatchplayPairingRound(pairing.id, Number(event.target.value) || 1)}
+                            className="rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1.5 text-sm text-white"
+                          >
+                            {Array.from({ length: tournament.rounds }, (_, roundIndex) => roundIndex + 1).map((roundNumber) => (
+                              <option key={roundNumber} value={roundNumber}>
+                                {roundNumber}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300">
+                            Duel
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {flights.length > 0 ? (
               <>
                 {/* Sub-tabs: Leaderboard / Startlijst */}
@@ -845,6 +1020,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     <LeaderboardClient
                       tournamentId={params.id}
                       tournamentName={tournament.name}
+                      activeMatchplayRound={activeMatchplayRound}
                       format={tournament.format}
                       scoringType={tournament.scoring_type}
                       isActive={tournament.status === 'active'}
@@ -921,6 +1097,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 <LeaderboardClient
                   tournamentId={params.id}
                   tournamentName={tournament.name}
+                  activeMatchplayRound={activeMatchplayRound}
                   format={tournament.format}
                   scoringType={tournament.scoring_type}
                   isActive={tournament.status === 'active'}
