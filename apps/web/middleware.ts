@@ -8,6 +8,7 @@ const intlMiddleware = createIntlMiddleware({
 });
 
 const TEN_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 10;
+type SupabaseCookie = { name: string; value: string; options?: CookieOptions };
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -33,25 +34,23 @@ export async function middleware(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
+          getAll() {
+            return request.cookies.getAll();
           },
-          set(name: string, value: string, options?: CookieOptions) {
-            // Schrijf vernieuwde cookies naar de response
-            // zodat de browser client ze bij de volgende request heeft
-            response.cookies.set(name, value, {
-              ...options,
-              path: '/',
-              sameSite: 'lax',
-              maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
+          setAll(cookiesToSet: SupabaseCookie[]) {
+            // Hou request en response cookie-state synchroon.
+            // Dit voorkomt dat sessies sporadisch "verdwijnen" bij harde reloads.
+            cookiesToSet.forEach(({ name, value }: SupabaseCookie) => {
+              request.cookies.set(name, value);
             });
-          },
-          remove(name: string, options?: CookieOptions) {
-            response.cookies.set(name, '', {
-              ...options,
-              path: '/',
-              sameSite: 'lax',
-              maxAge: 0,
+
+            cookiesToSet.forEach(({ name, value, options }: SupabaseCookie) => {
+              response.cookies.set(name, value, {
+                ...(options as CookieOptions | undefined),
+                path: '/',
+                sameSite: 'lax',
+                maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
+              });
             });
           },
         },

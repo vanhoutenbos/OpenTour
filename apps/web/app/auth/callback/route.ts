@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 const TEN_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 10;
+type SupabaseCookie = { name: string; value: string; options?: CookieOptions };
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -17,23 +18,17 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options?: CookieOptions) {
-          response.cookies.set(name, value, {
-            ...options,
-            path: options?.path ?? '/',
-            sameSite: options?.sameSite ?? 'lax',
-            maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
-          });
-        },
-        remove(name: string, options?: CookieOptions) {
-          response.cookies.set(name, '', {
-            ...options,
-            path: options?.path ?? '/',
-            sameSite: options?.sameSite ?? 'lax',
-            maxAge: 0,
+        setAll(cookiesToSet: SupabaseCookie[]) {
+          cookiesToSet.forEach(({ name, value, options }: SupabaseCookie) => {
+            response.cookies.set(name, value, {
+              ...(options as CookieOptions | undefined),
+              path: options?.path ?? '/',
+              sameSite: options?.sameSite ?? 'lax',
+              maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
+            });
           });
         },
       },
