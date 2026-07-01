@@ -143,7 +143,7 @@ export function LeaderboardTable({
         <table className="w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="text-gray-500 text-xs border-b border-gray-800 uppercase tracking-wider">
-              <th className="pb-3 w-6" />
+              {!hideFavorites && <th className="pb-3 w-6" />}
               <th className="pb-3 pr-2 w-10 text-center">Pos.</th>
               <th className="pb-3 w-6 text-center" />
               <th className="pb-3 text-left pl-2">Speler</th>
