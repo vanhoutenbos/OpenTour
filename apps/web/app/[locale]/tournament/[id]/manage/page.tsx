@@ -191,10 +191,12 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     max_players: 4,
   });
   const [flightGenerating, setFlightGenerating] = useState(false);
+  const [flightDeleting, setFlightDeleting] = useState(false);
   const [flightError, setFlightError] = useState<string | null>(null);
   const [editingFlightId, setEditingFlightId] = useState<string | null>(null);
   const [editingFlightName, setEditingFlightName] = useState('');
   const [showFlightSettings, setShowFlightSettings] = useState(false);
+  const [showDeleteFlightsConfirm, setShowDeleteFlightsConfirm] = useState(false);
   const [sortBy, setSortBy] = useState<'handicap_asc' | 'random'>('handicap_asc');
   const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
@@ -550,6 +552,16 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     if (deleteErr) { setFlightError(userError(deleteErr, 'Kon flights niet verwijderen.')); return; }
 
     await loadData();
+  };
+
+  const handleDeleteFlightsConfirm = async () => {
+    setShowDeleteFlightsConfirm(false);
+    setFlightDeleting(true);
+    try {
+      await deleteAllFlights();
+    } finally {
+      setFlightDeleting(false);
+    }
   };
 
   const startHoleOptions = [1, 10];
@@ -1468,15 +1480,44 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           {flightGenerating ? 'Genereren...' : 'Flights her-genereren'}
                         </button>
                         <button
-                          onClick={deleteAllFlights}
-                          className="py-2 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm"
+                          onClick={() => setShowDeleteFlightsConfirm(true)}
+                          disabled={flightDeleting}
+                          className="py-2 px-4 bg-red-900/40 hover:bg-red-900 disabled:opacity-50 text-red-300 rounded-xl text-sm"
                         >
-                          Alle flights verwijderen
+                          {flightDeleting ? 'Verwijderen...' : 'Alle flights verwijderen'}
                         </button>
                       </div>
                     </div>
                     {flightError && (
                       <p className="text-red-400 text-sm">{flightError}</p>
+                )}
+
+                {showDeleteFlightsConfirm && (
+                  <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Weet je het zeker?</h3>
+                        <p className="text-sm text-gray-400 mt-2">
+                          Dit verwijdert alle bestaande flights en ontkoppelt spelers van hun flight. Deze actie kan niet ongedaan worden gemaakt.
+                        </p>
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={() => setShowDeleteFlightsConfirm(false)}
+                          className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                        >
+                          Annuleren
+                        </button>
+                        <button
+                          onClick={handleDeleteFlightsConfirm}
+                          disabled={flightDeleting}
+                          className="flex-1 py-3 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold"
+                        >
+                          {flightDeleting ? 'Verwijderen...' : 'Ja, verwijderen'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
               </>
