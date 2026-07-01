@@ -583,12 +583,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     if (!error) await loadData();
   };
 
-  const markPlayerDNS = async (playerId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'dns' ? 'registered' : 'dns';
-    await supabase.from('tournament_players').update({ status: newStatus }).eq('id', playerId);
-    await loadData();
-  };
-
   const removePlayerFromFlight = async (playerId: string) => {
     await supabase.from('tournament_players').update({ flight_id: null }).eq('id', playerId);
     await loadData();
@@ -1805,17 +1799,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                       )}
                                     </div>
                                     <div className="flex gap-1 shrink-0">
-                                      <button
-                                        onClick={() => markPlayerDNS(pl.id, pl.status)}
-                                        title={pl.status === 'dns' ? 'DNS ongedaan maken' : 'Markeer als DNS'}
-                                        className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                                          pl.status === 'dns'
-                                            ? 'bg-yellow-900/30 text-yellow-400 hover:bg-yellow-900/50'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        }`}
-                                      >
-                                        {pl.status === 'dns' ? '↩' : 'DNS'}
-                                      </button>
                                       <button
                                         onClick={() => removePlayerFromFlight(pl.id)}
                                         title="Uit flight halen"
