@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
+const TEN_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 10;
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
@@ -22,12 +24,15 @@ export async function GET(request: NextRequest) {
           response.cookies.set(name, value, {
             ...options,
             path: options?.path ?? '/',
+            sameSite: options?.sameSite ?? 'lax',
+            maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
           });
         },
         remove(name: string, options?: CookieOptions) {
           response.cookies.set(name, '', {
             ...options,
             path: options?.path ?? '/',
+            sameSite: options?.sameSite ?? 'lax',
             maxAge: 0,
           });
         },
