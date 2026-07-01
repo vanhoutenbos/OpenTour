@@ -96,6 +96,7 @@ export interface Database {
           hole_id: string;
           tee_id: string | null;
           position: number;
+          distance_meters: number | null;
         };
         Insert: Omit<Database['public']['Tables']['loop_holes']['Row'], 'id'>;
         Update: Partial<Database['public']['Tables']['loop_holes']['Insert']>;

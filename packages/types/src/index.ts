@@ -83,6 +83,7 @@ export interface LoopHole {
   hole_id: string;
   tee_id?: string;
   position: number;
+  distance_meters?: number;
 }
 
 export interface Tournament {

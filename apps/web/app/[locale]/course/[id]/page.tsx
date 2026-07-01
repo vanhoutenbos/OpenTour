@@ -40,6 +40,7 @@ interface LoopHoleRow {
   loop_id: string;
   hole_id: string;
   position: number;
+  distance_meters?: number | null;
 }
 
 export default function EditCoursePage() {
@@ -107,7 +108,7 @@ export default function EditCoursePage() {
           .order('created_at', { ascending: true }),
         supabase
           .from('loop_holes')
-          .select('loop_id, hole_id, position')
+          .select('loop_id, hole_id, position, distance_meters')
           .in('loop_id', (await supabase.from('loops').select('id').eq('course_id', courseId)).data?.map((row) => row.id) ?? [])
           .order('position', { ascending: true }),
       ]);
@@ -126,17 +127,28 @@ export default function EditCoursePage() {
       const loopHoleRows = (loopHoles as LoopHoleRow[] | null) ?? [];
 
       const teeDrafts = teeRows.map((tee) => ({
-        external_id: tee.external_id,
-        name: tee.name ?? '',
         color: tee.color ?? '',
       }));
 
-      const holeDrafts = holeRows.map((hole) => ({
-        number: hole.number,
-        par: hole.par,
-        stroke_index: hole.stroke_index,
-        distance_meters: hole.distance_meters?.toString() ?? '',
-      }));
+      const holeDrafts = holeRows.map((hole) => {
+        const distance_meters_by_tee = Object.fromEntries(
+          teeRows.map((tee) => {
+            const matchingLoop = loopRows.find((loop) => loop.tee_id === tee.id);
+            const matchingLoopHole = matchingLoop
+              ? loopHoleRows.find((loopHole) => loopHole.loop_id === matchingLoop.id && loopHole.hole_id === hole.id)
+              : null;
+
+            return [tee.external_id, matchingLoopHole?.distance_meters?.toString() ?? ''];
+          })
+        );
+
+        return {
+          number: hole.number,
+          par: hole.par,
+          stroke_index: hole.stroke_index,
+          distance_meters_by_tee,
+        };
+      });
 
       const loopDrafts = loopRows.map((loop) => {
         const holeIdsForLoop = loopHoleRows
@@ -149,9 +161,8 @@ export default function EditCoursePage() {
 
         return {
           name: loop.name,
-          loop_type: loop.loop_type,
           tee_external_id: teeExternalId,
-          hole_numbers: holeIdsForLoop.join(','),
+          hole_numbers: holeIdsForLoop,
         };
       });
 

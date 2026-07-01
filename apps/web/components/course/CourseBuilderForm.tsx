@@ -7,23 +7,20 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 type LoopType = 'full_18' | 'front_9' | 'back_9' | 'custom';
 
 interface TeeDraft {
-  external_id: string;
-  name: string;
   color: string;
 }
 
 interface HoleDraft {
   number: number;
-  par: 3 | 4 | 5;
+  par: number;
   stroke_index: number;
-  distance_meters: string;
+  distance_meters_by_tee: Record<string, string>;
 }
 
 interface LoopDraft {
   name: string;
-  loop_type: LoopType;
   tee_external_id: string;
-  hole_numbers: string;
+  hole_numbers: number[];
 }
 
 export interface CourseBuilderInitialData {
@@ -48,35 +45,45 @@ interface CourseBuilderFormProps {
 }
 
 const DEFAULT_TEE_ROWS: TeeDraft[] = [
-  { external_id: 'white', name: 'Wit', color: 'Wit' },
-  { external_id: 'yellow', name: 'Geel', color: 'Geel' },
+  { color: 'Wit' },
+  { color: 'Geel' },
 ];
+const DEFAULT_PRIMARY_TEE_COLOR = DEFAULT_TEE_ROWS[0]?.color ?? 'Wit';
+
+const TEE_COLOR_OPTIONS = ['Zwart', 'Wit', 'Geel', 'Blauw', 'Rood', 'Oranje'] as const;
+
+function toTeeKey(color: string) {
+  return color.trim().toLowerCase();
+}
 
 const DEFAULT_HOLES: HoleDraft[] = Array.from({ length: 18 }).map((_, idx) => ({
   number: idx + 1,
   par: 4,
   stroke_index: idx + 1,
-  distance_meters: '',
+  distance_meters_by_tee: {
+    wit: '',
+    geel: '',
+  },
 }));
 
 const DEFAULT_LOOPS: LoopDraft[] = [
   {
     name: 'Volledige ronde',
-    loop_type: 'full_18',
-    tee_external_id: 'white',
-    hole_numbers: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18',
+    tee_external_id: 'wit',
+    hole_numbers: Array.from({ length: 18 }).map((_, idx) => idx + 1),
   },
 ];
 
-function parseHoleNumbers(input: string): number[] {
-  return input
-    .split(',')
-    .map((value) => parseInt(value.trim(), 10))
-    .filter((value) => !Number.isNaN(value));
-}
-
 function unique(values: number[]): boolean {
   return new Set(values).size === values.length;
+}
+
+function deriveLoopType(holeNumbers: number[]): LoopType {
+  const normalized = [...holeNumbers].sort((a, b) => a - b);
+  if (normalized.length === 18 && normalized.every((value, index) => value === index + 1)) return 'full_18';
+  if (normalized.length === 9 && normalized.every((value, index) => value === index + 1)) return 'front_9';
+  if (normalized.length === 9 && normalized.every((value, index) => value === index + 10)) return 'back_9';
+  return 'custom';
 }
 
 export function CourseBuilderForm({ locale, mode = 'create', initialData, onCancel, onCreated, onSaved }: CourseBuilderFormProps) {
@@ -88,6 +95,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
   const [tees, setTees] = useState<TeeDraft[]>(initialData?.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
   const [holes, setHoles] = useState<HoleDraft[]>(initialData?.holes?.length ? initialData.holes : DEFAULT_HOLES);
   const [loops, setLoops] = useState<LoopDraft[]>(initialData?.loops?.length ? initialData.loops : DEFAULT_LOOPS);
+  const [activeTeeKey, setActiveTeeKey] = useState<string>(toTeeKey(initialData?.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR));
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -101,6 +109,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     setTees(initialData.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
     setHoles(initialData.holes?.length ? initialData.holes : DEFAULT_HOLES);
     setLoops(initialData.loops?.length ? initialData.loops : DEFAULT_LOOPS);
+    setActiveTeeKey(toTeeKey(initialData.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR));
   }, [initialData]);
 
   const updateTee = (index: number, patch: Partial<TeeDraft>) => {
@@ -111,6 +120,20 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     setHoles((prev) => prev.map((hole, rowIndex) => (rowIndex === index ? { ...hole, ...patch } : hole)));
   };
 
+  const updateHoleDistance = (index: number, teeKey: string, value: string) => {
+    setHoles((prev) => prev.map((hole, rowIndex) => (
+      rowIndex === index
+        ? {
+            ...hole,
+            distance_meters_by_tee: {
+              ...hole.distance_meters_by_tee,
+              [teeKey]: value,
+            },
+          }
+        : hole
+    )));
+  };
+
   const updateLoop = (index: number, patch: Partial<LoopDraft>) => {
     setLoops((prev) => prev.map((loop, rowIndex) => (rowIndex === index ? { ...loop, ...patch } : loop)));
   };
@@ -119,9 +142,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     setTees((prev) => [
       ...prev,
       {
-        external_id: `tee-${prev.length + 1}`,
-        name: '',
-        color: '',
+        color: TEE_COLOR_OPTIONS.find((option) => !prev.some((tee) => tee.color === option)) ?? '',
       },
     ]);
   };
@@ -131,9 +152,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       ...prev,
       {
         name: `Lus ${prev.length + 1}`,
-        loop_type: 'custom',
-        tee_external_id: tees[0]?.external_id ?? '',
-        hole_numbers: '',
+        tee_external_id: toTeeKey(tees[0]?.color ?? ''),
+        hole_numbers: [],
       },
     ]);
   };
@@ -156,16 +176,26 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       if (hole.number < 1) return 'Hole nummer moet groter dan 0 zijn.';
     }
 
-    const teeExternalIds = tees.map((tee) => tee.external_id.trim());
-    if (teeExternalIds.some((externalId) => !externalId)) return 'Elke teebox moet een code hebben.';
-    if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Teebox-codes moeten uniek zijn.';
+    const teeExternalIds = tees.map((tee) => toTeeKey(tee.color));
+    if (teeExternalIds.some((externalId) => !externalId)) return 'Elke teebox moet een kleur hebben.';
+    if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke teeboxkleur mag maar 1 keer voorkomen.';
+
+    for (const hole of holes) {
+      if (hole.par < 1 || hole.par > 9) return 'Par moet tussen 1 en 9 liggen.';
+      if (hole.stroke_index < 1) return 'Stroke index moet een positief nummer zijn.';
+      for (const teeKey of teeExternalIds) {
+        const distance = hole.distance_meters_by_tee[teeKey];
+        if (distance && (parseInt(distance, 10) < 0 || parseInt(distance, 10) > 999)) {
+          return 'Meters per hole moeten tussen 0 en 999 liggen.';
+        }
+      }
+    }
 
     for (const loop of loops) {
       if (!loop.name.trim()) return 'Elke lus moet een naam hebben.';
-      const parsedHoleNumbers = parseHoleNumbers(loop.hole_numbers);
-      if (parsedHoleNumbers.length === 0) return `Lus "${loop.name}" heeft geen geldige holes.`;
-      if (!unique(parsedHoleNumbers)) return `Lus "${loop.name}" bevat dubbele holes.`;
-      const unknownHole = parsedHoleNumbers.find((holeNumber) => !holeNumbers.includes(holeNumber));
+      if (loop.hole_numbers.length === 0) return `Lus "${loop.name}" heeft geen geselecteerde holes.`;
+      if (!unique(loop.hole_numbers)) return `Lus "${loop.name}" bevat dubbele holes.`;
+      const unknownHole = loop.hole_numbers.find((holeNumber) => !holeNumbers.includes(holeNumber));
       if (unknownHole) return `Lus "${loop.name}" verwijst naar onbekende hole ${unknownHole}.`;
       if (loop.tee_external_id && !teeExternalIds.includes(loop.tee_external_id)) {
         return `Lus "${loop.name}" verwijst naar een onbekende teebox.`;
@@ -247,8 +277,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
       const teePayload = tees.map((tee) => ({
         course_id: courseId,
-        external_id: tee.external_id.trim(),
-        name: tee.name.trim() || null,
+        external_id: toTeeKey(tee.color),
+        name: tee.color.trim() || null,
         color: tee.color.trim() || null,
       }));
 
@@ -263,13 +293,18 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       const holePayload = holes
         .slice()
         .sort((a, b) => a.number - b.number)
-        .map((hole) => ({
-          course_id: courseId,
-          number: hole.number,
-          par: hole.par,
-          stroke_index: hole.stroke_index,
-          distance_meters: hole.distance_meters ? parseInt(hole.distance_meters, 10) : null,
-        }));
+        .map((hole) => {
+          const defaultTeeKey = toTeeKey(tees[0]?.color ?? '');
+          const defaultDistance = hole.distance_meters_by_tee[defaultTeeKey];
+
+          return {
+            course_id: courseId,
+            number: hole.number,
+            par: hole.par,
+            stroke_index: hole.stroke_index,
+            distance_meters: defaultDistance ? parseInt(defaultDistance, 10) : null,
+          };
+        });
 
       const { data: holeRows, error: holeError } = await supabase
         .from('holes')
@@ -280,7 +315,6 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       const holeMap = new Map(holeRows.map((hole) => [hole.number, hole.id]));
 
       for (const loop of loops) {
-        const parsedLoopHoles = parseHoleNumbers(loop.hole_numbers);
         const loopTeeId = loop.tee_external_id ? teeMap.get(loop.tee_external_id) ?? null : null;
 
         const { data: loopRow, error: loopError } = await supabase
@@ -288,8 +322,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
           .insert({
             course_id: courseId,
             name: loop.name.trim(),
-            holes_count: parsedLoopHoles.length,
-            loop_type: loop.loop_type,
+            holes_count: loop.hole_numbers.length,
+            loop_type: deriveLoopType(loop.hole_numbers),
             tee_id: loopTeeId,
             is_default: loops[0] === loop,
             created_by: authData.user.id,
@@ -299,17 +333,22 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         if (loopError || !loopRow) throw loopError ?? new Error(`Lus "${loop.name}" kon niet worden opgeslagen.`);
 
-        const loopHolePayload = parsedLoopHoles.map((holeNumber, index) => {
+        const loopHolePayload = loop.hole_numbers.map((holeNumber, index) => {
           const holeId = holeMap.get(holeNumber);
           if (!holeId) {
             throw new Error(`Hole ${holeNumber} bestaat niet en kan niet aan lus "${loop.name}" gekoppeld worden.`);
           }
+
+          const holeDefinition = holes.find((hole) => hole.number === holeNumber);
+          const teeDistance = loop.tee_external_id ? holeDefinition?.distance_meters_by_tee[loop.tee_external_id] : undefined;
+          const distanceMeters = teeDistance ? parseInt(teeDistance, 10) : null;
 
           return {
             loop_id: loopRow.id,
             hole_id: holeId,
             tee_id: loopTeeId,
             position: index + 1,
+            distance_meters: Number.isNaN(distanceMeters as number) ? null : distanceMeters,
           };
         });
 
@@ -410,25 +449,17 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         <div className="space-y-2">
           {tees.map((tee, index) => (
-            <div key={`${tee.external_id}-${index}`} className="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <input
-                value={tee.external_id}
-                onChange={(event) => updateTee(index, { external_id: event.target.value })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                placeholder="code (bijv. white)"
-              />
-              <input
-                value={tee.name}
-                onChange={(event) => updateTee(index, { name: event.target.value })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                placeholder="naam"
-              />
-              <input
+            <div key={`${tee.color}-${index}`} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <select
                 value={tee.color}
                 onChange={(event) => updateTee(index, { color: event.target.value })}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                placeholder="kleur"
-              />
+              >
+                <option value="">Kies teebox kleur</option>
+                {TEE_COLOR_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => setTees((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
@@ -446,30 +477,50 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       {!isEditMode && (
       <section className="space-y-3">
         <h3 className="text-sm font-semibold text-white">Holes</h3>
+        <div className="flex flex-wrap gap-2">
+          {tees.map((tee) => {
+            const teeKey = toTeeKey(tee.color);
+            return (
+              <button
+                key={teeKey || tee.color}
+                type="button"
+                onClick={() => setActiveTeeKey(teeKey)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  activeTeeKey === teeKey
+                    ? 'bg-green-900/30 border-green-600 text-green-300'
+                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                }`}
+              >
+                {tee.color || 'Onbekend'}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+          <div className="grid grid-cols-4 gap-2 px-1 text-xs uppercase tracking-wide text-gray-500">
+            <span>Hole nummer</span>
+            <span>Par nummer</span>
+            <span>Stroke index</span>
+            <span>Meters</span>
+          </div>
           {holes.map((hole, index) => (
             <div key={index} className="grid grid-cols-4 gap-2">
-              <input
-                type="number"
-                min={1}
-                value={hole.number}
-                onChange={(event) => updateHole(index, { number: parseInt(event.target.value, 10) || 1 })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                placeholder="Hole"
-              />
+              <div className="px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white text-sm">
+                {hole.number}
+              </div>
               <select
                 value={hole.par}
-                onChange={(event) => updateHole(index, { par: parseInt(event.target.value, 10) as 3 | 4 | 5 })}
+                onChange={(event) => updateHole(index, { par: parseInt(event.target.value, 10) })}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
               >
-                <option value={3}>Par 3</option>
-                <option value={4}>Par 4</option>
-                <option value={5}>Par 5</option>
+                {Array.from({ length: 9 }).map((_, optionIndex) => (
+                  <option key={optionIndex + 1} value={optionIndex + 1}>Par {optionIndex + 1}</option>
+                ))}
               </select>
               <input
                 type="number"
                 min={1}
-                max={18}
                 value={hole.stroke_index}
                 onChange={(event) => updateHole(index, { stroke_index: parseInt(event.target.value, 10) || 1 })}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
@@ -478,8 +529,9 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               <input
                 type="number"
                 min={0}
-                value={hole.distance_meters}
-                onChange={(event) => updateHole(index, { distance_meters: event.target.value })}
+                max={999}
+                value={hole.distance_meters_by_tee[activeTeeKey] ?? ''}
+                onChange={(event) => updateHoleDistance(index, activeTeeKey, event.target.value)}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
                 placeholder="meters"
               />
@@ -490,7 +542,12 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setHoles((prev) => [...prev, { number: prev.length + 1, par: 4, stroke_index: 1, distance_meters: '' }])}
+            onClick={() => setHoles((prev) => [...prev, {
+              number: prev.length + 1,
+              par: 4,
+              stroke_index: prev.length + 1,
+              distance_meters_by_tee: Object.fromEntries(tees.map((tee) => [toTeeKey(tee.color), ''])),
+            }])}
             className="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
           >
             + Hole
@@ -521,7 +578,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         {loops.map((loop, index) => (
           <div key={index} className="p-3 rounded-xl border border-gray-800 bg-gray-900 space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <input
                 value={loop.name}
                 onChange={(event) => updateLoop(index, { name: event.target.value })}
@@ -529,24 +586,14 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                 placeholder="Naam"
               />
               <select
-                value={loop.loop_type}
-                onChange={(event) => updateLoop(index, { loop_type: event.target.value as LoopType })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-              >
-                <option value="full_18">Full 18</option>
-                <option value="front_9">Front 9</option>
-                <option value="back_9">Back 9</option>
-                <option value="custom">Custom</option>
-              </select>
-              <select
                 value={loop.tee_external_id}
                 onChange={(event) => updateLoop(index, { tee_external_id: event.target.value })}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
               >
                 <option value="">Geen vaste teebox</option>
                 {tees.map((tee) => (
-                  <option key={tee.external_id} value={tee.external_id}>
-                    {tee.color || tee.name || tee.external_id}
+                  <option key={toTeeKey(tee.color)} value={toTeeKey(tee.color)}>
+                    {tee.color || 'Onbekend'}
                   </option>
                 ))}
               </select>
@@ -560,12 +607,37 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               </button>
             </div>
 
-            <input
-              value={loop.hole_numbers}
-              onChange={(event) => updateLoop(index, { hole_numbers: event.target.value })}
-              className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-              placeholder="Hole volgorde, bijv. 1,2,3,4,5,6,7,8,9"
-            />
+            <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
+              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Kies holes</p>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {holes.map((hole) => {
+                  const checked = loop.hole_numbers.includes(hole.number);
+                  return (
+                    <label
+                      key={hole.number}
+                      className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-sm cursor-pointer transition-colors ${
+                        checked
+                          ? 'bg-green-900/20 border-green-700 text-green-200'
+                          : 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => {
+                          const next = event.target.checked
+                            ? [...loop.hole_numbers, hole.number].sort((a, b) => a - b)
+                            : loop.hole_numbers.filter((value) => value !== hole.number);
+                          updateLoop(index, { hole_numbers: next });
+                        }}
+                        className="rounded border-gray-700 bg-gray-800"
+                      />
+                      <span>Hole {hole.number}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         ))}
       </section>
