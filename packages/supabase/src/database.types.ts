@@ -314,7 +314,7 @@ export interface Database {
           p_interval_minutes: number;
           p_max_players_per_flight: number;
           p_sort_by: string;
-          p_gender_mode: string;
+          p_split_by_category: boolean;
         };
         Returns: void;
       };

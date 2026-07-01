@@ -212,7 +212,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [showFlightSettings, setShowFlightSettings] = useState(false);
   const [showDeleteFlightsConfirm, setShowDeleteFlightsConfirm] = useState(false);
   const [sortBy, setSortBy] = useState<'handicap_asc' | 'random'>('handicap_asc');
-  const [genderMode, setGenderMode] = useState<'mixed' | 'separate'>('mixed');
+  const [splitByCategory, setSplitByCategory] = useState(false);
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -547,15 +547,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       .eq('tournament_id', params.id);
     if (deleteErr) { setFlightError(userError(deleteErr, 'Kon bestaande flights niet verwijderen.')); setFlightGenerating(false); return; }
 
-    // Stap 3: Ken categorieën toe aan spelers zonder categorie
-    const unassigned = players.filter(p => !p.category_id);
-    for (const pl of unassigned) {
-      const { error: catErr } = await supabase.rpc('assign_player_category', {
-        p_player_id: pl.id,
-        p_handicap: pl.handicap ?? 0,
-        p_gender: pl.gender ?? 'mixed',
-      });
-      if (catErr) { setFlightError(userError(catErr, 'Kon categorie niet toewijzen aan speler.')); setFlightGenerating(false); return; }
+    // Stap 3: Ken categorieën toe als er op categorie gesplitst wordt
+    if (splitByCategory) {
+      const unassigned = players.filter(p => !p.category_id);
+      for (const pl of unassigned) {
+        const { error: catErr } = await supabase.rpc('assign_player_category', {
+          p_player_id: pl.id,
+          p_handicap: pl.handicap ?? 0,
+          p_gender: pl.gender ?? 'mixed',
+        });
+        if (catErr) { setFlightError(userError(catErr, 'Kon categorie niet toewijzen aan speler.')); setFlightGenerating(false); return; }
+      }
     }
 
     // Stap 4: Genereer nieuwe flights via RPC
@@ -566,7 +568,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       p_interval_minutes: flightForm.interval_minutes,
       p_max_players_per_flight: flightForm.max_players,
       p_sort_by: sortBy,
-      p_gender_mode: genderMode,
+      p_split_by_category: splitByCategory,
     });
     if (error) {
       setFlightError(userError(error, 'Kon geen flights genereren. Controleer de instellingen en probeer het opnieuw.'));
@@ -1794,29 +1796,29 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
+                          <label className="block text-sm text-gray-400 mb-1.5">Indeling</label>
                           <div className="flex gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => setGenderMode('mixed')}
+                              onClick={() => setSplitByCategory(false)}
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                                genderMode === 'mixed'
+                                !splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
                                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
                               }`}
                             >
-                              Gemengd
+                              Gemengde categorieen
                             </button>
                             <button
                               type="button"
-                              onClick={() => setGenderMode('separate')}
+                              onClick={() => setSplitByCategory(true)}
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                                genderMode === 'separate'
+                                splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
                                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
                               }`}
                             >
-                              Op geslacht
+                              Per categorie
                             </button>
                           </div>
                         </div>
@@ -1907,29 +1909,29 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Geslacht</label>
+                          <label className="block text-sm text-gray-400 mb-1.5">Indeling</label>
                           <div className="flex gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => setGenderMode('mixed')}
+                              onClick={() => setSplitByCategory(false)}
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                                genderMode === 'mixed'
+                                !splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
                                   : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
                               }`}
                             >
-                              Gemengd
+                              Gemengde categorieen
                             </button>
                             <button
                               type="button"
-                              onClick={() => setGenderMode('separate')}
+                              onClick={() => setSplitByCategory(true)}
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                                genderMode === 'separate'
+                                splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
                                   : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
                               }`}
                             >
-                              Op geslacht
+                              Per categorie
                             </button>
                           </div>
                         </div>
