@@ -55,6 +55,21 @@ export function getRoundStage(roundNumber: number, activeRound: number): 'comple
   return 'upcoming';
 }
 
+export function deriveActiveRound(matches: MatchplayMatch[], maxRound: number): number {
+  const completedRounds = new Set<number>();
+
+  matches.forEach((match) => {
+    if (getMatchStatus(match) === 'finished') {
+      completedRounds.add(match.round_number);
+    }
+  });
+
+  if (completedRounds.size === 0) return 1;
+
+  const nextRound = Math.max(...completedRounds) + 1;
+  return clampRound(nextRound, maxRound);
+}
+
 export function clampRound(roundNumber: number, maxRound: number): number {
   return Math.min(Math.max(roundNumber, 1), maxRound);
 }

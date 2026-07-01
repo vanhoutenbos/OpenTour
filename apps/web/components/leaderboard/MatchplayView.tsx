@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+  deriveActiveRound,
   getHoleBadgeClass,
   getHoleBadgeLabel,
   getMatchStatus,
@@ -56,21 +57,26 @@ export function MatchplayView({ tournamentId, activeRound }: Props) {
     return { pending, live, finished, rounds: rounds.size };
   }, [matches]);
 
+  const effectiveActiveRound = useMemo(() => {
+    if (activeRound) return activeRound;
+    return deriveActiveRound(matches, 99);
+  }, [activeRound, matches]);
+
   const matchesByRound = useMemo(() => {
     const groups = new Map<number, MatchplayMatch[]>();
     matches.forEach((match) => {
-      const roundNumber = activeRound ?? match.round_number;
+      const roundNumber = effectiveActiveRound ?? match.round_number;
       const existing = groups.get(roundNumber) ?? [];
       existing.push(match);
       groups.set(roundNumber, existing);
     });
 
     const ordered = Array.from(groups.entries()).sort(([a], [b]) => a - b);
-    if (activeRound) {
-      return ordered.filter(([roundNumber]) => roundNumber === activeRound);
+    if (effectiveActiveRound) {
+      return ordered.filter(([roundNumber]) => roundNumber === effectiveActiveRound);
     }
     return ordered;
-  }, [matches, activeRound]);
+  }, [matches, effectiveActiveRound]);
 
   if (loading) {
     return (
@@ -135,9 +141,9 @@ export function MatchplayView({ tournamentId, activeRound }: Props) {
             <section key={roundNumber} className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${
-                  getRoundStage(roundNumber, activeRound ?? roundNumber) === 'active'
+                  getRoundStage(roundNumber, effectiveActiveRound ?? roundNumber) === 'active'
                     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                    : getRoundStage(roundNumber, activeRound ?? roundNumber) === 'completed'
+                    : getRoundStage(roundNumber, effectiveActiveRound ?? roundNumber) === 'completed'
                       ? 'border-slate-700 bg-slate-800 text-slate-300'
                       : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
                 }`}>
@@ -145,9 +151,9 @@ export function MatchplayView({ tournamentId, activeRound }: Props) {
                 </span>
                 <span className="text-sm text-slate-500">{roundMatches.length} duel{roundMatches.length === 1 ? '' : 'en'}</span>
                 <span className="text-sm text-slate-500">
-                  {getRoundStage(roundNumber, activeRound ?? roundNumber) === 'active'
+                  {getRoundStage(roundNumber, effectiveActiveRound ?? roundNumber) === 'active'
                     ? 'Actief'
-                    : getRoundStage(roundNumber, activeRound ?? roundNumber) === 'completed'
+                    : getRoundStage(roundNumber, effectiveActiveRound ?? roundNumber) === 'completed'
                       ? 'Afgerond'
                       : 'Komend'}
                 </span>

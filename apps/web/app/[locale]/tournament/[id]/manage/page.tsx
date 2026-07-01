@@ -9,7 +9,7 @@ import { userError } from '@/lib/errors';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
 import { PauseBanner } from '@/components/leaderboard/PauseBanner';
-import { clampRound, normalizeActiveRound } from '@/components/leaderboard/matchplayUtils';
+import { clampRound, deriveActiveRound, normalizeActiveRound, type MatchplayMatch } from '@/components/leaderboard/matchplayUtils';
 import ScoreGrid from '@/components/score-grid/ScoreGrid';
 
 interface Tournament {
@@ -145,6 +145,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [hasScores, setHasScores] = useState(false);
   const [overviewView, setOverviewView] = useState<'leaderboard' | 'startlist'>('leaderboard');
   const [matchplayPairings, setMatchplayPairings] = useState<MatchplayPairingSummary[]>([]);
+  const [matchplayMatches, setMatchplayMatches] = useState<MatchplayMatch[]>([]);
   const [matchplayBusy, setMatchplayBusy] = useState(false);
   const [activeMatchplayRound, setActiveMatchplayRound] = useState(1);
 
@@ -268,7 +269,15 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       round_number: normalizeActiveRound(pairing.round_number, t.rounds || 1),
     })));
 
-    setActiveMatchplayRound(normalizeActiveRound(1, t.rounds || 1));
+    const { data: standingsRows } = await supabase
+      .from('matchplay_standings')
+      .select('tournament_id, round_number, player_a_id, player_a_name, player_b_id, player_b_name, holes_won_a, holes_won_b, holes_halved, standing, holes_played, standing_text, hole_results')
+      .eq('tournament_id', params.id)
+      .order('round_number');
+    setMatchplayMatches((standingsRows as MatchplayMatch[]) ?? []);
+
+    const derivedRound = deriveActiveRound((standingsRows as MatchplayMatch[]) ?? [], t.rounds || 1);
+    setActiveMatchplayRound(normalizeActiveRound(derivedRound, t.rounds || 1));
 
     const { data: c } = await supabase
       .from('access_codes')
@@ -655,12 +664,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const pairings = [] as Array<{ tournament_id: string; player_a_id: string; player_b_id: string; flight_id: string | null; round_number: number }>;
     Array.from(playersByFlight.values()).forEach((flightPlayers) => {
       const sortedPlayers = [...flightPlayers].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
-      for (let index = 0; index < sortedPlayers.length - (sortedPlayers.length % 2); index += 2) {
+      const playersForPairings = sortedPlayers.filter((player) => !['withdrawn', 'dns', 'dnf', 'dsq'].includes(player.status));
+      for (let index = 0; index < playersForPairings.length - (playersForPairings.length % 2); index += 2) {
         pairings.push({
           tournament_id: params.id,
-          player_a_id: sortedPlayers[index]!.id,
-          player_b_id: sortedPlayers[index + 1]!.id,
-          flight_id: sortedPlayers[index]!.flight_id ?? null,
+          player_a_id: playersForPairings[index]!.id,
+          player_b_id: playersForPairings[index + 1]!.id,
+          flight_id: playersForPairings[index]!.flight_id ?? null,
           round_number: 1,
         });
       }
@@ -692,6 +702,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const safeRound = normalizeActiveRound(nextRound, tournament?.rounds ?? 1);
     setActiveMatchplayRound(safeRound);
     await supabase.from('tournaments').update({ rounds: tournament?.rounds ?? safeRound }).eq('id', params.id);
+    await loadData();
+  };
+
+  const advanceMatchplayRound = async () => {
+    if (!tournament) return;
+    const nextRound = deriveActiveRound(matchplayMatches, tournament.rounds ?? 1);
+    const safeRound = normalizeActiveRound(nextRound, tournament.rounds ?? 1);
+    setActiveMatchplayRound(safeRound);
     await loadData();
   };
 
@@ -947,7 +965,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   >
                     Opslaan ronde
                   </button>
-                  <span className="text-sm text-gray-500">Huidige toernooirondes: {tournament.rounds}</span>
+                  <button
+                    onClick={advanceMatchplayRound}
+                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white hover:bg-emerald-600"
+                  >
+                    Volgende ronde
+                  </button>
+                  <span className="text-sm text-gray-500">Ronde wordt automatisch doorgeschoven zodra alle duels in de actieve ronde zijn afgerond.</span>
                 </div>
 
                 {matchplayPairings.length === 0 ? (

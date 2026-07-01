@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampRound, getMatchStatus, getMatchStatusLabel, getStandingLabel, getRoundStage, normalizeActiveRound } from './matchplayUtils';
+import { clampRound, deriveActiveRound, getMatchStatus, getMatchStatusLabel, getStandingLabel, getRoundStage, normalizeActiveRound } from './matchplayUtils';
 
 describe('matchplay utils', () => {
   it('returns pending, live, and finished states from played holes', () => {
@@ -70,6 +70,17 @@ describe('matchplay utils', () => {
     expect(getRoundStage(2, 2)).toBe('active');
     expect(getRoundStage(3, 2)).toBe('upcoming');
     expect(getRoundStage(1, 1)).toBe('active');
+  });
+
+  it('derives the next active round automatically when the current round is complete', () => {
+    expect(deriveActiveRound([
+      { tournament_id: 't1', round_number: 1, holes_played: 18, player_a_id: 'a', player_a_name: 'A', player_b_id: 'b', player_b_name: 'B', holes_won_a: 1, holes_won_b: 0, holes_halved: 0, standing: 1, standing_text: '1 up', hole_results: null },
+      { tournament_id: 't1', round_number: 1, holes_played: 18, player_a_id: 'c', player_a_name: 'C', player_b_id: 'd', player_b_name: 'D', holes_won_a: 2, holes_won_b: 0, holes_halved: 0, standing: 2, standing_text: '2 up', hole_results: null },
+    ], 3)).toBe(2);
+
+    expect(deriveActiveRound([
+      { tournament_id: 't1', round_number: 1, holes_played: 10, player_a_id: 'a', player_a_name: 'A', player_b_id: 'b', player_b_name: 'B', holes_won_a: 1, holes_won_b: 0, holes_halved: 0, standing: 1, standing_text: '1 up', hole_results: null },
+    ], 3)).toBe(1);
   });
 
   it('formats standings for matchplay displays', () => {
