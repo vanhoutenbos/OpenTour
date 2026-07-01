@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { LeaderboardEntry } from '@opentour/types';
-import { ScorecardModal } from './ScorecardModal';
+import { ScorecardDrawer } from './ScorecardDrawer';
 
 const INACTIVE_STATUSES = ['dns', 'dnf', 'dsq'];
 
@@ -289,7 +289,7 @@ export function LeaderboardTable({
 
       {/* Uitgeklapte scorecard modals */}
       {expandedPlayer && (
-        <ScorecardModal
+        <ScorecardDrawer
           playerId={expandedPlayer}
           playerName={entries.find((e) => e.player_id === expandedPlayer)?.player_name ?? ''}
           tournamentId={tournamentId}

@@ -65,7 +65,7 @@ function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
   return <span className={`${baseClass} text-white`}>{strokes}</span>;
 }
 
-export function ScorecardModal({
+export function ScorecardDrawer({
   playerId,
   playerName,
   tournamentId,
@@ -133,11 +133,14 @@ export function ScorecardModal({
     holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + h.par, 0);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div
+        className="relative w-full max-w-2xl bg-gray-900 border-l border-gray-800 h-full overflow-y-auto shadow-[0_0_40px_rgba(0,0,0,0.45)] animate-slide-in-right"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm shrink-0">
           <div>
             <h3 className="text-lg font-bold text-white">{playerName}</h3>
             {handicap !== undefined && (
@@ -177,7 +180,7 @@ export function ScorecardModal({
         )}
 
         {/* Scorecard */}
-        <div className="overflow-y-auto p-5">
+        <div className="p-5">
           {loading && (
             <div className="animate-pulse space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
