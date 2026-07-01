@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { CourseBuilderForm } from '@/components/course/CourseBuilderForm';
 
 interface Course {
   id: string;
   name: string;
   location: string | null;
   holes_count: number;
+  created_by?: string | null;
 }
 
 interface Loop {
@@ -52,6 +54,7 @@ const STEP_LABELS: Record<Step, string> = {
 export default function NewTournamentPage() {
   const router = useRouter();
   const params = useParams();
+  const locale = ((params.locale as string) || 'nl').toLowerCase();
   const format = useFormatter();
   const [step, setStep] = useState<Step>('basics');
   const [courses, setCourses] = useState<Course[]>([]);
@@ -61,6 +64,8 @@ export default function NewTournamentPage() {
   const [tees, setTees] = useState<Tee[]>([]);
   const [loadingLoops, setLoadingLoops] = useState(false);
   const [loadingTees, setLoadingTees] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [showCourseBuilder, setShowCourseBuilder] = useState(false);
 
   // Categorieën die lokaal worden opgebouwd vóór submit
   const [categories, setCategories] = useState<CategoryDraft[]>([]);
@@ -105,6 +110,24 @@ export default function NewTournamentPage() {
     setCategories([]);
   };
 
+  const loadCourses = async (userId: string) => {
+    const supabase = getSupabaseBrowser();
+    const { data } = await supabase
+      .from('courses')
+      .select('id, name, location, holes_count, created_by')
+      .or(`is_public.eq.true,created_by.eq.${userId}`)
+      .order('name');
+
+    const sortedCourses = ((data as Course[]) ?? []).sort((a, b) => {
+      const aOwn = a.created_by === userId ? 1 : 0;
+      const bOwn = b.created_by === userId ? 1 : 0;
+      if (aOwn !== bOwn) return bOwn - aOwn;
+      return a.name.localeCompare(b.name, 'nl');
+    });
+
+    setCourses(sortedCourses);
+  };
+
   const buildStartDatetime = (): string | null => {
     if (!form.start_date) return null;
     return `${form.start_date}T${form.start_time || '00:00'}:00`;
@@ -123,15 +146,15 @@ export default function NewTournamentPage() {
 
     const supabase = getSupabaseBrowser();
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.replace('/nl/login');
-    });
+      if (!data.user) {
+        router.replace(`/${locale}/login`);
+        return;
+      }
 
-    supabase
-      .from('courses')
-      .select('id, name, location, holes_count')
-      .order('name')
-      .then(({ data }) => setCourses((data as Course[]) ?? []));
-  }, [router]);
+      setCurrentUserId(data.user.id);
+      void loadCourses(data.user.id);
+    });
+  }, [router, locale]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -184,7 +207,7 @@ export default function NewTournamentPage() {
 
     const supabase = getSupabaseBrowser();
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) { router.replace('/nl/login'); return; }
+    if (!userData.user) { router.replace(`/${locale}/login`); return; }
 
     // 1. Toernooi aanmaken
     const { data, error: tournamentError } = await supabase
@@ -226,13 +249,13 @@ export default function NewTournamentPage() {
         // Toernooi is al aangemaakt, stuur door maar meld de fout
         setError(`Toernooi aangemaakt, maar categorieën opslaan mislukt: ${catError.message}`);
         setLoading(false);
-        router.push(`/nl/tournament/${data.id}/manage`);
+        router.push(`/${locale}/tournament/${data.id}/manage`);
         return;
       }
     }
 
     clearForm();
-    router.push(`/nl/tournament/${data.id}/manage`);
+    router.push(`/${locale}/tournament/${data.id}/manage`);
   };
 
   const steps: Step[] = ['basics', 'course', 'loop_tee', 'format', 'categories', 'confirm'];
@@ -366,6 +389,13 @@ export default function NewTournamentPage() {
               <p className="text-gray-400 text-sm">Kies een baan of sla over om later in te stellen.</p>
             </div>
 
+            <button
+              onClick={() => setShowCourseBuilder(true)}
+              className="w-full py-3 border border-dashed border-green-700 hover:border-green-500 text-green-400 hover:text-green-300 rounded-xl text-sm transition-colors"
+            >
+              + Nieuwe baan toevoegen
+            </button>
+
             {courses.length > 0 ? (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 <button
@@ -392,8 +422,8 @@ export default function NewTournamentPage() {
               </div>
             ) : (
               <div className="text-center py-8 border border-dashed border-gray-700 rounded-2xl">
-                <p className="text-gray-400 text-sm mb-4">Nog geen banen beschikbaar.</p>
-                <a href="/nl/course/new" className="text-green-500 hover:text-green-400 text-sm underline">Baan aanmaken →</a>
+                <p className="text-gray-400 text-sm mb-2">Nog geen banen beschikbaar.</p>
+                <p className="text-gray-500 text-xs">Maak direct hierboven je eerste baan aan.</p>
               </div>
             )}
 
@@ -759,6 +789,31 @@ export default function NewTournamentPage() {
         )}
 
       </div>
+
+      {showCourseBuilder && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm overflow-y-auto">
+          <div className="min-h-full px-4 py-8 md:py-12 flex items-start justify-center">
+            <div className="w-full max-w-4xl rounded-2xl border border-gray-800 bg-gray-900 p-5 md:p-6">
+              <CourseBuilderForm
+                locale={locale}
+                onCancel={() => setShowCourseBuilder(false)}
+                onCreated={async (created) => {
+                  setShowCourseBuilder(false);
+                  if (currentUserId) {
+                    await loadCourses(currentUserId);
+                  }
+
+                  updateForm({
+                    course_id: created.id,
+                    loop_id: '',
+                    tee_id: '',
+                  });
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

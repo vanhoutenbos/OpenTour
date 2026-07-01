@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
     pathname.includes('/dashboard') ||
     pathname.includes('/manage') ||
     pathname.includes('/tournament/new') ||
-    pathname.includes('/course/new');
+    pathname.includes('/course');
 
   if (needsAuth) {
     const supabase = createServerClient(

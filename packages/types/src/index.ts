@@ -16,6 +16,7 @@ export type UserRole = 'organizer' | 'recorder';
 export type Language = 'nl' | 'en';
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 export type Gender = 'male' | 'female' | 'mixed';
+export type LoopType = 'full_18' | 'front_9' | 'back_9' | 'custom';
 
 // ============================================================
 // DATABASE ENTITEITEN
@@ -42,6 +43,7 @@ export interface Course {
   external_id?: string;
   created_by?: string;
   is_verified: boolean;
+  is_public: boolean;
   created_at: string;
 }
 
@@ -63,11 +65,32 @@ export interface Tee {
   created_at: string;
 }
 
+export interface Loop {
+  id: string;
+  course_id: string;
+  name: string;
+  holes_count: number;
+  loop_type: LoopType;
+  tee_id?: string;
+  is_default: boolean;
+  created_by?: string;
+  created_at: string;
+}
+
+export interface LoopHole {
+  id: string;
+  loop_id: string;
+  hole_id: string;
+  tee_id?: string;
+  position: number;
+}
+
 export interface Tournament {
   id: string;
   name: string;
   description?: string;
   course_id?: string;
+  loop_id?: string;
   format: TournamentFormat;
   scoring_type: ScoringType;
   rounds: number;

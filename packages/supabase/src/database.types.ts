@@ -34,6 +34,7 @@ export interface Database {
           external_id: string | null;
           created_by: string | null;
           is_verified: boolean;
+          is_public: boolean;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['courses']['Row'], 'id' | 'created_at'>;
@@ -57,6 +58,7 @@ export interface Database {
           name: string;
           description: string | null;
           course_id: string | null;
+          loop_id: string | null;
           format: 'stroke' | 'stableford' | 'match';
           scoring_type: 'gross' | 'net';
           rounds: number;
@@ -71,6 +73,32 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['tournaments']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['tournaments']['Insert']>;
+      };
+      loops: {
+        Row: {
+          id: string;
+          course_id: string;
+          name: string;
+          holes_count: number;
+          loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
+          tee_id: string | null;
+          is_default: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['loops']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['loops']['Insert']>;
+      };
+      loop_holes: {
+        Row: {
+          id: string;
+          loop_id: string;
+          hole_id: string;
+          tee_id: string | null;
+          position: number;
+        };
+        Insert: Omit<Database['public']['Tables']['loop_holes']['Row'], 'id'>;
+        Update: Partial<Database['public']['Tables']['loop_holes']['Insert']>;
       };
       tees: {
         Row: {

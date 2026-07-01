@@ -100,16 +100,29 @@ export function Navbar() {
             ))}
 
             {user && (
-              <Link
-                href={`/${locale}/dashboard`}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(`/${locale}/dashboard`)
-                    ? 'text-green-400 bg-green-900/30'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                }`}
-              >
-                {t('dashboard')}
-              </Link>
+              <>
+                <Link
+                  href={`/${locale}/dashboard`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(`/${locale}/dashboard`)
+                      ? 'text-green-400 bg-green-900/30'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {t('dashboard')}
+                </Link>
+
+                <Link
+                  href={`/${locale}/course`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(`/${locale}/course`)
+                      ? 'text-green-400 bg-green-900/30'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {t('create_course')}
+                </Link>
+              </>
             )}
           </div>
 
@@ -315,6 +328,17 @@ export function Navbar() {
                       }`}
                     >
                       {t('dashboard')}
+                    </Link>
+                    <Link
+                      href={`/${locale}/course`}
+                      onClick={() => setMenuOpen(false)}
+                      className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        isActive(`/${locale}/course`)
+                          ? 'text-green-400 bg-green-900/30'
+                          : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      {t('create_course')}
                     </Link>
                     <button
                       onClick={async () => {
