@@ -1,5 +1,4 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -10,32 +9,31 @@ export async function GET(request: NextRequest) {
 
   console.log('Auth callback ontvangen:', { code: !!code, token_hash: !!token_hash, type, origin });
 
-  const cookieStore = cookies();
+  const response = NextResponse.redirect(`${origin}/nl/login?error=auth`);
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options?: CookieOptions) {
-          cookieStore.set(name, value, options ?? { path: '/' });
+          response.cookies.set(name, value, {
+            ...options,
+            path: options?.path ?? '/',
+          });
         },
         remove(name: string, options?: CookieOptions) {
-          cookieStore.set(name, '', { ...options, path: '/', maxAge: 0 });
+          response.cookies.set(name, '', {
+            ...options,
+            path: options?.path ?? '/',
+            maxAge: 0,
+          });
         },
       },
     }
   );
-
-  const makeRedirect = (path: string) => {
-    const response = NextResponse.redirect(`${origin}${path}`);
-    cookieStore.getAll().forEach(cookie => {
-      response.cookies.set(cookie.name, cookie.value, { path: '/' });
-    });
-    return response;
-  };
 
   // PKCE flow
   if (code) {
@@ -48,7 +46,8 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.session) {
       console.log('✅ PKCE succesvol - redirect naar dashboard');
-      return makeRedirect('/nl/dashboard');
+      response.headers.set('Location', `${origin}/nl/dashboard`);
+      return response;
     }
   }
 
@@ -69,7 +68,8 @@ export async function GET(request: NextRequest) {
     
     if (!error && data?.session) {
       console.log('✅ OTP succesvol - redirect naar dashboard');
-      return makeRedirect('/nl/dashboard');
+      response.headers.set('Location', `${origin}/nl/dashboard`);
+      return response;
     }
     
     if (error) {
@@ -78,5 +78,5 @@ export async function GET(request: NextRequest) {
   }
 
   console.log('Auth callback mislukt — redirect naar login');
-  return NextResponse.redirect(`${origin}/nl/login?error=auth`);
+  return response;
 }

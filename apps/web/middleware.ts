@@ -7,6 +7,8 @@ const intlMiddleware = createIntlMiddleware({
   defaultLocale: 'nl',
 });
 
+const TEN_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 10;
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -41,6 +43,7 @@ export async function middleware(request: NextRequest) {
               ...options,
               path: '/',
               sameSite: 'lax',
+              maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
             });
           },
           remove(name: string, options?: CookieOptions) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
@@ -17,6 +17,8 @@ interface Tournament {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'nl';
   const format = useFormatter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +28,6 @@ export default function DashboardPage() {
     const supabase = getSupabaseBrowser();
     let cancelled = false;
     let loaded = false;
-
-    // Tijdelijke debug: welke cookies ziet de browser client?
-    console.log('[dashboard] document.cookie keys:', document.cookie.split(';').map(c => c.trim().split('=')[0]));
 
     const loadDashboard = async (userId: string, email: string | undefined) => {
       if (cancelled || loaded) return;
@@ -62,7 +61,7 @@ export default function DashboardPage() {
         loadDashboard(session.user.id, session.user.email ?? undefined);
       } else {
         setLoading(false);
-        router.replace('/nl/login');
+        router.replace(`/${locale}/login`);
       }
     });
 
@@ -73,7 +72,7 @@ export default function DashboardPage() {
         loadDashboard(session.user.id, session.user.email ?? undefined);
       } else if (event === 'SIGNED_OUT') {
         setLoading(false);
-        router.replace('/nl/login');
+        router.replace(`/${locale}/login`);
       }
     });
 
@@ -81,11 +80,11 @@ export default function DashboardPage() {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [locale, router]);
 
   const handleLogout = async () => {
     await getSupabaseBrowser().auth.signOut();
-    router.replace('/nl/login');
+    router.replace(`/${locale}/login`);
   };
 
   const statusLabel: Record<string, { label: string; className: string }> = {
@@ -126,7 +125,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
           <Link
-            href={`/nl/tournament/new`}
+            href={`/${locale}/tournament/new`}
             className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm
                        font-semibold rounded-xl transition-colors"
           >
@@ -142,7 +141,7 @@ export default function DashboardPage() {
               Maak je eerste toernooi aan en deel het leaderboard met deelnemers.
             </p>
             <Link
-              href={`/nl/tournament/new`}
+              href={`/${locale}/tournament/new`}
               className="px-6 py-3 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
             >
               Toernooi aanmaken →
@@ -155,7 +154,7 @@ export default function DashboardPage() {
               return (
                 <Link
                   key={t.id}
-                  href={`/nl/tournament/${t.id}/manage`}
+                  href={`/${locale}/tournament/${t.id}/manage`}
                   className="block bg-gray-900 border border-gray-800 hover:border-gray-600
                              rounded-2xl p-4 transition-colors"
                 >
