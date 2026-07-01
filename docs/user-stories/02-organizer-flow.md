@@ -218,14 +218,13 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 - **Fase:** MVP
 - **Afhankelijk van:** US-ORG-02
 - **Acceptatiecriteria:**
-  - Statusopties per speler: registered, confirmed, withdrawn, dns, dnf, dsq
+  - Statusopties per speler: registered, confirmed, dns, dnf, dsq
   - DNS/DNF/DSQ spelers verschijnen onderaan het leaderboard met een duidelijke badge
   - DNS/DNF/DSQ spelers worden uitgesloten van de rangschikking
   - Ingevoerde scores van DNF-spelers blijven bewaard
   - Organisator kan de status op elk moment wijzigen
 - **Opmerkingen:**
   - Conform NGF-wedstrijdregels
-  - Withdrawn = teruggetrokken voor start (volledig uit leaderboard)
 
 ## Technische specificatie
 

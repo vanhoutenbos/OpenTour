@@ -1341,7 +1341,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   const statusConfig: Record<string, { label: string; color: string }> = {
                     registered: { label: 'Aangemeld',    color: 'bg-gray-700 text-gray-300' },
                     confirmed:  { label: 'Bevestigd',    color: 'bg-blue-900/40 text-blue-300' },
-                    withdrawn:  { label: 'Teruggetrokken', color: 'bg-gray-800 text-gray-500' },
                     dns:        { label: 'DNS',          color: 'bg-yellow-900/40 text-yellow-300' },
                     dnf:        { label: 'DNF',          color: 'bg-orange-900/40 text-orange-300' },
                     dsq:        { label: 'DSQ',          color: 'bg-red-900/40 text-red-300' },
