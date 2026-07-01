@@ -19,7 +19,6 @@ interface HoleDraft {
 
 interface LoopDraft {
   name: string;
-  tee_external_id: string;
   hole_numbers: number[];
 }
 
@@ -69,7 +68,6 @@ const DEFAULT_HOLES: HoleDraft[] = Array.from({ length: 18 }).map((_, idx) => ({
 const DEFAULT_LOOPS: LoopDraft[] = [
   {
     name: 'Volledige ronde',
-    tee_external_id: 'wit',
     hole_numbers: Array.from({ length: 18 }).map((_, idx) => idx + 1),
   },
 ];
@@ -152,7 +150,6 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       ...prev,
       {
         name: `Lus ${prev.length + 1}`,
-        tee_external_id: toTeeKey(tees[0]?.color ?? ''),
         hole_numbers: [],
       },
     ]);
@@ -171,8 +168,6 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     if (!unique(strokeIndexes)) return 'Stroke index moet uniek zijn binnen een baan.';
 
     for (const hole of holes) {
-      if (hole.par < 3 || hole.par > 5) return 'Par moet tussen 3 en 5 liggen.';
-      if (hole.stroke_index < 1 || hole.stroke_index > 18) return 'Stroke index moet tussen 1 en 18 liggen.';
       if (hole.number < 1) return 'Hole nummer moet groter dan 0 zijn.';
     }
 
@@ -197,9 +192,6 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       if (!unique(loop.hole_numbers)) return `Lus "${loop.name}" bevat dubbele holes.`;
       const unknownHole = loop.hole_numbers.find((holeNumber) => !holeNumbers.includes(holeNumber));
       if (unknownHole) return `Lus "${loop.name}" verwijst naar onbekende hole ${unknownHole}.`;
-      if (loop.tee_external_id && !teeExternalIds.includes(loop.tee_external_id)) {
-        return `Lus "${loop.name}" verwijst naar een onbekende teebox.`;
-      }
     }
 
     return null;
@@ -314,9 +306,35 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       if (holeError || !holeRows) throw holeError ?? new Error('Holes konden niet worden opgeslagen.');
       const holeMap = new Map(holeRows.map((hole) => [hole.number, hole.id]));
 
-      for (const loop of loops) {
-        const loopTeeId = loop.tee_external_id ? teeMap.get(loop.tee_external_id) ?? null : null;
+      const holeTeeDistancePayload = holes.flatMap((hole) => {
+        const holeId = holeMap.get(hole.number);
+        if (!holeId) return [];
 
+        return tees
+          .map((tee) => {
+            const teeKey = toTeeKey(tee.color);
+            const teeId = teeMap.get(teeKey);
+            const distance = hole.distance_meters_by_tee[teeKey];
+
+            if (!teeId || !distance) return null;
+
+            return {
+              hole_id: holeId,
+              tee_id: teeId,
+              distance_meters: parseInt(distance, 10),
+            };
+          })
+          .filter((row): row is { hole_id: string; tee_id: string; distance_meters: number } =>
+            Boolean(row && !Number.isNaN(row.distance_meters))
+          );
+      });
+
+      if (holeTeeDistancePayload.length > 0) {
+        const { error: holeTeeError } = await supabase.from('hole_tee_distances').insert(holeTeeDistancePayload);
+        if (holeTeeError) throw holeTeeError;
+      }
+
+      for (const loop of loops) {
         const { data: loopRow, error: loopError } = await supabase
           .from('loops')
           .insert({
@@ -324,7 +342,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
             name: loop.name.trim(),
             holes_count: loop.hole_numbers.length,
             loop_type: deriveLoopType(loop.hole_numbers),
-            tee_id: loopTeeId,
+            tee_id: null,
             is_default: loops[0] === loop,
             created_by: authData.user.id,
           })
@@ -339,16 +357,12 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
             throw new Error(`Hole ${holeNumber} bestaat niet en kan niet aan lus "${loop.name}" gekoppeld worden.`);
           }
 
-          const holeDefinition = holes.find((hole) => hole.number === holeNumber);
-          const teeDistance = loop.tee_external_id ? holeDefinition?.distance_meters_by_tee[loop.tee_external_id] : undefined;
-          const distanceMeters = teeDistance ? parseInt(teeDistance, 10) : null;
-
           return {
             loop_id: loopRow.id,
             hole_id: holeId,
-            tee_id: loopTeeId,
+            tee_id: null,
             position: index + 1,
-            distance_meters: Number.isNaN(distanceMeters as number) ? null : distanceMeters,
+            distance_meters: null,
           };
         });
 
@@ -578,25 +592,13 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         {loops.map((loop, index) => (
           <div key={index} className="p-3 rounded-xl border border-gray-800 bg-gray-900 space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <input
                 value={loop.name}
                 onChange={(event) => updateLoop(index, { name: event.target.value })}
                 className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
                 placeholder="Naam"
               />
-              <select
-                value={loop.tee_external_id}
-                onChange={(event) => updateLoop(index, { tee_external_id: event.target.value })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-              >
-                <option value="">Geen vaste teebox</option>
-                {tees.map((tee) => (
-                  <option key={toTeeKey(tee.color)} value={toTeeKey(tee.color)}>
-                    {tee.color || 'Onbekend'}
-                  </option>
-                ))}
-              </select>
               <button
                 type="button"
                 onClick={() => setLoops((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}

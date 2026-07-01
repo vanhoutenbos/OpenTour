@@ -52,6 +52,17 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['holes']['Row'], 'id'>;
         Update: Partial<Database['public']['Tables']['holes']['Insert']>;
       };
+      hole_tee_distances: {
+        Row: {
+          id: string;
+          hole_id: string;
+          tee_id: string;
+          distance_meters: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['hole_tee_distances']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['hole_tee_distances']['Insert']>;
+      };
       tournaments: {
         Row: {
           id: string;

@@ -43,6 +43,12 @@ interface LoopHoleRow {
   distance_meters?: number | null;
 }
 
+interface HoleTeeDistanceRow {
+  hole_id: string;
+  tee_id: string;
+  distance_meters: number;
+}
+
 export default function EditCoursePage() {
   const params = useParams();
   const locale = ((params.locale as string) || 'nl').toLowerCase();
@@ -59,7 +65,6 @@ export default function EditCoursePage() {
       id: string;
       name: string;
       loopType: string;
-      teeLabel: string;
       holeNumbers: string;
     }[];
     holeRows: {
@@ -84,7 +89,7 @@ export default function EditCoursePage() {
         return;
       }
 
-      const [{ data: course }, { data: tees }, { data: holes }, { data: loops }, { data: loopHoles }] = await Promise.all([
+      const [{ data: course }, { data: tees }, { data: holes }, { data: loops }, { data: loopHoles }, { data: holeTeeDistances }] = await Promise.all([
         supabase
           .from('courses')
           .select('id, name, location, country, holes_count')
@@ -111,6 +116,10 @@ export default function EditCoursePage() {
           .select('loop_id, hole_id, position, distance_meters')
           .in('loop_id', (await supabase.from('loops').select('id').eq('course_id', courseId)).data?.map((row) => row.id) ?? [])
           .order('position', { ascending: true }),
+        supabase
+          .from('hole_tee_distances')
+          .select('hole_id, tee_id, distance_meters')
+          .in('hole_id', (await supabase.from('holes').select('id').eq('course_id', courseId)).data?.map((row) => row.id) ?? []),
       ]);
 
       if (!course) {
@@ -125,6 +134,7 @@ export default function EditCoursePage() {
       const holeRows = (holes as HoleRow[] | null) ?? [];
       const loopRows = (loops as LoopRow[] | null) ?? [];
       const loopHoleRows = (loopHoles as LoopHoleRow[] | null) ?? [];
+      const holeTeeDistanceRows = (holeTeeDistances as HoleTeeDistanceRow[] | null) ?? [];
 
       const teeDrafts = teeRows.map((tee) => ({
         color: tee.color ?? '',
@@ -133,12 +143,11 @@ export default function EditCoursePage() {
       const holeDrafts = holeRows.map((hole) => {
         const distance_meters_by_tee = Object.fromEntries(
           teeRows.map((tee) => {
-            const matchingLoop = loopRows.find((loop) => loop.tee_id === tee.id);
-            const matchingLoopHole = matchingLoop
-              ? loopHoleRows.find((loopHole) => loopHole.loop_id === matchingLoop.id && loopHole.hole_id === hole.id)
-              : null;
+            const matchingDistance = holeTeeDistanceRows.find(
+              (distance) => distance.hole_id === hole.id && distance.tee_id === tee.id
+            );
 
-            return [tee.external_id, matchingLoopHole?.distance_meters?.toString() ?? ''];
+            return [tee.external_id, matchingDistance?.distance_meters?.toString() ?? ''];
           })
         );
 
@@ -161,7 +170,6 @@ export default function EditCoursePage() {
 
         return {
           name: loop.name,
-          tee_external_id: teeExternalId,
           hole_numbers: holeIdsForLoop,
         };
       });
@@ -178,7 +186,6 @@ export default function EditCoursePage() {
           id: loop.id,
           name: loop.name,
           loopType: loop.loop_type,
-          teeLabel: loop.tee_id ? teeRows.find((tee) => tee.id === loop.tee_id)?.color || teeRows.find((tee) => tee.id === loop.tee_id)?.name || 'Geen' : 'Geen vaste teebox',
           holeNumbers: holeIdsForLoop.join(', '),
         };
       });
@@ -294,7 +301,7 @@ export default function EditCoursePage() {
                         <div>
                           <p className="text-sm font-semibold text-white">{loop.name}</p>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {loop.loopType} · Tee: {loop.teeLabel}
+                            {loop.loopType}
                           </p>
                         </div>
                         <span className="text-xs text-gray-400">{loop.holeNumbers.split(',').filter(Boolean).length} holes</span>
