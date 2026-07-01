@@ -85,8 +85,12 @@ export default function CoursesPage() {
           </div>
           <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
             <p className="text-xs text-gray-500 uppercase tracking-wide">Publicatiestatus</p>
-            <p className="text-sm text-gray-300 mt-2">Alle banen staan nu op privé.</p>
+            <p className="text-sm text-gray-300 mt-2">Alle banen zijn eigenaar-gebonden. Submit/publicatie komt later.</p>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 text-sm text-gray-300">
+          Vanuit dit overzicht kun je een baan bewerken als eigenaar of direct opnieuw gebruiken in een nieuw toernooi.
         </div>
 
         <section className="rounded-2xl border border-gray-800 bg-gray-900 p-5 md:p-6">
@@ -125,6 +129,12 @@ export default function CoursesPage() {
                     <span className="text-xs px-2.5 py-1 rounded-md border border-gray-700 text-gray-400">
                       {course.is_public ? 'Publiek' : 'Privé'}
                     </span>
+                    <Link
+                      href={`/${locale}/course/${course.id}`}
+                      className="text-xs px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"
+                    >
+                      Bewerken
+                    </Link>
                     <Link
                       href={`/${locale}/tournament/new`}
                       className="text-xs px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"

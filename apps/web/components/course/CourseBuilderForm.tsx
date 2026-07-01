@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
@@ -26,10 +26,25 @@ interface LoopDraft {
   hole_numbers: string;
 }
 
+export interface CourseBuilderInitialData {
+  course: {
+    id: string;
+    name: string;
+    location: string | null;
+    country: string;
+  };
+  tees?: TeeDraft[];
+  holes?: HoleDraft[];
+  loops?: LoopDraft[];
+}
+
 interface CourseBuilderFormProps {
   locale: string;
+  mode?: 'create' | 'edit';
+  initialData?: CourseBuilderInitialData;
   onCancel?: () => void;
   onCreated?: (created: { id: string; name: string }) => void;
+  onSaved?: (saved: { id: string; name: string }) => void;
 }
 
 const DEFAULT_TEE_ROWS: TeeDraft[] = [
@@ -64,17 +79,29 @@ function unique(values: number[]): boolean {
   return new Set(values).size === values.length;
 }
 
-export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilderFormProps) {
+export function CourseBuilderForm({ locale, mode = 'create', initialData, onCancel, onCreated, onSaved }: CourseBuilderFormProps) {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [country, setCountry] = useState('NL');
-  const [tees, setTees] = useState<TeeDraft[]>(DEFAULT_TEE_ROWS);
-  const [holes, setHoles] = useState<HoleDraft[]>(DEFAULT_HOLES);
-  const [loops, setLoops] = useState<LoopDraft[]>(DEFAULT_LOOPS);
+  const isEditMode = mode === 'edit';
+  const [name, setName] = useState(initialData?.course.name ?? '');
+  const [location, setLocation] = useState(initialData?.course.location ?? '');
+  const [country, setCountry] = useState(initialData?.course.country ?? 'NL');
+  const [tees, setTees] = useState<TeeDraft[]>(initialData?.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
+  const [holes, setHoles] = useState<HoleDraft[]>(initialData?.holes?.length ? initialData.holes : DEFAULT_HOLES);
+  const [loops, setLoops] = useState<LoopDraft[]>(initialData?.loops?.length ? initialData.loops : DEFAULT_LOOPS);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    setName(initialData.course.name);
+    setLocation(initialData.course.location ?? '');
+    setCountry(initialData.course.country ?? 'NL');
+    setTees(initialData.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
+    setHoles(initialData.holes?.length ? initialData.holes : DEFAULT_HOLES);
+    setLoops(initialData.loops?.length ? initialData.loops : DEFAULT_LOOPS);
+  }, [initialData]);
 
   const updateTee = (index: number, patch: Partial<TeeDraft>) => {
     setTees((prev) => prev.map((tee, rowIndex) => (rowIndex === index ? { ...tee, ...patch } : tee)));
@@ -170,26 +197,56 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
         return;
       }
 
-      const { data: courseData, error: courseError } = await supabase
-        .from('courses')
-        .insert({
-          name: name.trim(),
-          location: location.trim() || null,
-          country: country.trim() || 'NL',
-          holes_count: holes.length,
-          source: 'custom',
-          is_verified: false,
-          is_public: false,
-          created_by: authData.user.id,
-        })
-        .select('id, name')
-        .single();
+      let courseId = initialData?.course.id ?? null;
+      let courseName = name.trim();
 
-      if (courseError || !courseData) throw courseError ?? new Error('Baan kon niet worden aangemaakt.');
-      createdCourseId = courseData.id;
+      if (isEditMode && initialData?.course.id) {
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .update({
+            name: name.trim(),
+            location: location.trim() || null,
+            country: country.trim() || 'NL',
+            holes_count: holes.length,
+          })
+          .eq('id', initialData.course.id)
+          .eq('created_by', authData.user.id)
+          .select('id, name')
+          .single();
+
+        if (courseError || !courseData) throw courseError ?? new Error('Baan kon niet worden opgeslagen.');
+        courseId = courseData.id;
+        courseName = courseData.name;
+        setSuccess(`Baan "${courseName}" is opgeslagen.`);
+        onSaved?.({ id: courseData.id, name: courseName });
+        setSaving(false);
+        return;
+      } else {
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .insert({
+            name: name.trim(),
+            location: location.trim() || null,
+            country: country.trim() || 'NL',
+            holes_count: holes.length,
+            source: 'custom',
+            is_verified: false,
+            is_public: false,
+            created_by: authData.user.id,
+          })
+          .select('id, name')
+          .single();
+
+        if (courseError || !courseData) throw courseError ?? new Error('Baan kon niet worden aangemaakt.');
+        courseId = courseData.id;
+        courseName = courseData.name;
+        createdCourseId = courseData.id;
+      }
+
+      if (!courseId) throw new Error('Geen baan gevonden om op te slaan.');
 
       const teePayload = tees.map((tee) => ({
-        course_id: courseData.id,
+        course_id: courseId,
         external_id: tee.external_id.trim(),
         name: tee.name.trim() || null,
         color: tee.color.trim() || null,
@@ -207,7 +264,7 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
         .slice()
         .sort((a, b) => a.number - b.number)
         .map((hole) => ({
-          course_id: courseData.id,
+          course_id: courseId,
           number: hole.number,
           par: hole.par,
           stroke_index: hole.stroke_index,
@@ -229,7 +286,7 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
         const { data: loopRow, error: loopError } = await supabase
           .from('loops')
           .insert({
-            course_id: courseData.id,
+            course_id: courseId,
             name: loop.name.trim(),
             holes_count: parsedLoopHoles.length,
             loop_type: loop.loop_type,
@@ -260,10 +317,16 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
         if (loopHoleError) throw loopHoleError;
       }
 
-      setSuccess(`Baan "${courseData.name}" is aangemaakt en alleen zichtbaar voor jou.`);
+      setSuccess(
+        isEditMode
+          ? `Baan "${courseName}" is opgeslagen.`
+          : `Baan "${courseName}" is aangemaakt en alleen zichtbaar voor jou.`
+      );
 
-      if (onCreated) {
-        onCreated({ id: courseData.id, name: courseData.name });
+      if (isEditMode) {
+        onSaved?.({ id: courseId, name: courseName });
+      } else if (onCreated) {
+        onCreated({ id: courseId, name: courseName });
       } else {
         setName('');
         setLocation('');
@@ -287,9 +350,13 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-xl font-bold text-white">Golfbaan aanmaken</h2>
+        <h2 className="text-xl font-bold text-white">
+          {isEditMode ? 'Golfbaan bewerken' : 'Golfbaan aanmaken'}
+        </h2>
         <p className="text-sm text-gray-400">
-          Maak handmatig een baan met teeboxen, lussen en holes. Nieuwe banen zijn standaard privé.
+          {isEditMode
+            ? 'Pas de basisgegevens aan. De structuur-editor volgt later als versiebeheer is ingericht.'
+            : 'Maak handmatig een baan met teeboxen, lussen en holes. Nieuwe banen zijn standaard privé.'}
         </p>
       </div>
 
@@ -328,6 +395,7 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
         />
       </div>
 
+      {!isEditMode && (
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Teeboxen</h3>
@@ -373,7 +441,9 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
           ))}
         </div>
       </section>
+      )}
 
+      {!isEditMode && (
       <section className="space-y-3">
         <h3 className="text-sm font-semibold text-white">Holes</h3>
         <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
@@ -434,7 +504,9 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
           </button>
         </div>
       </section>
+      )}
 
+      {!isEditMode && (
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">Lussen</h3>
@@ -497,6 +569,7 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
           </div>
         ))}
       </section>
+      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && <p className="text-sm text-green-400">{success}</p>}
@@ -517,7 +590,7 @@ export function CourseBuilderForm({ locale, onCancel, onCreated }: CourseBuilder
           disabled={saving}
           className="flex-1 py-3 rounded-xl bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold"
         >
-          {saving ? 'Opslaan...' : 'Baan aanmaken'}
+          {saving ? 'Opslaan...' : isEditMode ? 'Wijzigingen opslaan' : 'Baan aanmaken'}
         </button>
       </div>
     </div>

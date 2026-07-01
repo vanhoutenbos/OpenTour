@@ -26,10 +26,11 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
   - Ondersteuning voor 9 en 18 holes (custom aantallen mogelijk)
   - Stroke index is uniek binnen de baan (geen duplicate SI)
   - Na opslaan: baan wordt toegevoegd aan de database en is beschikbaar bij toernooi-aanmaak
-  - Baan is standaard privé (alleen zichtbaar voor aanmaker); optioneel publiek delen
+  - Alleen de eigenaar kan de baan bewerken
+  - Publiceren/indienen naar een bredere groep is een latere workflow via een aparte submit-knop
 - **Opmerkingen:**
   - Stroke index is verplicht omdat net-scoring zonder SI onmogelijk is
-  - Publieke banen kunnen later door de community worden geverifieerd
+  - De eerste versie blijft eigendom van één organisator; review/publicatie komt later
 
 ## Technische specificatie
 
@@ -44,6 +45,7 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
   - Default 18 holes, met optie voor 9 holes (custom aantallen mogelijk)
   - Stroke index 1-18, uniek per baan (UNIQUE(course_id, stroke_index))
   - Nieuwe baan krijgt `source = 'custom'`, `is_verified = false`, `created_by = auth.uid()`
+  - Owner kan later een submit-knop gebruiken om de baan aan een review/publicatieflow aan te bieden
 
 ---
 
@@ -61,6 +63,7 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
   - Na selectie: holes (par + SI) worden automatisch geladen voor het toernooi
   - Filter op land (standaard NL)
   - Eerder door deze organisator aangemaakte banen verschijnen bovenaan
+  - In het beheer-overzicht ziet een gebruiker alleen de banen die hij/zij zelf bezit
 - **Opmerkingen:**
   - Dit is de snelste weg naar een werkend toernooi
   - Database bevat in MVP de geimporteerde eGolf4u banen + handmatig aangemaakte banen
@@ -78,6 +81,7 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
   - Zoekveld met client-side filter op baannaam (nog te implementeren — momenteel statische lijst)
   - "Nog niet kiezen" optie om baan later in te stellen
   - Eigen banen van organisator verschijnen bovenaan (via `ORDER BY created_by = auth.uid() DESC, name`)
+  - Publiek delen is niet onderdeel van MVP; owner-only edit blijft de standaard
 
 ---
 
@@ -153,22 +157,22 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
 
 ---
 
-### US-CRS-05 — Baan delen met andere organisatoren
+### US-CRS-05 — Baan indienen voor review/publicatie
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik een door mij aangemaakte baan publiek kan delen met andere organisatoren
-- **Waarde:** De community bouwt samen een baandatabase op
+- **Doel:** Dat ik een door mij aangemaakte baan kan indienen voor review zodat een aangewezen groep deze later kan publiceren
+- **Waarde:** Ik houd beheer eenvoudig nu, maar kan de baan later veilig laten reviewen
 - **Prioriteit:** C
 - **Fase:** Later
 - **Afhankelijk van:** US-CRS-04
 - **Acceptatiecriteria:**
-  - Knop "Maak publiek" op baandetailpagina
-  - Publieke banen zijn zichtbaar voor alle organisatoren bij het kiezen van een baan
-  - Na publiceren: baan kan niet meer privé worden gemaakt (om misbruik te voorkomen)
-  - Publieke banen krijgen een `community` bron-label
+  - Knop "Submit voor review" op baandetailpagina
+  - Submitted banen krijgen een status die zichtbaar is voor reviewers
+  - Alleen een aangewezen groep reviewers/rollen kan de baan publiceren
+  - Na publicatie kan een baan niet meer vrij worden aangepast zonder nieuwe draft-versie
 - **Opmerkingen:**
-  - Dit is de basis voor een community-gedreven baandatabase
-  - Later: verificatieproces voor community-banen
+  - Dit is de basis voor een beheerde publish-flow met versiebeheer
+  - Later: draft-versies, review-queue en publish approvals
 
 ---
 

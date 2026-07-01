@@ -201,6 +201,13 @@ Golfverenigingen, clubsecretarissen, wedstrijdcommissies, spelers en supporters 
 6. **Open standaarden.** CSV, JSON, REST API. Geen proprietaire formaten.
 7. **Community-gedreven groei.** Features worden bepaald door echte gebruikers, niet door aandeelhouders.
 
+### Besluit over banenbeheer
+
+- Een organisator mag nu meerdere banen aanmaken en beheren.
+- Alleen de eigenaar van een baan mag deze bewerken.
+- Publicatie naar andere organisatoren of de wereld is een latere submit/review-flow, niet onderdeel van de MVP.
+- Bestaande banen worden toegewezen aan één eigenaar zodat het huidige beheer eenduidig blijft.
+
 ### Non-goals
 
 | Niet doen | Waarom niet |
