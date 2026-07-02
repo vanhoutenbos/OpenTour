@@ -136,7 +136,6 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const [categories, setCategories] = useState<TournamentCategory[]>([]);
   const [flights, setFlights] = useState<Flight[]>([]);
   const [holes, setHoles] = useState<Hole[]>([]);
-  const [selectedFlightId, setSelectedFlightId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [pauseReason, setPauseReason] = useState('');
@@ -2113,47 +2112,23 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   Koppel eerst een baan aan het toernooi via het tabblad Bewerken.
                 </p>
               </div>
-            ) : flights.length === 0 ? (
+            ) : players.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
-                <span className="text-5xl">🗂️</span>
-                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Nog geen flights</h3>
+                <span className="text-5xl">🧑‍🤝‍🧑</span>
+                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Nog geen spelers</h3>
                 <p className="text-gray-400 text-sm max-w-xs mx-auto">
-                  Genereer eerst flights via het tabblad Flights.
+                  Voeg eerst spelers toe via het tabblad Spelers.
                 </p>
               </div>
             ) : (
-              <>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                  <label className="block text-sm text-gray-400 mb-2">Selecteer flight</label>
-                  <select
-                    value={selectedFlightId}
-                    onChange={e => setSelectedFlightId(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
-                  >
-                    <option value="">-- Kies een flight --</option>
-                    {flights.map(f => {
-                      const catName = categories.find(c => c.id === f.category_id)?.name;
-                      const playerCount = players.filter(p => p.flight_id === f.id).length;
-                      return (
-                        <option key={f.id} value={f.id}>
-                          {flightLabel(f, flights.indexOf(f))} ({playerCount} spelers{catName ? ` · ${catName}` : ''})
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                {selectedFlightId && (
-                  <ScoreGrid
-                    tournamentId={params.id}
-                    players={players.filter(p => p.flight_id === selectedFlightId) as any}
-                    holes={holes}
-                    tournamentFormat={tournament.format as 'stroke' | 'stableford' | 'match'}
-                    scoringType={tournament.scoring_type as 'gross' | 'net'}
-                    tournamentRounds={tournament.rounds}
-                  />
-                )}
-              </>
+              <ScoreGrid
+                tournamentId={params.id}
+                players={players as any}
+                holes={holes}
+                tournamentFormat={tournament.format as 'stroke' | 'stableford' | 'match'}
+                scoringType={tournament.scoring_type as 'gross' | 'net'}
+                tournamentRounds={tournament.rounds}
+              />
             )}
           </div>
         )}
