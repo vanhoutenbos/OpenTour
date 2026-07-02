@@ -533,6 +533,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     setFlightGenerating(true);
     setFlightError(null);
 
+    // Guard: velden kunnen tijdelijk 0 zijn tijdens het typen (leeg veld).
+    // Val terug op geldige defaults als generate wordt aangeroepen vóórdat onBlur clamt.
+    const safeMaxPlayers = flightForm.max_players > 0 ? Math.min(4, flightForm.max_players) : 4;
+    const safeIntervalMinutes = flightForm.interval_minutes > 0 ? Math.min(30, flightForm.interval_minutes) : 8;
+
     // Stap 1: Ontkoppel spelers van flights (FK constraint, moet vóór DELETE)
     const { error: updateErr } = await supabase
       .from('tournament_players')
@@ -565,8 +570,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       p_tournament_id: params.id,
       p_start_time: new Date(flightForm.start_time).toISOString(),
       p_start_holes: flightForm.start_holes,
-      p_interval_minutes: flightForm.interval_minutes,
-      p_max_players_per_flight: flightForm.max_players,
+      p_interval_minutes: safeIntervalMinutes,
+      p_max_players_per_flight: safeMaxPlayers,
       p_sort_by: sortBy,
       p_split_by_category: splitByCategory,
     });
@@ -1746,8 +1751,16 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             type="number"
                             min={1}
                             max={30}
-                            value={flightForm.interval_minutes}
-                            onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                            value={flightForm.interval_minutes === 0 ? '' : flightForm.interval_minutes}
+                            onChange={e => {
+                              const raw = e.target.value;
+                              setFlightForm(f => ({ ...f, interval_minutes: raw === '' ? 0 : (parseInt(raw) || 0) }));
+                            }}
+                            onBlur={e => {
+                              const parsed = parseInt(e.target.value);
+                              const clamped = Number.isNaN(parsed) ? 8 : Math.min(30, Math.max(1, parsed));
+                              setFlightForm(f => ({ ...f, interval_minutes: clamped }));
+                            }}
                             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
                           />
                         </div>
@@ -1757,8 +1770,16 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             type="number"
                             min={1}
                             max={4}
-                            value={flightForm.max_players}
-                            onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                            value={flightForm.max_players === 0 ? '' : flightForm.max_players}
+                            onChange={e => {
+                              const raw = e.target.value;
+                              setFlightForm(f => ({ ...f, max_players: raw === '' ? 0 : (parseInt(raw) || 0) }));
+                            }}
+                            onBlur={e => {
+                              const parsed = parseInt(e.target.value);
+                              const clamped = Number.isNaN(parsed) ? 4 : Math.min(4, Math.max(1, parsed));
+                              setFlightForm(f => ({ ...f, max_players: clamped }));
+                            }}
                             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
                           />
                         </div>
@@ -1860,8 +1881,16 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             type="number"
                             min={1}
                             max={30}
-                            value={flightForm.interval_minutes}
-                            onChange={e => setFlightForm(f => ({ ...f, interval_minutes: parseInt(e.target.value) || 8 }))}
+                            value={flightForm.interval_minutes === 0 ? '' : flightForm.interval_minutes}
+                            onChange={e => {
+                              const raw = e.target.value;
+                              setFlightForm(f => ({ ...f, interval_minutes: raw === '' ? 0 : (parseInt(raw) || 0) }));
+                            }}
+                            onBlur={e => {
+                              const parsed = parseInt(e.target.value);
+                              const clamped = Number.isNaN(parsed) ? 8 : Math.min(30, Math.max(1, parsed));
+                              setFlightForm(f => ({ ...f, interval_minutes: clamped }));
+                            }}
                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
                           />
                         </div>
@@ -1871,8 +1900,16 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             type="number"
                             min={1}
                             max={4}
-                            value={flightForm.max_players}
-                            onChange={e => setFlightForm(f => ({ ...f, max_players: parseInt(e.target.value) || 4 }))}
+                            value={flightForm.max_players === 0 ? '' : flightForm.max_players}
+                            onChange={e => {
+                              const raw = e.target.value;
+                              setFlightForm(f => ({ ...f, max_players: raw === '' ? 0 : (parseInt(raw) || 0) }));
+                            }}
+                            onBlur={e => {
+                              const parsed = parseInt(e.target.value);
+                              const clamped = Number.isNaN(parsed) ? 4 : Math.min(4, Math.max(1, parsed));
+                              setFlightForm(f => ({ ...f, max_players: clamped }));
+                            }}
                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
                           />
                         </div>
