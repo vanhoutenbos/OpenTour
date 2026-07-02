@@ -84,11 +84,11 @@ export function CourseStats({ tournamentId }: Props) {
             )}
             <th className="py-2 text-center">SI</th>
             <th className="py-2 text-center">Ø Score</th>
-            <th className="py-2 text-center w-16">○ Eagle</th>
-            <th className="py-2 text-center w-16">○ Birdie</th>
+            <th className="py-2 text-center w-16 text-yellow-400/80">○ Eagle</th>
+            <th className="py-2 text-center w-16 text-red-400/80">○ Birdie</th>
             <th className="py-2 text-center w-14">— Par</th>
-            <th className="py-2 text-center w-14">□ Bogey</th>
-            <th className="py-2 text-center w-14">▫ Double</th>
+            <th className="py-2 text-center w-14 text-slate-400/80">□ Bogey</th>
+            <th className="py-2 text-center w-14 text-blue-400/80">▫ Double</th>
             <th className="py-2 text-center w-12">#</th>
           </tr>
         </thead>
@@ -102,11 +102,11 @@ export function CourseStats({ tournamentId }: Props) {
               )}
               <td className="py-2 text-center font-mono text-gray-500">{h.stroke_index}</td>
               <td className="py-2 text-center font-mono text-white font-bold">{h.average_score.toFixed(1)}</td>
-              <td className="py-2 text-center font-mono text-green-300">{h.eagles || '-'}</td>
-              <td className="py-2 text-center font-mono text-green-400">{h.birdies}</td>
+              <td className="py-2 text-center font-mono text-yellow-400">{h.eagles || '-'}</td>
+              <td className="py-2 text-center font-mono text-red-400">{h.birdies}</td>
               <td className="py-2 text-center font-mono text-gray-300">{h.pars}</td>
-              <td className="py-2 text-center font-mono text-amber-400">{h.bogeys}</td>
-              <td className="py-2 text-center font-mono text-red-400">{h.double_bogeys}</td>
+              <td className="py-2 text-center font-mono text-slate-400">{h.bogeys}</td>
+              <td className="py-2 text-center font-mono text-blue-400">{h.double_bogeys}</td>
               <td className="py-2 text-center font-mono text-gray-500">{h.total_scores}</td>
             </tr>
           ))}
@@ -119,11 +119,11 @@ export function CourseStats({ tournamentId }: Props) {
             )}
             <td />
             <td className="py-2 text-center text-white font-mono">{summary.avgScore.toFixed(1)}</td>
-            <td className="py-2 text-center text-green-300 font-mono">{summary.eagles}</td>
-            <td className="py-2 text-center text-green-400 font-mono">{summary.birdies}</td>
+            <td className="py-2 text-center text-yellow-400 font-mono">{summary.eagles}</td>
+            <td className="py-2 text-center text-red-400 font-mono">{summary.birdies}</td>
             <td className="py-2 text-center text-gray-300 font-mono">{summary.pars}</td>
-            <td className="py-2 text-center text-amber-400 font-mono">{summary.bogeys}</td>
-            <td className="py-2 text-center text-red-400 font-mono">{summary.doubles}</td>
+            <td className="py-2 text-center text-slate-400 font-mono">{summary.bogeys}</td>
+            <td className="py-2 text-center text-blue-400 font-mono">{summary.doubles}</td>
             <td className="py-2 text-center text-gray-500 font-mono">{summary.eagles + summary.birdies + summary.pars + summary.bogeys + summary.doubles}</td>
           </tr>
         </tbody>
