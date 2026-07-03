@@ -55,13 +55,6 @@ export function TournamentHeader({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
-                {/* White-label logo slot */}
-                <div
-                  className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-xs font-bold text-green-500 shrink-0"
-                  data-logo-slot
-                >
-                  OT
-                </div>
                 <div>
                   <h1 className="text-lg sm:text-xl font-bold text-white truncate">
                     {name}

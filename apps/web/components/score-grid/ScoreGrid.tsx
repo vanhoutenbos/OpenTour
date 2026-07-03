@@ -55,14 +55,7 @@ export default function ScoreGrid({
     scoresRef.current = scores;
   }, [scores]);
 
-  const sortedPlayers = [...players].sort((a, b) => {
-    const flightA = a.flight_id || '';
-    const flightB = b.flight_id || '';
-    if (flightA !== flightB) {
-      return flightA.localeCompare(flightB);
-    }
-    return a.name.localeCompare(b.name);
-  });
+  const sortedPlayers = [...players].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 
   const sortedHoles = holes.sort((a, b) => a.number - b.number);
 
@@ -238,29 +231,36 @@ export default function ScoreGrid({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-fixed">
+            <colgroup>
+              <col className="w-32 sm:w-40" />
+              {sortedHoles.map((hole) => (
+                <col key={hole.id} className="w-[52px] sm:w-14" />
+              ))}
+              {tournamentFormat === 'stableford' && <col className="w-16" />}
+            </colgroup>
             <thead>
               <tr className="bg-gray-800 border-b border-gray-700">
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-300 sticky left-0 bg-gray-800">
+                <th className="px-2 sm:px-3 py-2 text-left text-xs sm:text-sm font-medium text-gray-300 sticky left-0 bg-gray-800 z-10">
                   Speler
                 </th>
                 {sortedHoles.map((hole) => (
                   <th
                     key={hole.id}
                     id={`hole-col-${hole.number}`}
-                    className={`px-3 py-3 text-center text-sm font-medium transition-colors ${
+                    className={`px-0.5 py-2 text-center text-xs font-medium transition-colors ${
                       highlightedHole === hole.number
                         ? 'text-green-300 bg-green-900/20'
                         : 'text-gray-300'
                     }`}
                   >
-                    <div>Hole {hole.number}</div>
-                    <div className="text-xs text-gray-500">Par {hole.par}</div>
+                    <div className="leading-tight">{hole.number}</div>
+                    <div className="text-[10px] text-gray-500 leading-tight">Par {hole.par}</div>
                   </th>
                 ))}
                 {tournamentFormat === 'stableford' && (
-                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-300">
-                    Stableford
+                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-300">
+                    Stbf
                   </th>
                 )}
               </tr>
@@ -271,9 +271,9 @@ export default function ScoreGrid({
                   key={player.id}
                   className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
                 >
-                  <td className="px-4 py-3 sticky left-0 bg-gray-900 border-r border-gray-800">
-                    <div className="font-medium text-white">{getPlayerDisplayName(player)}</div>
-                    <div className="text-xs text-gray-500 capitalize">{player.status}</div>
+                  <td className="px-2 sm:px-3 py-1.5 sticky left-0 bg-gray-900 border-r border-gray-800 z-10">
+                    <div className="font-medium text-white text-xs sm:text-sm truncate">{getPlayerDisplayName(player)}</div>
+                    <div className="text-[10px] text-gray-500 capitalize">{player.status}</div>
                   </td>
                   {sortedHoles.map((hole) => {
                     const key = `${player.id}-${hole.id}`;
@@ -295,7 +295,7 @@ export default function ScoreGrid({
                     return (
                       <td
                         key={hole.id}
-                        className={`px-2 py-2 text-center transition-colors ${
+                        className={`px-0.5 py-1 text-center transition-colors ${
                           highlightedHole === hole.number ? 'bg-green-900/10' : ''
                         }`}
                       >
@@ -319,13 +319,13 @@ export default function ScoreGrid({
                             }
                           }}
                           onFocus={(e) => e.target.select()}
-                          className={`w-16 px-2 py-2 text-center font-mono rounded border transition-all ${cellClass} hover:border-green-500 focus:outline-none focus:border-green-400 focus:w-20`}
+                          className={`w-full min-w-0 px-0.5 py-1.5 text-center font-mono text-sm rounded border transition-colors ${cellClass} hover:border-green-500 focus:outline-none focus:border-green-400`}
                         />
                       </td>
                     );
                   })}
                   {tournamentFormat === 'stableford' && (
-                    <td className="px-4 py-3 text-center font-mono text-lg">
+                    <td className="px-2 py-1.5 text-center font-mono text-base">
                       {sortedHoles.reduce((sum, hole) => {
                         const key = `${player.id}-${hole.id}`;
                         const strokes = scores.get(key);

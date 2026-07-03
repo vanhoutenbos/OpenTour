@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useFormatter } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface Tournament {
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'nl';
   const format = useFormatter();
+  const t = useTranslations('dashboard');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,7 +99,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-950">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
           <Link
             href={`/${locale}/tournament/new`}
@@ -106,6 +107,14 @@ export default function DashboardPage() {
                        font-semibold rounded-xl transition-colors"
           >
             + Nieuw toernooi
+          </Link>
+        </div>
+        <div className="mb-6">
+          <Link
+            href={`/${locale}/dashboard/getting-started`}
+            className="text-sm text-gray-400 hover:text-green-400 transition-colors"
+          >
+            {t('gettingStartedLink')}
           </Link>
         </div>
 
@@ -116,12 +125,21 @@ export default function DashboardPage() {
             <p className="text-gray-400 text-sm mb-6">
               Maak je eerste toernooi aan en deel het leaderboard met deelnemers.
             </p>
-            <Link
-              href={`/${locale}/tournament/new`}
-              className="px-6 py-3 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
-            >
-              Toernooi aanmaken →
-            </Link>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                href={`/${locale}/tournament/new`}
+                className="px-6 py-3 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Toernooi aanmaken →
+              </Link>
+              <Link
+                href={`/${locale}/dashboard/getting-started`}
+                className="px-6 py-3 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white
+                           font-semibold rounded-xl transition-colors"
+              >
+                {t('gettingStartedLink')}
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

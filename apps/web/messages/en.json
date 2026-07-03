@@ -159,100 +159,6 @@
     "code_title": "Access code",
     "code_description": "Enter the 8-character code you received from the organizer.",
     "code_placeholder": "XXXX XXXX",
-    "code_hint": "Only letters A-HJ-NP-Z and numbers 2-9",
-    "start_scoring": "Start scoring →",
-    "invalid_code": "Invalid code",
-    "expired_code": "Code expired",
-    "network_error": "No internet connection. Please try again.",
-    "other_code": "← Other code",
-    "back_to_flights": "← Flights",
-    "no_flights": "No flights yet",
-    "no_flights_desc": "No flights have been created for this tournament yet.",
-    "players": "players",
-    "holes": "holes",
-    "submit_final": "Submit final",
-    "submit_title": "Submit scorecard",
-    "submit_confirm": "Are you sure all scores are correct? After submitting, scores cannot be changed.",
-    "submit_cancel": "Cancel",
-    "submit_processing": "Submitting...",
-    "submit_error": "Submission failed. Please try again.",
-    "tournament_not_found": "Tournament not found",
-    "data_not_found": "Data not found",
-    "load_error": "An error occurred while loading.",
-    "load_error_generic": "An error occurred.",
-    "retry": "Try again",
-    "access_code": {
-      "enter": "Enter your access code",
-      "submit": "Login with code",
-      "validating": "Validating..."
-    },
-    "flight": {
-      "select": "Choose a flight",
-      "no_flights": "No flights found for this tournament",
-      "players_count": "{count} players"
-    },
-    "hole_nav": {
-      "grid": "Hole overview",
-      "completed": "Completed",
-      "empty": "Not yet filled",
-      "verified": "Verified"
-    },
-    "auto_advance": {
-      "next_hole": "Next hole",
-      "finished": "Round completed"
-    },
-    "mode": {
-      "follow_flight": "Walk with flight",
-      "holes_per_flight": "Enter by hole"
-    },
-    "hole_per_flight": {
-      "select_hole": "Choose a hole",
-      "enter_all": "Enter scores for all players"
-    }
-  },
-  "leaderboard": {
-    "title": "Leaderboard",
-    "position": "Pos.",
-    "player": "Player",
-    "flight": "Flight",
-    "holes": "Holes",
-    "score": "Score",
-    "total": "Total",
-    "points": "Points",
-    "live": "LIVE",
-    "updated_at": "Updated at",
-    "no_scores": "No scores entered yet",
-    "auto_refresh": "auto-refreshes",
-    "search_placeholder": "Search player...",
-    "favorites": "Favorites",
-    "players": "Players",
-    "today": "Today",
-    "thru": "Thru",
-    "filter": {
-      "all": "All flights",
-      "flight": "Flight"
-    },
-    "tabs": {
-      "leaderboard": "Leaderboard",
-      "teetimes": "Tee Times",
-      "matchplay": "Matchplay",
-      "coursestats": "Course Stats"
-    },
-    "scorecard": {
-      "eagle": "Eagle",
-      "birdie": "Birdie",
-      "par": "Par",
-      "bogey": "Bogey",
-      "double_bogey": "Double+"
-    },
-    "info": "Tournament info",
-    "started_on_hole": "Started on hole {hole}"
-  },
-  "scorer": {
-    "page_title": "Enter scores",
-    "code_title": "Access code",
-    "code_description": "Enter the 8-character code you received from the organizer.",
-    "code_placeholder": "XXXX XXXX",
     "code_hint": "Letters A-HJ-NP-Z and digits 2-9 only",
     "start_scoring": "Start scoring →",
     "invalid_code": "Invalid code",
@@ -303,6 +209,44 @@
       "select_hole": "Choose a hole",
       "enter_all": "Scores for all players"
     }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "position": "Pos.",
+    "player": "Player",
+    "flight": "Flight",
+    "holes": "Holes",
+    "score": "Score",
+    "total": "Total",
+    "points": "Points",
+    "live": "LIVE",
+    "updated_at": "Updated at",
+    "no_scores": "No scores entered yet",
+    "auto_refresh": "auto-refreshes",
+    "search_placeholder": "Search player...",
+    "favorites": "Favorites",
+    "players": "Players",
+    "today": "Today",
+    "thru": "Thru",
+    "filter": {
+      "all": "All flights",
+      "flight": "Flight"
+    },
+    "tabs": {
+      "leaderboard": "Leaderboard",
+      "teetimes": "Tee Times",
+      "matchplay": "Matchplay",
+      "coursestats": "Course Stats"
+    },
+    "scorecard": {
+      "eagle": "Eagle",
+      "birdie": "Birdie",
+      "par": "Par",
+      "bogey": "Bogey",
+      "double_bogey": "Double+"
+    },
+    "info": "Tournament info",
+    "started_on_hole": "Started on hole {hole}"
   },
   "course": {
     "create": {
@@ -363,5 +307,47 @@
     "tournament_finished": "This tournament has ended. No more scores can be entered.",
     "tournament_paused": "This tournament is temporarily paused. Score entry is blocked.",
     "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes."
+  },
+  "dashboard": {
+    "title": "My tournaments",
+    "newTournament": "+ New tournament",
+    "empty": {
+      "title": "No tournaments yet",
+      "description": "Create your first tournament and share the leaderboard with participants.",
+      "cta": "Create tournament →"
+    },
+    "gettingStartedLink": "How does it work? →",
+    "gettingStarted": {
+      "title": "Getting started with OpenTour",
+      "subtitle": "Four steps from an empty dashboard to a live tournament with a real-time leaderboard.",
+      "backToDashboard": "← Back to dashboard",
+      "steps": {
+        "course": {
+          "title": "1. Choose or create a golf course",
+          "description": "Search for an existing course in the database, or create your own with par and stroke index per hole. Stroke index is required — without it, net scoring can't be calculated.",
+          "cta": "Create a course",
+          "tip": "Tip: save your course as ‘public’ so you can reuse it later."
+        },
+        "tournament": {
+          "title": "2. Create your tournament",
+          "description": "Give your tournament a name, pick a date and start time, select a course, and choose a scoring format (stroke play, stableford, or matchplay). Add players and flights in the same wizard — manually or via CSV upload.",
+          "cta": "New tournament",
+          "tip": "Tip: let flights be generated automatically based on the number of players, then adjust manually if needed."
+        },
+        "accessCodes": {
+          "title": "3. Share access codes with recorders",
+          "description": "Generate an 8-character access code per tournament. Share it via WhatsApp, print, or a QR code on the starting list. Recorders log in with it without an account and can enter scores for all flights.",
+          "tip": "Tip: a code is valid for 24 hours by default. Lost or misused? Deactivate it and create a new one."
+        },
+        "activate": {
+          "title": "4. Activate the tournament and share the leaderboard",
+          "description": "Change the status from ‘draft’ to ‘active’ once everything is ready. The leaderboard can be followed instantly via a shareable link — no account or app install needed, on any screen from phone to TV.",
+          "tip": "Tip: in case of weather or interruptions you can pause the tournament — spectators will see a clear banner with the reason."
+        }
+      },
+      "helpTitle": "Still have questions?",
+      "helpDescription": "OpenTour is free and open source. Questions, ideas, or bugs can be reported on GitHub.",
+      "helpCta": "View on GitHub"
+    }
   }
 }

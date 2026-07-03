@@ -307,5 +307,47 @@
     "tournament_finished": "Dit toernooi is afgesloten. Scores kunnen niet meer worden ingevoerd.",
     "tournament_paused": "Dit toernooi is tijdelijk gepauzeerd. Scores invoeren is geblokkeerd.",
     "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw."
+  },
+  "dashboard": {
+    "title": "Mijn toernooien",
+    "newTournament": "+ Nieuw toernooi",
+    "empty": {
+      "title": "Nog geen toernooien",
+      "description": "Maak je eerste toernooi aan en deel het leaderboard met deelnemers.",
+      "cta": "Toernooi aanmaken →"
+    },
+    "gettingStartedLink": "Hoe werkt het? →",
+    "gettingStarted": {
+      "title": "Aan de slag met OpenTour",
+      "subtitle": "In vier stappen van een leeg dashboard naar een lopend toernooi met live leaderboard.",
+      "backToDashboard": "← Terug naar dashboard",
+      "steps": {
+        "course": {
+          "title": "1. Kies of maak een golfbaan",
+          "description": "Zoek een bestaande baan uit de database, of maak je eigen baan aan met par en stroke index per hole. Stroke index is verplicht — zonder SI kun je geen net scores berekenen.",
+          "cta": "Baan aanmaken",
+          "tip": "Tip: sla je baan op als ‘publiek’ zodat je hem later opnieuw kunt gebruiken."
+        },
+        "tournament": {
+          "title": "2. Maak je toernooi aan",
+          "description": "Geef je toernooi een naam, kies datum en starttijd, selecteer een baan en kies het scoreformat (stroke play, stableford of matchplay). Spelers en flights voeg je in dezelfde wizard toe — handmatig of via CSV-upload.",
+          "cta": "Nieuw toernooi",
+          "tip": "Tip: laat flights automatisch genereren op basis van het aantal spelers, en pas ze daarna zo nodig handmatig aan."
+        },
+        "accessCodes": {
+          "title": "3. Deel toegangscodes met recorders",
+          "description": "Genereer een 8-tekens toegangscode per toernooi. Deel deze via WhatsApp, print of QR-code op de startlijst. Recorders loggen hiermee in zonder account en kunnen scores invoeren voor alle flights.",
+          "tip": "Tip: een code is standaard 24 uur geldig. Kwijt of misbruikt? Deactiveer hem en maak een nieuwe aan."
+        },
+        "activate": {
+          "title": "4. Activeer het toernooi en deel het leaderboard",
+          "description": "Zet de status van ‘concept’ naar ‘actief’ zodra alles klaarstaat. Het leaderboard is direct te volgen via een deelbare link — zonder account of app-installatie, op elk scherm van telefoon tot TV.",
+          "tip": "Tip: bij weersomstandigheden of onderbrekingen kun je het toernooi pauzeren — toeschouwers zien dan een duidelijke banner met de reden."
+        }
+      },
+      "helpTitle": "Nog vragen?",
+      "helpDescription": "OpenTour is gratis en open source. Vragen, ideeën of bugs kun je melden via GitHub.",
+      "helpCta": "Bekijk op GitHub"
+    }
   }
 }
