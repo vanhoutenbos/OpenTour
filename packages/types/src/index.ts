@@ -7,7 +7,7 @@
 // ENUMS & UNION TYPES
 // ============================================================
 
-export type TournamentFormat = 'stroke' | 'stableford' | 'match';
+export type TournamentFormat = 'strokeplay' | 'stableford' | 'matchplay';
 export type ScoringType = 'gross' | 'net';
 export type TournamentStatus = 'draft' | 'active' | 'paused' | 'finished';
 export type PlayerStatus = 'registered' | 'confirmed' | 'withdrawn' | 'dns' | 'dnf' | 'dsq';
