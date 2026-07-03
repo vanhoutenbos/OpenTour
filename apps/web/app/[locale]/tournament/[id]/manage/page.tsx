@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter } from 'next-intl';
@@ -123,7 +123,8 @@ function InputField({ label, value, onChange, type = 'text' }: { label: string; 
   );
 }
 
-export default function ManageTournamentPage({ params }: { params: { id: string; locale: string } }) {
+export default function ManageTournamentPage({ params: paramsPromise }: { params: Promise<{ id: string; locale: string }> }) {
+  const params = use(paramsPromise);
   const router = useRouter();
   const format = useFormatter();
   const supabase = getSupabaseBrowser();
