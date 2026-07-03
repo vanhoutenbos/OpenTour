@@ -52,15 +52,15 @@ button {
 /* Leaderboard specifieke utilities */
 @layer utilities {
   .score-eagle {
-    @apply ring-2 ring-green-400 bg-green-900/30 rounded-full;
+    @apply ring-2 ring-yellow-400 bg-yellow-900/20 rounded-full;
   }
   .score-birdie {
-    @apply ring-2 ring-green-500/60 rounded-full;
+    @apply ring-2 ring-red-400/70 rounded-full;
   }
   .score-bogey {
-    @apply ring-2 ring-amber-500/60 rounded;
+    @apply ring-2 ring-slate-400/70 rounded;
   }
   .score-double-bogey {
-    @apply ring-2 ring-red-500/60 bg-red-900/20 rounded;
+    @apply ring-2 ring-blue-400/70 bg-blue-900/20 rounded;
   }
 }

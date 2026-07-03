@@ -50,16 +50,16 @@ function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
   const baseClass = 'inline-flex items-center justify-center w-8 h-8 text-sm font-mono font-bold';
 
   if (isEagle) {
-    return <span className={`${baseClass} score-eagle text-green-400`}>{strokes}</span>;
+    return <span className={`${baseClass} score-eagle text-yellow-400`}>{strokes}</span>;
   }
   if (isBirdie) {
-    return <span className={`${baseClass} score-birdie text-green-400`}>{strokes}</span>;
+    return <span className={`${baseClass} score-birdie text-red-400`}>{strokes}</span>;
   }
   if (isBogey) {
-    return <span className={`${baseClass} score-bogey text-amber-400`}>{strokes}</span>;
+    return <span className={`${baseClass} score-bogey text-slate-400`}>{strokes}</span>;
   }
   if (strokes >= par + 2) {
-    return <span className={`${baseClass} score-double-bogey text-red-400`}>{strokes}</span>;
+    return <span className={`${baseClass} score-double-bogey text-blue-400`}>{strokes}</span>;
   }
 
   return <span className={`${baseClass} text-white`}>{strokes}</span>;
@@ -323,11 +323,11 @@ export function ScorecardDrawer({
 
               {/* Legenda */}
               <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-gray-500">
-                <span><span className="score-eagle inline-block w-5 h-5 text-center leading-5 text-green-400 mr-1">◉</span> Eagle</span>
-                <span><span className="score-birdie inline-block w-5 h-5 text-center leading-5 text-green-400 mr-1">○</span> Birdie</span>
+                <span><span className="score-eagle inline-block w-5 h-5 text-center leading-5 text-yellow-400 mr-1">◉</span> Eagle</span>
+                <span><span className="score-birdie inline-block w-5 h-5 text-center leading-5 text-red-400 mr-1">○</span> Birdie</span>
                 <span><span className="text-white mr-1">—</span> Par</span>
-                <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-amber-400 mr-1">□</span> Bogey</span>
-                <span><span className="score-double-bogey inline-block w-5 h-5 text-center leading-5 text-red-400 mr-1">▫</span> Double+</span>
+                <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-slate-400 mr-1">□</span> Bogey</span>
+                <span><span className="score-double-bogey inline-block w-5 h-5 text-center leading-5 text-blue-400 mr-1">▫</span> Double+</span>
                 <span className="text-gray-600">M = Meters · SI = Stroke Index</span>
               </div>
 

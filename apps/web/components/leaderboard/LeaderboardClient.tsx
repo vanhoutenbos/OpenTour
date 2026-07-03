@@ -209,10 +209,12 @@ export function LeaderboardClient({
             flightCount={flightCount ?? uniqueFlights.length}
           />
 
-          {/* Sponsor mid-banner */}
-          <div className="px-4 pt-4">
-            <SponsorBanner position="mid" />
-          </div>
+          {/* Sponsor mid-banner — tijdelijk verborgen, zie B21 in design doc */}
+          {false && (
+            <div className="px-4 pt-4">
+              <SponsorBanner position="mid" />
+            </div>
+          )}
         </>
       )}
 
