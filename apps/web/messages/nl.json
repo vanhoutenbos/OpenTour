@@ -48,10 +48,10 @@
       "submit": "Toernooi aanmaken"
     },
     "format": {
-      "stroke": "Stroke play",
-      "stableford": "Stableford",
-      "match": "Matchplay"
-    },
+          "strokeplay": "Stroke play",
+          "stableford": "Stableford",
+          "matchplay": "Matchplay"
+        },
     "scoring": {
       "gross": "Bruto",
       "net": "Netto"
