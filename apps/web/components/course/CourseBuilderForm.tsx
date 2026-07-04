@@ -403,10 +403,10 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-content">
           {isEditMode ? 'Golfbaan bewerken' : 'Golfbaan aanmaken'}
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-content-muted">
           {isEditMode
             ? 'Pas de basisgegevens aan. De structuur-editor volgt later als versiebeheer is ingericht.'
             : 'Maak handmatig een baan met teeboxen, lussen en holes. Nieuwe banen zijn standaard privé.'}
@@ -415,22 +415,22 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="md:col-span-2">
-          <label className="block text-sm text-gray-400 mb-1.5">Naam *</label>
+          <label className="block text-sm text-content-muted mb-1.5">Naam *</label>
           <input
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
             placeholder="bijv. Golfclub De Haenen"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1.5">Land</label>
+          <label className="block text-sm text-content-muted mb-1.5">Land</label>
           <input
             type="text"
             value={country}
             onChange={(event) => setCountry(event.target.value.toUpperCase())}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
             placeholder="NL"
             maxLength={2}
           />
@@ -438,12 +438,12 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       </div>
 
       <div>
-        <label className="block text-sm text-gray-400 mb-1.5">Locatie</label>
+        <label className="block text-sm text-content-muted mb-1.5">Locatie</label>
         <input
           type="text"
           value={location}
           onChange={(event) => setLocation(event.target.value)}
-          className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+          className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
           placeholder="bijv. Scherpenzeel"
         />
       </div>
@@ -451,11 +451,11 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       {!isEditMode && (
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">Teeboxen</h3>
+          <h3 className="text-sm font-semibold text-content">Teeboxen</h3>
           <button
             type="button"
             onClick={addTee}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-3 hover:bg-border-strong text-content"
           >
             + Teebox
           </button>
@@ -467,7 +467,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               <select
                 value={tee.color}
                 onChange={(event) => updateTee(index, { color: event.target.value })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
               >
                 <option value="">Kies teebox kleur</option>
                 {TEE_COLOR_OPTIONS.map((option) => (
@@ -490,7 +490,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
       {!isEditMode && (
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-white">Holes</h3>
+        <h3 className="text-sm font-semibold text-content">Holes</h3>
         <div className="flex flex-wrap gap-2">
           {tees.map((tee) => {
             const teeKey = toTeeKey(tee.color);
@@ -502,7 +502,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                   activeTeeKey === teeKey
                     ? 'bg-green-900/30 border-green-600 text-green-300'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+                    : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
                 }`}
               >
                 {tee.color || 'Onbekend'}
@@ -512,7 +512,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
         </div>
 
         <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-          <div className="grid grid-cols-4 gap-2 px-1 text-xs uppercase tracking-wide text-gray-500">
+          <div className="grid grid-cols-4 gap-2 px-1 text-xs uppercase tracking-wide text-content-muted">
             <span>Hole nummer</span>
             <span>Par nummer</span>
             <span>Stroke index</span>
@@ -520,13 +520,13 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
           </div>
           {holes.map((hole, index) => (
             <div key={index} className="grid grid-cols-4 gap-2">
-              <div className="px-3 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white text-sm">
+              <div className="px-3 py-2.5 bg-surface-2 border border-border rounded-lg text-content text-sm">
                 {hole.number}
               </div>
               <select
                 value={hole.par}
                 onChange={(event) => updateHole(index, { par: parseInt(event.target.value, 10) })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
               >
                 {Array.from({ length: 9 }).map((_, optionIndex) => (
                   <option key={optionIndex + 1} value={optionIndex + 1}>Par {optionIndex + 1}</option>
@@ -537,7 +537,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                 min={1}
                 value={hole.stroke_index}
                 onChange={(event) => updateHole(index, { stroke_index: parseInt(event.target.value, 10) || 1 })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
                 placeholder="SI"
               />
               <input
@@ -546,7 +546,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                 max={999}
                 value={hole.distance_meters_by_tee[activeTeeKey] ?? ''}
                 onChange={(event) => updateHoleDistance(index, activeTeeKey, event.target.value)}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
                 placeholder="meters"
               />
             </div>
@@ -562,14 +562,14 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               stroke_index: prev.length + 1,
               distance_meters_by_tee: Object.fromEntries(tees.map((tee) => [toTeeKey(tee.color), ''])),
             }])}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-3 hover:bg-border-strong text-content"
           >
             + Hole
           </button>
           <button
             type="button"
             onClick={() => setHoles((prev) => prev.slice(0, Math.max(9, prev.length - 1)))}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-3 hover:bg-border-strong text-content"
           >
             - Hole
           </button>
@@ -580,23 +580,23 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       {!isEditMode && (
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">Lussen</h3>
+          <h3 className="text-sm font-semibold text-content">Lussen</h3>
           <button
             type="button"
             onClick={addLoop}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+            className="text-xs px-3 py-1.5 rounded-lg bg-surface-3 hover:bg-border-strong text-content"
           >
             + Lus
           </button>
         </div>
 
         {loops.map((loop, index) => (
-          <div key={index} className="p-3 rounded-xl border border-gray-800 bg-gray-900 space-y-2">
+          <div key={index} className="p-3 rounded-xl border border-border bg-surface-2 space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <input
                 value={loop.name}
                 onChange={(event) => updateLoop(index, { name: event.target.value })}
-                className="px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
                 placeholder="Naam"
               />
               <button
@@ -609,8 +609,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               </button>
             </div>
 
-            <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
-              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Kies holes</p>
+            <div className="rounded-lg border border-border bg-surface p-3">
+              <p className="text-xs uppercase tracking-wide text-content-muted mb-2">Kies holes</p>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                 {holes.map((hole) => {
                   const checked = loop.hole_numbers.includes(hole.number);
@@ -620,7 +620,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                       className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-sm cursor-pointer transition-colors ${
                         checked
                           ? 'bg-green-900/20 border-green-700 text-green-200'
-                          : 'bg-gray-900 border-gray-800 text-gray-300 hover:border-gray-700'
+                          : 'bg-surface-2 border-border text-content-secondary hover:border-border-strong'
                       }`}
                     >
                       <input
@@ -632,7 +632,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                             : loop.hole_numbers.filter((value) => value !== hole.number);
                           updateLoop(index, { hole_numbers: next });
                         }}
-                        className="rounded border-gray-700 bg-gray-800"
+                        className="rounded border-border-strong bg-surface-3"
                       />
                       <span>Hole {hole.number}</span>
                     </label>
@@ -653,7 +653,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium"
+            className="flex-1 py-3 rounded-xl bg-surface-3 hover:bg-border-strong text-content font-medium"
           >
             Annuleren
           </button>

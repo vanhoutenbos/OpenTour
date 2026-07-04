@@ -95,14 +95,14 @@ export async function TournamentWidget({ locale }: Props) {
   const hasAny = activeTournaments.length > 0 || upcomingTournaments.length > 0;
 
   return (
-    <section id="tournaments" className="py-20 bg-gray-900">
+    <section id="tournaments" className="py-20 bg-surface-2">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h2 className="text-3xl font-bold text-white">
+            <h2 className="text-3xl font-bold text-content">
               {locale === 'nl' ? 'Wedstrijden' : 'Tournaments'}
             </h2>
-            <p className="text-gray-400 mt-1">
+            <p className="text-content-muted mt-1">
               {locale === 'nl'
                 ? 'Volg live scores of ontdek aankomende wedstrijden'
                 : 'Follow live scores or discover upcoming tournaments'}
@@ -111,12 +111,12 @@ export async function TournamentWidget({ locale }: Props) {
         </div>
 
         {!hasAny ? (
-          <div className="text-center py-16 bg-gray-950/50 rounded-2xl border border-gray-800">
+          <div className="text-center py-16 bg-surface/50 rounded-2xl border border-border">
             <div className="text-5xl mb-4">🏌️</div>
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-xl font-semibold text-content mb-2">
               {locale === 'nl' ? 'Nog geen wedstrijden gepland' : 'No tournaments scheduled yet'}
             </h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-content-muted mb-6 max-w-md mx-auto">
               {locale === 'nl'
                 ? 'Wees de eerste! Maak een toernooi aan en nodig je club of vrienden uit.'
                 : 'Be the first! Create a tournament and invite your club or friends.'}
@@ -140,7 +140,7 @@ export async function TournamentWidget({ locale }: Props) {
                   <h3 className="text-lg font-semibold text-green-400 uppercase tracking-wider">
                     {locale === 'nl' ? 'Live' : 'Live'}
                   </h3>
-                  <span className="text-sm text-gray-500">({activeTournaments.length})</span>
+                  <span className="text-sm text-content-muted">({activeTournaments.length})</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {activeTournaments.map((t) => (
@@ -157,7 +157,7 @@ export async function TournamentWidget({ locale }: Props) {
                   <h3 className="text-lg font-semibold text-blue-400 uppercase tracking-wider">
                     {locale === 'nl' ? 'Aankomend' : 'Upcoming'}
                   </h3>
-                  <span className="text-sm text-gray-500">({upcomingTournaments.length})</span>
+                  <span className="text-sm text-content-muted">({upcomingTournaments.length})</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {upcomingTournaments.map((t) => (

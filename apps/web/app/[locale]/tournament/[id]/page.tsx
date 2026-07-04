@@ -158,7 +158,7 @@ export default async function LeaderboardPage({ params }: Props) {
   ]);
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
+    <main className="min-h-screen bg-surface text-content">
       {/* Pause banner */}
       {tournament.status === 'paused' && tournament.pause_reason && (
         <div className="bg-yellow-900/40 border-b border-yellow-700 px-4 py-3">
@@ -198,11 +198,11 @@ function LeaderboardSkeleton() {
   return (
     <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto px-4 py-4">
       <div className="animate-pulse space-y-4">
-        <div className="h-16 bg-gray-800 rounded-xl" />
-        <div className="h-12 bg-gray-800 rounded-lg" />
-        <div className="h-14 bg-gray-800 rounded-lg" />
+        <div className="h-16 bg-surface-3 rounded-xl" />
+        <div className="h-12 bg-surface-3 rounded-lg" />
+        <div className="h-14 bg-surface-3 rounded-lg" />
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-14 bg-gray-800 rounded-lg" />
+          <div key={i} className="h-14 bg-surface-3 rounded-lg" />
         ))}
       </div>
     </div>

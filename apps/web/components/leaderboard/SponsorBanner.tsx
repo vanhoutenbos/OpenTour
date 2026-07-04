@@ -14,10 +14,10 @@ export function SponsorBanner({ position = 'top', className = '' }: Props) {
 
   return (
     <div
-      className={`${heights[position]} bg-gray-900/50 border border-gray-800/50 rounded-xl flex items-center justify-center ${className}`}
+      className={`${heights[position]} bg-surface-2/50 border border-border/50 rounded-xl flex items-center justify-center ${className}`}
       data-ad-slot={`sponsor-${position}`}
     >
-      <span className="text-xs text-gray-600 tracking-widest uppercase">
+      <span className="text-xs text-content-muted tracking-widest uppercase">
         Sponsor Banner — {position}
       </span>
     </div>

@@ -192,7 +192,7 @@ export default function ScoreGrid({
     if (diff === 1) return 'text-yellow-400';
     if (diff === 2) return 'text-orange-400';
     if (diff >= 3) return 'text-red-400';
-    return 'text-white';
+    return 'text-content';
   };
 
   const getStablefordPoints = (strokes: number, par: number) => {
@@ -205,12 +205,12 @@ export default function ScoreGrid({
 
   if (loading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+      <div className="bg-surface-2 border border-border rounded-xl p-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-800 rounded w-1/4"></div>
+          <div className="h-6 bg-surface-3 rounded w-1/4"></div>
           <div className="space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-10 bg-gray-800 rounded"></div>
+              <div key={i} className="h-10 bg-surface-3 rounded"></div>
             ))}
           </div>
         </div>
@@ -220,10 +220,10 @@ export default function ScoreGrid({
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
-          <h3 className="text-lg font-semibold text-white">Score in Excel-stijl</h3>
-          <p className="text-sm text-gray-400 mt-1">
+      <div className="bg-surface-2 border border-border rounded-xl overflow-hidden">
+        <div className="bg-surface-3 px-6 py-4 border-b border-border-strong">
+          <h3 className="text-lg font-semibold text-content">Score in Excel-stijl</h3>
+          <p className="text-sm text-content-muted mt-1">
             {sortedPlayers.length} spelers × {sortedHoles.length} holes ronde {currentRound}
             {lastSaved && ` • Laatst opgeslagen: ${format.dateTime(lastSaved, { hour: '2-digit', minute: '2-digit' })}`}
             {isSaving && ' • Bezig met opslaan...'}
@@ -240,8 +240,8 @@ export default function ScoreGrid({
               {tournamentFormat === 'stableford' && <col className="w-16" />}
             </colgroup>
             <thead>
-              <tr className="bg-gray-800 border-b border-gray-700">
-                <th className="px-2 sm:px-3 py-2 text-left text-xs sm:text-sm font-medium text-gray-300 sticky left-0 bg-gray-800 z-10">
+              <tr className="bg-surface-3 border-b border-border-strong">
+                <th className="px-2 sm:px-3 py-2 text-left text-xs sm:text-sm font-medium text-content-secondary sticky left-0 bg-surface-3 z-10">
                   Speler
                 </th>
                 {sortedHoles.map((hole) => (
@@ -251,15 +251,15 @@ export default function ScoreGrid({
                     className={`px-0.5 py-2 text-center text-xs font-medium transition-colors ${
                       highlightedHole === hole.number
                         ? 'text-green-300 bg-green-900/20'
-                        : 'text-gray-300'
+                        : 'text-content-secondary'
                     }`}
                   >
                     <div className="leading-tight">{hole.number}</div>
-                    <div className="text-[10px] text-gray-500 leading-tight">Par {hole.par}</div>
+                    <div className="text-[10px] text-content-muted leading-tight">Par {hole.par}</div>
                   </th>
                 ))}
                 {tournamentFormat === 'stableford' && (
-                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-300">
+                  <th className="px-2 py-2 text-center text-xs font-medium text-content-secondary">
                     Stbf
                   </th>
                 )}
@@ -269,26 +269,26 @@ export default function ScoreGrid({
               {sortedPlayers.map((player) => (
                 <tr
                   key={player.id}
-                  className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
+                  className="border-b border-border hover:bg-surface-3/50 transition-colors"
                 >
-                  <td className="px-2 sm:px-3 py-1.5 sticky left-0 bg-gray-900 border-r border-gray-800 z-10">
-                    <div className="font-medium text-white text-xs sm:text-sm truncate">{getPlayerDisplayName(player)}</div>
-                    <div className="text-[10px] text-gray-500 capitalize">{player.status}</div>
+                  <td className="px-2 sm:px-3 py-1.5 sticky left-0 bg-surface-2 border-r border-border z-10">
+                    <div className="font-medium text-content text-xs sm:text-sm truncate">{getPlayerDisplayName(player)}</div>
+                    <div className="text-[10px] text-content-muted capitalize">{player.status}</div>
                   </td>
                   {sortedHoles.map((hole) => {
                     const key = `${player.id}-${hole.id}`;
                     const strokes = scores.get(key);  // undefined = geen score ingevoerd
                     const hasScore = strokes !== undefined;
 
-                    let cellClass = 'bg-gray-800 border-gray-700 text-gray-400';
+                    let cellClass = 'bg-surface-3 border-border-strong text-score-muted';
                     if (hasScore) {
                       if (tournamentFormat === 'stroke') {
-                        cellClass = `bg-gray-800 border-gray-700 ${getStrokeplayClassification(strokes!, hole.par as number)}`;
+                        cellClass = `bg-surface-3 border-border-strong ${getStrokeplayClassification(strokes!, hole.par as number)}`;
                       } else if (tournamentFormat === 'stableford') {
                         const points = getStablefordPoints(strokes!, hole.par as number);
-                        if (points === 0) cellClass = 'bg-gray-800 border-gray-700 text-gray-600';
-                        else if (points === 4) cellClass = 'bg-gray-800 border-gray-700 font-bold text-green-400';
-                        else cellClass = 'bg-gray-800 border-gray-700 text-green-300';
+                        if (points === 0) cellClass = 'bg-surface-3 border-border-strong text-score-muted';
+                        else if (points === 4) cellClass = 'bg-surface-3 border-border-strong font-bold text-green-400';
+                        else cellClass = 'bg-surface-3 border-border-strong text-green-300';
                       }
                     }
 
@@ -341,12 +341,12 @@ export default function ScoreGrid({
         </div>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <div className="bg-surface-2 border border-border rounded-xl p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-content-muted">
             Typ om direct op te slaan • Klik op een vakje om te selecteren
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-content-muted">
             Scores 1-99 • Laatst opgeslagen: {lastSaved && format.dateTime(lastSaved, { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>

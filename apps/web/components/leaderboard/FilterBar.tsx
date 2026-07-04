@@ -50,17 +50,17 @@ export function FilterBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 py-3 border-b border-gray-800/60">
+    <div className="flex flex-wrap items-center gap-3 py-3 border-b border-border/60">
       {/* Zoek */}
       <div className="relative flex-1 min-w-[160px] max-w-xs">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted text-sm">🔍</span>
         <input
           ref={inputRef}
           type="text"
           defaultValue={searchQuery}
           onChange={(e) => handleSearchInput(e.target.value)}
           placeholder={t('search_placeholder')}
-          className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
+          className="w-full pl-9 pr-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm placeholder-content-muted focus:outline-none focus:border-green-600 transition-colors"
         />
       </div>
 
@@ -69,7 +69,7 @@ export function FilterBar({
         <select
           value={selectedFlight}
           onChange={(e) => onFlightChange(e.target.value)}
-          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+          className="px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
         >
           <option value="">{t('filter.all')}</option>
           {flights.map((f) => (
@@ -85,7 +85,7 @@ export function FilterBar({
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             showFavoritesOnly
               ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-600/40'
-              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'
+              : 'bg-surface-3 text-content-muted border border-border-strong hover:border-border-strong'
           }`}
         >
           <span className={showFavoritesOnly ? '' : 'opacity-40'}>★</span>
@@ -99,7 +99,7 @@ export function FilterBar({
       )}
 
       {/* Stats rechts */}
-      <div className="hidden sm:flex items-center gap-3 ml-auto text-xs text-gray-500">
+      <div className="hidden sm:flex items-center gap-3 ml-auto text-xs text-content-muted">
         <span>{playerCount} {t('players').toLowerCase()}</span>
         {lastUpdated && (
           <span>

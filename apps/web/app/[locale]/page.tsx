@@ -41,7 +41,7 @@ export default async function HomePage({ params }: Props) {
   const isLoggedIn = await getIsLoggedIn();
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-surface">
       <HeroSection locale={locale} isLoggedIn={isLoggedIn} />
       <TournamentWidget locale={locale} />
       <AboutSection locale={locale} />

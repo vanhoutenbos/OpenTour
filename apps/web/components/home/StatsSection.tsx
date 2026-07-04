@@ -86,8 +86,8 @@ export async function StatsSection({ locale }: Props) {
           {items.map((item, i) => (
             <div key={i} className="text-center">
               <div className="text-3xl mb-2">{item.icon}</div>
-              <div className="text-3xl font-bold text-white">{item.value}</div>
-              <div className="text-sm text-gray-500 mt-1">{item.label}</div>
+              <div className="text-3xl font-bold text-content">{item.value}</div>
+              <div className="text-sm text-content-muted mt-1">{item.label}</div>
             </div>
           ))}
         </div>

@@ -217,19 +217,19 @@ export default function EditCoursePage() {
   }, [courseId]);
 
   return (
-    <main className="min-h-screen bg-gray-950 py-8 px-4">
+    <main className="min-h-screen bg-surface py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Golfbaan bewerken</h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <h1 className="text-2xl font-bold text-content">Golfbaan bewerken</h1>
+            <p className="text-sm text-content-muted mt-1">
               Alleen de eigenaar kan deze baan aanpassen.
             </p>
           </div>
 
           <Link
             href={`/${locale}/course`}
-            className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm"
+            className="px-4 py-2 rounded-xl bg-surface-3 hover:bg-surface-4 text-content-secondary text-sm"
           >
             Terug naar beheer
           </Link>
@@ -237,43 +237,43 @@ export default function EditCoursePage() {
 
         {courseHeader && !loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Baan</p>
-              <p className="text-white font-semibold mt-1 truncate">{courseHeader.name}</p>
+            <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+              <p className="text-xs text-content-muted uppercase tracking-wide">Baan</p>
+              <p className="text-content font-semibold mt-1 truncate">{courseHeader.name}</p>
             </div>
-            <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Holes</p>
-              <p className="text-2xl font-bold text-white mt-1">{courseHeader.holes_count}</p>
+            <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+              <p className="text-xs text-content-muted uppercase tracking-wide">Holes</p>
+              <p className="text-2xl font-bold text-content mt-1">{courseHeader.holes_count}</p>
             </div>
-            <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Teeboxen</p>
-              <p className="text-2xl font-bold text-white mt-1">{teeCount}</p>
+            <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+              <p className="text-xs text-content-muted uppercase tracking-wide">Teeboxen</p>
+              <p className="text-2xl font-bold text-content mt-1">{teeCount}</p>
             </div>
-            <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Lussen</p>
-              <p className="text-2xl font-bold text-white mt-1">{loopCount}</p>
+            <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+              <p className="text-xs text-content-muted uppercase tracking-wide">Lussen</p>
+              <p className="text-2xl font-bold text-content mt-1">{loopCount}</p>
             </div>
           </div>
         )}
 
         {courseHeader && !loading && !error && (
-          <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 md:p-6 space-y-5">
+          <div className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6 space-y-5">
             <div>
-              <h2 className="text-lg font-semibold text-white">Structuur in één oogopslag</h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <h2 className="text-lg font-semibold text-content">Structuur in één oogopslag</h2>
+              <p className="text-sm text-content-muted mt-1">
                 Dit is de huidige indeling van de baan. Alleen de eigenaar kan deze gegevens aanpassen.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-gray-800 bg-gray-950 p-4 space-y-2">
-                <p className="text-sm font-medium text-white">Teeboxen</p>
+              <div className="rounded-xl border border-border bg-surface p-4 space-y-2">
+                <p className="text-sm font-medium text-content">Teeboxen</p>
                 <div className="flex flex-wrap gap-2">
                   {structureView.teeLabels.length === 0 ? (
-                    <span className="text-sm text-gray-500">Geen teeboxen</span>
+                    <span className="text-sm text-content-muted">Geen teeboxen</span>
                   ) : (
                     structureView.teeLabels.map((label) => (
-                      <span key={label} className="text-xs px-2.5 py-1 rounded-md bg-gray-800 text-gray-200">
+                      <span key={label} className="text-xs px-2.5 py-1 rounded-md bg-surface-3 text-content-secondary">
                         {label}
                       </span>
                     ))
@@ -281,32 +281,32 @@ export default function EditCoursePage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-800 bg-gray-950 p-4 space-y-2">
-                <p className="text-sm font-medium text-white">Laatste status</p>
-                <p className="text-sm text-gray-400">
+              <div className="rounded-xl border border-border bg-surface p-4 space-y-2">
+                <p className="text-sm font-medium text-content">Laatste status</p>
+                <p className="text-sm text-content-muted">
                   Submit/publicatie komt later. Voor nu is deze baan alleen zichtbaar en bewerkbaar voor de eigenaar.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-sm font-medium text-white">Lussen</p>
+              <p className="text-sm font-medium text-content">Lussen</p>
               <div className="space-y-2">
                 {structureView.loopCards.length === 0 ? (
-                  <p className="text-sm text-gray-500">Geen lussen aanwezig.</p>
+                  <p className="text-sm text-content-muted">Geen lussen aanwezig.</p>
                 ) : (
                   structureView.loopCards.map((loop) => (
-                    <div key={loop.id} className="rounded-xl border border-gray-800 bg-gray-950 px-4 py-3">
+                    <div key={loop.id} className="rounded-xl border border-border bg-surface px-4 py-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">{loop.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-sm font-semibold text-content">{loop.name}</p>
+                          <p className="text-xs text-content-muted mt-0.5">
                             {loop.loopType}
                           </p>
                         </div>
-                        <span className="text-xs text-gray-400">{loop.holeNumbers.split(',').filter(Boolean).length} holes</span>
+                        <span className="text-xs text-content-muted">{loop.holeNumbers.split(',').filter(Boolean).length} holes</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2 break-words">{loop.holeNumbers || 'Geen holes gekoppeld'}</p>
+                      <p className="text-xs text-content-muted mt-2 break-words">{loop.holeNumbers || 'Geen holes gekoppeld'}</p>
                     </div>
                   ))
                 )}
@@ -314,17 +314,17 @@ export default function EditCoursePage() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-sm font-medium text-white">Holes</p>
-              <div className="overflow-hidden rounded-xl border border-gray-800">
-                <div className="grid grid-cols-4 bg-gray-900 px-4 py-2 text-xs uppercase tracking-wide text-gray-500">
+              <p className="text-sm font-medium text-content">Holes</p>
+              <div className="overflow-hidden rounded-xl border border-border">
+                <div className="grid grid-cols-4 bg-surface-2 px-4 py-2 text-xs uppercase tracking-wide text-content-muted">
                   <span>Nr</span>
                   <span>Par</span>
                   <span>SI</span>
                   <span>Meter</span>
                 </div>
-                <div className="divide-y divide-gray-800 bg-gray-950">
+                <div className="divide-y divide-border bg-surface">
                   {structureView.holeRows.map((hole) => (
-                    <div key={hole.number} className="grid grid-cols-4 px-4 py-2 text-sm text-gray-200">
+                    <div key={hole.number} className="grid grid-cols-4 px-4 py-2 text-sm text-content-secondary">
                       <span>{hole.number}</span>
                       <span>{hole.par}</span>
                       <span>{hole.stroke_index}</span>
@@ -337,10 +337,10 @@ export default function EditCoursePage() {
           </div>
         )}
 
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-5 md:p-6">
+        <div className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6">
           {loading ? (
-            <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <span className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 text-content-muted text-sm">
+              <span className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin" />
               Laden...
             </div>
           ) : error ? (

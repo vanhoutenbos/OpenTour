@@ -96,13 +96,13 @@ export function FeaturesSection({ locale }: Props) {
   const features = locale === 'nl' ? featuresNl : featuresEn;
 
   return (
-    <section id="features" className="py-20 bg-gray-900/50">
+    <section id="features" className="py-20 bg-surface-2/50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-content mb-4">
             {locale === 'nl' ? 'Alles wat je nodig hebt' : 'Everything you need'}
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className="text-content-muted max-w-2xl mx-auto">
             {locale === 'nl'
               ? 'Van aanmaken tot uitslag — OpenTour begeleidt je bij elke stap.'
               : 'From creation to results — OpenTour guides you through every step.'}
@@ -113,13 +113,13 @@ export function FeaturesSection({ locale }: Props) {
           {features.map((feature, i) => (
             <div
               key={i}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-green-800/40 transition-colors"
+              className="bg-surface-2 border border-border rounded-xl p-6 hover:border-green-800/40 transition-colors"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-900/30 border border-green-800/40 text-green-400 mb-4">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
+              <h3 className="text-lg font-semibold text-content mb-2">{feature.title}</h3>
+              <p className="text-content-muted text-sm leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>

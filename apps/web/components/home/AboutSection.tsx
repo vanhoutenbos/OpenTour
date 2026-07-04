@@ -9,10 +9,10 @@ export function AboutSection({ locale }: Props) {
     <section id="about" className="py-20">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-14">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-content mb-4">
             {isNl ? 'Wat is OpenTour?' : 'What is OpenTour?'}
           </h2>
-          <p className="text-lg text-gray-400 leading-relaxed">
+          <p className="text-lg text-content-muted leading-relaxed">
             {isNl
               ? 'OpenTour is het gratis, open source platform waarmee golfclubs, vriendengroepen en verenigingen eenvoudig toernooien organiseren met live leaderboards — zonder dure abonnementen, zonder lock-in.'
               : 'OpenTour is the free, open source platform for golf clubs, friend groups, and associations to easily organize tournaments with live leaderboards — no subscriptions, no lock-in.'}
@@ -53,8 +53,8 @@ export function AboutSection({ locale }: Props) {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-900/30 border border-green-800/40 text-green-400 mb-4">
                 {item.icon}
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              <h3 className="text-lg font-semibold text-content mb-2">{item.title}</h3>
+              <p className="text-content-muted text-sm leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>

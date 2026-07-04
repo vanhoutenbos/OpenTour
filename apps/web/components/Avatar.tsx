@@ -51,7 +51,7 @@ export function Avatar({ name, imageUrl, size = 'sm' }: Props) {
       <img
         src={imageUrl}
         alt={name ?? ''}
-        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-gray-700`}
+        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-border-strong`}
       />
     );
   }
@@ -59,7 +59,7 @@ export function Avatar({ name, imageUrl, size = 'sm' }: Props) {
   if (name) {
     return (
       <span
-        className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${colors[colorIndex]} flex items-center justify-center font-bold text-white ring-2 ring-gray-700 shadow-sm`}
+        className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${colors[colorIndex]} flex items-center justify-center font-bold text-content ring-2 ring-border-strong shadow-sm`}
       >
         {getInitials(name)}
       </span>
@@ -68,7 +68,7 @@ export function Avatar({ name, imageUrl, size = 'sm' }: Props) {
 
   return (
     <span
-      className={`${sizeClasses[size]} rounded-full bg-gray-800 flex items-center justify-center text-gray-400 ring-2 ring-gray-700`}
+      className={`${sizeClasses[size]} rounded-full bg-surface-3 flex items-center justify-center text-content-muted ring-2 ring-border-strong`}
     >
       {fallbackIcon}
     </span>

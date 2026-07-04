@@ -2,10 +2,10 @@
 // route handler mist. Normaal wordt auth afgehandeld door /app/auth/callback/route.ts
 export default function AuthCallbackFallback() {
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center">
+    <main className="min-h-screen bg-surface flex items-center justify-center">
       <div className="text-center">
         <div className="text-4xl mb-4">🏌️</div>
-        <p className="text-gray-400">Inloggen...</p>
+        <p className="text-content-muted">Inloggen...</p>
       </div>
     </main>
   );

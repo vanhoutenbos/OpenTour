@@ -220,7 +220,7 @@ export function LeaderboardClient({
 
       {/* Subtab navigation */}
       {visibleTabs.length > 1 && (
-        <div className="border-b border-gray-800 px-4">
+        <div className="border-b border-border px-4">
           <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto flex gap-4 overflow-x-auto scrollbar-none">
             {visibleTabs.map(({ key, label }) => (
               <button
@@ -228,8 +228,8 @@ export function LeaderboardClient({
                 onClick={() => setActiveTab(key)}
                 className={`py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 ${
                   activeTab === key
-                    ? 'border-green-500 text-white'
-                    : 'border-transparent text-gray-400 hover:text-white'
+                    ? 'border-green-500 text-content'
+                    : 'border-transparent text-content-muted hover:text-content'
                 }`}
               >
                 {label}
@@ -262,13 +262,13 @@ export function LeaderboardClient({
             {loading && (
               <div className="animate-pulse space-y-3">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-gray-800 rounded-lg" />
+                  <div key={i} className="h-14 bg-surface-3 rounded-lg" />
                 ))}
               </div>
             )}
 
             {error && (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-content-muted">
                 <p>{error}</p>
                 <button
                   onClick={poll}

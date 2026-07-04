@@ -19,7 +19,7 @@ interface HoleNavigatorProps {
 }
 
 const statusStyle: Record<HoleStatus, { bg: string; border: string; labelKey: string }> = {
-  empty: { bg: 'bg-gray-800', border: 'border-gray-700', labelKey: 'hole_nav.empty' },
+  empty: { bg: 'bg-surface-3', border: 'border-border-strong', labelKey: 'hole_nav.empty' },
   filled: { bg: 'bg-green-900/40', border: 'border-green-800', labelKey: 'hole_nav.completed' },
   verified: { bg: 'bg-blue-900/40', border: 'border-blue-700', labelKey: 'hole_nav.verified' },
 };
@@ -28,19 +28,19 @@ export function HoleNavigator({ holes, holeStatus, selectedHole, onHoleSelect }:
   const t = useTranslations('scorer');
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+    <div className="bg-surface-2 border border-border rounded-xl p-3">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t('hole_nav.grid')}</span>
+        <span className="text-xs font-medium text-content-muted uppercase tracking-wider">{t('hole_nav.grid')}</span>
         <div className="flex gap-2 ml-auto">
-          <span className="flex items-center gap-1 text-[10px] text-gray-500">
-            <span className="w-2 h-2 rounded-sm bg-gray-700 inline-block" />
+          <span className="flex items-center gap-1 text-[10px] text-content-muted">
+            <span className="w-2 h-2 rounded-sm bg-surface-3 inline-block" />
             {t('hole_nav.empty')}
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-gray-500">
+          <span className="flex items-center gap-1 text-[10px] text-content-muted">
             <span className="w-2 h-2 rounded-sm bg-green-800 inline-block" />
             {t('hole_nav.completed')}
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-gray-500">
+          <span className="flex items-center gap-1 text-[10px] text-content-muted">
             <span className="w-2 h-2 rounded-sm bg-blue-800 inline-block" />
             {t('hole_nav.verified')}
           </span>
@@ -63,12 +63,12 @@ export function HoleNavigator({ holes, holeStatus, selectedHole, onHoleSelect }:
                 ${style.bg} ${style.border}
                 ${isSelected
                   ? 'ring-2 ring-blue-500 border-blue-500'
-                  : 'hover:border-gray-500 active:scale-95'
+                  : 'hover:border-border-strong active:scale-95'
                 }
               `}
             >
-              <span className="text-xs font-bold leading-none text-white">{hole.number}</span>
-              <span className="text-[9px] leading-none text-gray-500 mt-0.5">{hole.par}</span>
+              <span className="text-xs font-bold leading-none text-content">{hole.number}</span>
+              <span className="text-[9px] leading-none text-content-muted mt-0.5">{hole.par}</span>
             </button>
           );
         })}

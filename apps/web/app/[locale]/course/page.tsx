@@ -58,12 +58,12 @@ export default function CoursesPage() {
   const totalHoles = useMemo(() => courses.reduce((sum, course) => sum + course.holes_count, 0), [courses]);
 
   return (
-    <main className="min-h-screen bg-gray-950 py-8 px-4">
+    <main className="min-h-screen bg-surface py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Golfbanen beheren</h1>
-            <p className="text-sm text-gray-400 mt-1">Beheer je eigen banen, lussen, teeboxen en holes.</p>
+            <h1 className="text-2xl font-bold text-content">Golfbanen beheren</h1>
+            <p className="text-sm text-content-muted mt-1">Beheer je eigen banen, lussen, teeboxen en holes.</p>
           </div>
 
           <Link
@@ -75,36 +75,36 @@ export default function CoursesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Aantal banen</p>
-            <p className="text-2xl font-bold text-white mt-1">{courses.length}</p>
+          <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+            <p className="text-xs text-content-muted uppercase tracking-wide">Aantal banen</p>
+            <p className="text-2xl font-bold text-content mt-1">{courses.length}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Totaal holes</p>
-            <p className="text-2xl font-bold text-white mt-1">{totalHoles}</p>
+          <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+            <p className="text-xs text-content-muted uppercase tracking-wide">Totaal holes</p>
+            <p className="text-2xl font-bold text-content mt-1">{totalHoles}</p>
           </div>
-          <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Publicatiestatus</p>
-            <p className="text-sm text-gray-300 mt-2">Alle banen zijn eigenaar-gebonden. Submit/publicatie komt later.</p>
+          <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+            <p className="text-xs text-content-muted uppercase tracking-wide">Publicatiestatus</p>
+            <p className="text-sm text-content-secondary mt-2">Alle banen zijn eigenaar-gebonden. Submit/publicatie komt later.</p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 text-sm text-gray-300">
+        <div className="rounded-xl border border-border bg-surface-2 px-4 py-3 text-sm text-content-secondary">
           Vanuit dit overzicht kun je een baan bewerken als eigenaar of direct opnieuw gebruiken in een nieuw toernooi.
         </div>
 
-        <section className="rounded-2xl border border-gray-800 bg-gray-900 p-5 md:p-6">
+        <section className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6">
           {loading ? (
-            <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <span className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 text-content-muted text-sm">
+              <span className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin" />
               Laden...
             </div>
           ) : error ? (
             <p className="text-sm text-red-400">{error}</p>
           ) : courses.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-gray-700 rounded-xl">
-              <p className="text-gray-300 font-medium">Je hebt nog geen banen aangemaakt.</p>
-              <p className="text-gray-500 text-sm mt-1">Start met een baan en gebruik die direct in Nieuw Toernooi.</p>
+            <div className="text-center py-10 border border-dashed border-border-strong rounded-xl">
+              <p className="text-content-secondary font-medium">Je hebt nog geen banen aangemaakt.</p>
+              <p className="text-content-muted text-sm mt-1">Start met een baan en gebruik die direct in Nieuw Toernooi.</p>
               <Link
                 href={`/${locale}/course/new`}
                 className="inline-block mt-4 text-sm text-green-400 hover:text-green-300"
@@ -117,27 +117,27 @@ export default function CoursesPage() {
               {courses.map((course) => (
                 <div
                   key={course.id}
-                  className="rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 flex items-center justify-between gap-4"
+                  className="rounded-xl border border-border bg-surface px-4 py-3 flex items-center justify-between gap-4"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{course.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                    <p className="text-sm font-medium text-content truncate">{course.name}</p>
+                    <p className="text-xs text-content-muted mt-0.5 truncate">
                       {course.location || 'Locatie onbekend'} · {course.country} · {course.holes_count} holes
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs px-2.5 py-1 rounded-md border border-gray-700 text-gray-400">
+                    <span className="text-xs px-2.5 py-1 rounded-md border border-border-strong text-content-muted">
                       {course.is_public ? 'Publiek' : 'Privé'}
                     </span>
                     <Link
                       href={`/${locale}/course/${course.id}`}
-                      className="text-xs px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"
+                      className="text-xs px-2.5 py-1 rounded-md bg-surface-3 hover:bg-surface-4 text-content-secondary"
                     >
                       Bewerken
                     </Link>
                     <Link
                       href={`/${locale}/tournament/new`}
-                      className="text-xs px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"
+                      className="text-xs px-2.5 py-1 rounded-md bg-surface-3 hover:bg-surface-4 text-content-secondary"
                     >
                       Gebruik in toernooi
                     </Link>

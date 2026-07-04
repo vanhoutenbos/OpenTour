@@ -44,7 +44,7 @@ function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
   isEagle: boolean;
 }) {
   if (strokes === undefined || strokes === null) {
-    return <span className="text-gray-600">-</span>;
+    return <span className="text-content-muted">-</span>;
   }
 
   const baseClass = 'inline-flex items-center justify-center w-8 h-8 text-sm font-mono font-bold';
@@ -56,13 +56,13 @@ function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
     return <span className={`${baseClass} score-birdie text-red-400`}>{strokes}</span>;
   }
   if (isBogey) {
-    return <span className={`${baseClass} score-bogey text-slate-400`}>{strokes}</span>;
+    return <span className={`${baseClass} score-bogey text-score-muted`}>{strokes}</span>;
   }
   if (strokes >= par + 2) {
     return <span className={`${baseClass} score-double-bogey text-blue-400`}>{strokes}</span>;
   }
 
-  return <span className={`${baseClass} text-white`}>{strokes}</span>;
+  return <span className={`${baseClass} text-content`}>{strokes}</span>;
 }
 
 export function ScorecardDrawer({
@@ -112,14 +112,14 @@ export function ScorecardDrawer({
     holes: PlayerHoleScore[],
     renderCell: (hole: PlayerHoleScore) => React.ReactNode
   ) => (
-    <tr className="border-b border-gray-800/60 last:border-b-0">
-      <td className="py-1.5 pr-3 text-xs text-gray-500 font-medium w-10">{label}</td>
+    <tr className="border-b border-border/60 last:border-b-0">
+      <td className="py-1.5 pr-3 text-xs text-content-muted font-medium w-10">{label}</td>
       {holes.map((h) => (
         <td key={h.hole_number} className="py-1.5 text-center">
           {renderCell(h)}
         </td>
       ))}
-      <td className="py-1.5 pl-3 text-right text-xs text-gray-500 font-medium" />
+      <td className="py-1.5 pl-3 text-right text-xs text-content-muted font-medium" />
     </tr>
   );
 
@@ -136,20 +136,20 @@ export function ScorecardDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
-        className="relative w-full max-w-2xl bg-gray-900 border-l border-gray-800 h-full overflow-y-auto shadow-[0_0_40px_rgba(0,0,0,0.45)] animate-slide-in-right"
+        className="relative w-full max-w-2xl bg-surface-2 border-l border-border h-full overflow-y-auto shadow-[0_0_40px_rgba(0,0,0,0.45)] animate-slide-in-right"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm shrink-0">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-border bg-surface-2/95 backdrop-blur-sm shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-white">{playerName}</h3>
+            <h3 className="text-lg font-bold text-content">{playerName}</h3>
             {handicap !== undefined && (
-              <p className="text-xs text-gray-400">HCP {handicap}</p>
+              <p className="text-xs text-content-muted">HCP {handicap}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-lg bg-surface-3 hover:bg-surface-4 flex items-center justify-center text-content-muted hover:text-content transition-colors"
           >
             ✕
           </button>
@@ -157,7 +157,7 @@ export function ScorecardDrawer({
 
         {/* Round tabs */}
         {rounds.length > 1 && (
-          <div className="flex gap-1 px-5 py-2 border-b border-gray-800/60 shrink-0">
+          <div className="flex gap-1 px-5 py-2 border-b border-border/60 shrink-0">
             {rounds.map((r) => (
               <button
                 key={r.round_number}
@@ -165,7 +165,7 @@ export function ScorecardDrawer({
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                   selectedRound === r.round_number
                     ? 'bg-green-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    : 'bg-surface-3 text-content-muted hover:bg-surface-4'
                 }`}
               >
                 R{r.round_number}
@@ -184,14 +184,14 @@ export function ScorecardDrawer({
           {loading && (
             <div className="animate-pulse space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-8 bg-gray-800 rounded" />
+                <div key={i} className="h-8 bg-surface-3 rounded" />
               ))}
             </div>
           )}
 
           {error && (
             <div className="text-center py-8">
-              <p className="text-gray-400">{error}</p>
+              <p className="text-content-muted">{error}</p>
             </div>
           )}
 
@@ -203,7 +203,7 @@ export function ScorecardDrawer({
                   <>
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-gray-500 text-xs">
+                        <tr className="text-content-muted text-xs">
                           <th className="text-left font-medium w-10" />
                           {Array.from({ length: 9 }, (_, i) => (
                             <th key={i} className="text-center font-medium w-8">
@@ -215,13 +215,13 @@ export function ScorecardDrawer({
                       </thead>
                       <tbody>
                         {renderHoleRow('Par', front, (h) => (
-                          <span className="text-xs text-gray-400 font-mono">{h.par}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.par}</span>
                         ))}
                         {front.some((h) => h.distance_meters) && renderHoleRow('M', front, (h) => (
-                          <span className="text-xs text-gray-500 font-mono">{h.distance_meters ?? '-'}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.distance_meters ?? '-'}</span>
                         ))}
                         {renderHoleRow('SI', front, (h) => (
-                          <span className="text-xs text-gray-500 font-mono">{h.stroke_index}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
                         {renderHoleRow('Score', front, (h) => (
                           <ScoreSymbol
@@ -232,13 +232,13 @@ export function ScorecardDrawer({
                             isEagle={h.to_par != null && h.to_par <= -2}
                           />
                         ))}
-                        <tr className="border-t border-gray-700">
+                        <tr className="border-t border-border-strong">
                           <td colSpan={9} className="py-2" />
                           <td className="text-right py-2">
-                            <span className="font-mono font-bold text-white">
+                            <span className="font-mono font-bold text-content">
                               {totalFront(front)}
                             </span>
-                            <span className="text-xs text-gray-500 ml-1">
+                            <span className="text-xs text-content-muted ml-1">
                               ({parFront(front)})
                             </span>
                           </td>
@@ -248,7 +248,7 @@ export function ScorecardDrawer({
 
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-gray-500 text-xs">
+                        <tr className="text-content-muted text-xs">
                           <th className="text-left font-medium w-10" />
                           {Array.from({ length: 9 }, (_, i) => (
                             <th key={i} className="text-center font-medium w-8">
@@ -260,13 +260,13 @@ export function ScorecardDrawer({
                       </thead>
                       <tbody>
                         {renderHoleRow('Par', back, (h) => (
-                          <span className="text-xs text-gray-400 font-mono">{h.par}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.par}</span>
                         ))}
                         {back.some((h) => h.distance_meters) && renderHoleRow('M', back, (h) => (
-                          <span className="text-xs text-gray-500 font-mono">{h.distance_meters ?? '-'}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.distance_meters ?? '-'}</span>
                         ))}
                         {renderHoleRow('SI', back, (h) => (
-                          <span className="text-xs text-gray-500 font-mono">{h.stroke_index}</span>
+                          <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
                         {renderHoleRow('Score', back, (h) => (
                           <ScoreSymbol
@@ -277,13 +277,13 @@ export function ScorecardDrawer({
                             isEagle={h.to_par != null && h.to_par <= -2}
                           />
                         ))}
-                        <tr className="border-t border-gray-700">
+                        <tr className="border-t border-border-strong">
                           <td colSpan={9} className="py-2" />
                           <td className="text-right py-2">
-                            <span className="font-mono font-bold text-white">
+                            <span className="font-mono font-bold text-content">
                               {totalBack(back)}
                             </span>
-                            <span className="text-xs text-gray-500 ml-1">
+                            <span className="text-xs text-content-muted ml-1">
                               ({parBack(back)})
                             </span>
                           </td>
@@ -292,13 +292,13 @@ export function ScorecardDrawer({
                     </table>
 
                     {/* TOTAL row */}
-                    <div className="flex items-center justify-between px-1 pt-4 border-t border-gray-800">
-                      <span className="text-sm font-bold text-white">Totaal</span>
+                    <div className="flex items-center justify-between px-1 pt-4 border-t border-border">
+                      <span className="text-sm font-bold text-content">Totaal</span>
                       <div className="text-right">
-                        <span className="font-mono font-bold text-lg text-white">
+                        <span className="font-mono font-bold text-lg text-content">
                           {active.total_strokes}
                         </span>
-                        <span className="text-xs text-gray-500 mx-1">
+                        <span className="text-xs text-content-muted mx-1">
                           / {active.total_par}
                         </span>
                         <span className={`font-mono font-bold text-sm ${
@@ -306,7 +306,7 @@ export function ScorecardDrawer({
                             ? 'text-red-400'
                             : active.score_to_par === 0
                               ? 'text-green-400'
-                              : 'text-gray-400'
+                              : 'text-content-muted'
                         }`}>
                           {active.score_to_par === 0
                             ? 'E'
@@ -322,13 +322,13 @@ export function ScorecardDrawer({
               })()}
 
               {/* Legenda */}
-              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-content-muted">
                 <span><span className="score-eagle inline-block w-5 h-5 text-center leading-5 text-yellow-400 mr-1">◉</span> Eagle</span>
                 <span><span className="score-birdie inline-block w-5 h-5 text-center leading-5 text-red-400 mr-1">○</span> Birdie</span>
-                <span><span className="text-white mr-1">—</span> Par</span>
-                <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-slate-400 mr-1">□</span> Bogey</span>
+                <span><span className="text-content mr-1">—</span> Par</span>
+                <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-score-muted mr-1">□</span> Bogey</span>
                 <span><span className="score-double-bogey inline-block w-5 h-5 text-center leading-5 text-blue-400 mr-1">▫</span> Double+</span>
-                <span className="text-gray-600">M = Meters · SI = Stroke Index</span>
+                <span className="text-content-muted">M = Meters · SI = Stroke Index</span>
               </div>
 
               {/* Stats */}
@@ -338,7 +338,7 @@ export function ScorecardDrawer({
                 const eagles = active.holes.filter((h) => h.to_par != null && h.to_par <= -2).length;
                 const pars = active.holes.filter((h) => h.to_par === 0).length;
                 return (
-                  <div className="flex flex-wrap gap-4 pt-2 text-xs text-gray-400">
+                  <div className="flex flex-wrap gap-4 pt-2 text-xs text-content-muted">
                     <span>◎ {eagles} Eagles</span>
                     <span>○ {birdies} Birdies</span>
                     <span>— {pars} Pars</span>
@@ -351,7 +351,7 @@ export function ScorecardDrawer({
           )}
 
           {!loading && !error && !active && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-content-muted">
               Geen scores beschikbaar voor deze speler
             </div>
           )}

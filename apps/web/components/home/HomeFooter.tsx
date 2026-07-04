@@ -8,12 +8,12 @@ export function HomeFooter({ locale }: Props) {
   const isNl = locale === 'nl';
 
   return (
-    <footer className="py-12 bg-gray-950 border-t border-gray-800">
+    <footer className="py-12 bg-surface border-t border-border">
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div>
-            <h4 className="font-semibold text-white mb-3">OpenTour</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h4 className="font-semibold text-content mb-3">OpenTour</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
               <li>
                 <Link href={`/${locale}/login`} className="hover:text-green-400 transition-colors">
                   {isNl ? 'Toernooi aanmaken' : 'Create tournament'}
@@ -32,8 +32,8 @@ export function HomeFooter({ locale }: Props) {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-white mb-3">{isNl ? 'Community' : 'Community'}</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h4 className="font-semibold text-content mb-3">{isNl ? 'Community' : 'Community'}</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
               <li>
                 <a href="https://github.com/vanhoutenbos/opentour" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
                   GitHub
@@ -52,8 +52,8 @@ export function HomeFooter({ locale }: Props) {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-white mb-3">{isNl ? 'Ontwikkelaars' : 'Developers'}</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h4 className="font-semibold text-content mb-3">{isNl ? 'Ontwikkelaars' : 'Developers'}</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
               <li>
                 <a href="https://github.com/vanhoutenbos/opentour#readme" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
                   {isNl ? 'Documentatie' : 'Documentation'}
@@ -72,15 +72,15 @@ export function HomeFooter({ locale }: Props) {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-white mb-3">{isNl ? 'Legal' : 'Legal'}</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <h4 className="font-semibold text-content mb-3">{isNl ? 'Legal' : 'Legal'}</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
               <li>
                 <Link href={`/${locale}/privacy`} className="hover:text-green-400 transition-colors">
                   {isNl ? 'Privacyverklaring' : 'Privacy policy'}
                 </Link>
               </li>
               <li>
-                <span className="text-gray-600">
+                <span className="text-content-muted">
                   {isNl ? 'Geen tracking cookies' : 'No tracking cookies'}
                 </span>
               </li>
@@ -93,11 +93,11 @@ export function HomeFooter({ locale }: Props) {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-600">
+        <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-content-muted">
             OpenTour — {isNl ? 'Open source golf toernooi platform' : 'Open source golf tournament platform'}
           </p>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-content-muted">
             <span>{isNl ? 'Gehost op Vercel' : 'Hosted on Vercel'}</span>
             <span>·</span>
             <span>AGPL-3.0</span>

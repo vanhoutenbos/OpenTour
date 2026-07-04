@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { Avatar } from '@/components/Avatar';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const locales = [
   { code: 'nl', label: 'NL' },
@@ -67,7 +68,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+    <nav className="sticky top-0 z-50 bg-surface-2/80 backdrop-blur-md border-b border-border">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -78,7 +79,7 @@ export function Navbar() {
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-green-900/50">
               OT
             </span>
-            <span className="text-lg font-bold text-white hidden sm:inline">
+            <span className="text-lg font-bold text-content hidden sm:inline">
               OpenTour
             </span>
           </Link>
@@ -92,7 +93,7 @@ export function Navbar() {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
                     ? 'text-green-400 bg-green-900/30'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                    : 'text-content-secondary hover:text-content hover:bg-surface-3'
                 }`}
               >
                 {link.label}
@@ -106,7 +107,7 @@ export function Navbar() {
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(`/${locale}/dashboard`)
                       ? 'text-green-400 bg-green-900/30'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      : 'text-content-secondary hover:text-content hover:bg-surface-3'
                   }`}
                 >
                   {t('dashboard')}
@@ -117,7 +118,7 @@ export function Navbar() {
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(`/${locale}/course`)
                       ? 'text-green-400 bg-green-900/30'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                      : 'text-content-secondary hover:text-content hover:bg-surface-3'
                   }`}
                 >
                   {t('create_course')}
@@ -133,7 +134,7 @@ export function Navbar() {
               href="https://github.com/vanhoutenbos/opentour"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="hidden sm:inline-flex p-2 rounded-lg text-content-muted hover:text-content hover:bg-surface-3 transition-colors"
               aria-label="GitHub"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -165,20 +166,20 @@ export function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-gray-900 border border-gray-700/60 shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-surface-2 border border-border-strong/60 shadow-2xl shadow-black/50 z-50 overflow-hidden">
                     {/* User info header */}
-                    <div className="px-4 py-3 border-b border-gray-800">
-                      <p className="text-sm font-semibold text-white truncate">
+                    <div className="px-4 py-3 border-b border-border">
+                      <p className="text-sm font-semibold text-content truncate">
                         {user.display_name || user.email}
                       </p>
                       {user.display_name && (
-                        <p className="text-xs text-gray-400 truncate mt-0.5">{user.email}</p>
+                        <p className="text-xs text-content-muted truncate mt-0.5">{user.email}</p>
                       )}
                     </div>
 
                     {/* Language */}
-                    <div className="px-2 py-2 border-b border-gray-800">
-                      <p className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="px-2 py-2 border-b border-border">
+                      <p className="px-2 py-1 text-xs font-semibold text-content-muted uppercase tracking-wider">
                         {t('language')}
                       </p>
                       {locales.map((l) => (
@@ -188,8 +189,8 @@ export function Navbar() {
                           onClick={() => setProfileOpen(false)}
                           className={`flex items-center justify-between px-2 py-2 rounded-lg text-sm transition-colors ${
                             locale === l.code
-                              ? 'text-white bg-gray-800'
-                              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                              ? 'text-content bg-surface-3'
+                              : 'text-content-muted hover:text-content hover:bg-surface-3'
                           }`}
                         >
                           {l.code === 'nl' ? 'Nederlands' : 'English'}
@@ -202,6 +203,11 @@ export function Navbar() {
                       ))}
                     </div>
 
+                    {/* Theme */}
+                    <div className="border-b border-border">
+                      <ThemeToggle onSelect={() => setProfileOpen(false)} />
+                    </div>
+
                     {/* Logout */}
                     <div className="px-2 py-2">
                       <button
@@ -209,7 +215,7 @@ export function Navbar() {
                           setProfileOpen(false);
                           await getSupabaseBrowser().auth.signOut();
                         }}
-                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"
                       >
                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -225,7 +231,7 @@ export function Navbar() {
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="md:hidden p-2 rounded-lg text-content-muted hover:text-content hover:bg-surface-3 transition-colors"
               aria-label="Toggle menu"
             >
               {menuOpen ? (
@@ -244,18 +250,18 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-gray-800 bg-gray-900/95 backdrop-blur-md">
+        <div className="md:hidden border-t border-border bg-surface-2/95 backdrop-blur-md">
           <div className="px-4 py-4 space-y-1">
             {/* Mobile user info */}
             {user && (
-              <div className="flex items-center gap-3 px-3 py-3 border-b border-gray-800 mb-2">
+              <div className="flex items-center gap-3 px-3 py-3 border-b border-border mb-2">
                 <Avatar name={user.display_name} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-medium text-content truncate">
                     {user.display_name || user.email}
                   </p>
                   {user.display_name && (
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="text-xs text-content-muted truncate">{user.email}</p>
                   )}
                 </div>
               </div>
@@ -269,7 +275,7 @@ export function Navbar() {
                 className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
                     ? 'text-green-400 bg-green-900/30'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                    : 'text-content-secondary hover:text-content hover:bg-surface-3'
                 }`}
               >
                 {link.label}
@@ -282,7 +288,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-content-muted hover:text-content hover:bg-surface-3 transition-colors"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
@@ -290,9 +296,9 @@ export function Navbar() {
               GitHub
             </a>
 
-            <div className="border-t border-gray-800 pt-1">
+            <div className="border-t border-border pt-1">
               {/* Language switcher */}
-              <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <p className="px-3 pt-2 pb-1 text-xs font-semibold text-content-muted uppercase tracking-wider">
                 {t('language')}
               </p>
               {locales.map((l) => (
@@ -302,8 +308,8 @@ export function Navbar() {
                   onClick={() => setMenuOpen(false)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     locale === l.code
-                      ? 'text-white bg-gray-800'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'text-content bg-surface-3'
+                      : 'text-content-muted hover:text-content hover:bg-surface-3'
                   }`}
                 >
                   {l.code === 'nl' ? 'Nederlands' : 'English'}
@@ -315,7 +321,11 @@ export function Navbar() {
                 </Link>
               ))}
 
-              <div className="border-t border-gray-800 mt-1 pt-1">
+              <div className="border-t border-border mt-1 pt-1">
+                <ThemeToggle onSelect={() => setMenuOpen(false)} />
+              </div>
+
+              <div className="border-t border-border mt-1 pt-1">
                 {user ? (
                   <>
                     <Link
@@ -324,7 +334,7 @@ export function Navbar() {
                       className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive(`/${locale}/dashboard`)
                           ? 'text-green-400 bg-green-900/30'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                          : 'text-content-secondary hover:text-content hover:bg-surface-3'
                       }`}
                     >
                       {t('dashboard')}
@@ -335,7 +345,7 @@ export function Navbar() {
                       className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive(`/${locale}/course`)
                           ? 'text-green-400 bg-green-900/30'
-                          : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                          : 'text-content-secondary hover:text-content hover:bg-surface-3'
                       }`}
                     >
                       {t('create_course')}
@@ -345,7 +355,7 @@ export function Navbar() {
                         await getSupabaseBrowser().auth.signOut();
                         setMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+                      className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"
                     >
                       <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

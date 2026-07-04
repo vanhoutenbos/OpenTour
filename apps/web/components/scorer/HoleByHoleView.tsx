@@ -126,21 +126,21 @@ export function HoleByHoleView({
 
   if (!activePlayer || !currentHole) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">{t('mode.follow_flight')}</h3>
+      <div className="bg-surface-2 border border-border rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-content mb-4">{t('mode.follow_flight')}</h3>
         {players.length > 1 && (
           <div className="space-y-3">
-            <p className="text-gray-400 mb-3">{tScoring('enter_score')}</p>
+            <p className="text-content-muted mb-3">{tScoring('enter_score')}</p>
             {players.map((player) => (
               <button
                 key={player.id}
                 onClick={() => setActivePlayerId(player.id)}
-                className="w-full p-4 bg-gray-800 hover:bg-gray-700 text-white rounded-xl
+                className="w-full p-4 bg-surface-3 hover:bg-surface-4 text-content rounded-xl
                            text-left transition-colors"
               >
                 <span className="font-semibold">{player.name}</span>
                 {player.handicap != null && (
-                  <span className="text-gray-400 ml-2">HCP {player.handicap}</span>
+                  <span className="text-content-muted ml-2">HCP {player.handicap}</span>
                 )}
               </button>
             ))}
@@ -152,15 +152,15 @@ export function HoleByHoleView({
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <div className="bg-surface-2 border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <button
             onClick={onBack}
-            className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            className="text-sm text-content-muted hover:text-content-secondary transition-colors"
           >
             ← {t('back_to_flights')}
           </button>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-content-muted">
             {activePlayer.name}
             {activePlayer.handicap != null && ` · HCP ${activePlayer.handicap}`}
           </span>
@@ -178,18 +178,18 @@ export function HoleByHoleView({
       </div>
 
       {previousScore && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
-          <p className="text-sm text-gray-400">
+        <div className="bg-surface-2 border border-border rounded-xl px-4 py-3">
+          <p className="text-sm text-content-muted">
             {tScoring('hole')} {previousScore.holeNumber}:{' '}
-            <span className="text-white font-semibold">{previousScore.strokes}</span>{' '}
+            <span className="text-content font-semibold">{previousScore.strokes}</span>{' '}
             {tScoring('strokes')}
           </p>
         </div>
       )}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="bg-surface-2 border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-content-muted">
             {tScoring('hole')} {currentHole.number}/{sortedHoles.length}
           </span>
           {isLastHole && (

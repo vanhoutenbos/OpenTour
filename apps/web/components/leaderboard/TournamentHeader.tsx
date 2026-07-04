@@ -50,16 +50,16 @@ export function TournamentHeader({
 
   return (
     <>
-      <div className="sticky top-0 z-20 bg-gray-900/95 backdrop-blur-md border-b border-gray-800">
+      <div className="sticky top-0 z-20 bg-surface-2/95 backdrop-blur-md border-b border-border">
         <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto px-4 py-3">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
                 <div>
-                  <h1 className="text-lg sm:text-xl font-bold text-white truncate">
+                  <h1 className="text-lg sm:text-xl font-bold text-content truncate">
                     {name}
                   </h1>
-                  <p className="text-xs sm:text-sm text-gray-400 truncate">
+                  <p className="text-xs sm:text-sm text-content-muted truncate">
                     {formatLabels[format] ?? format}
                     {courseName && ` · ${courseName}`}
                     {startDate && ` · ${new Date(startDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}`}
@@ -84,7 +84,7 @@ export function TournamentHeader({
 
               <button
                 onClick={() => setShowInfo(true)}
-                className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                className="w-9 h-9 rounded-lg bg-surface-3 hover:bg-surface-4 flex items-center justify-center text-content-muted hover:text-content transition-colors"
                 title="Toernooi informatie"
               >
                 ⓘ

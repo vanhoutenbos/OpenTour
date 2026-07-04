@@ -112,12 +112,12 @@ type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'correct
 function InputField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs text-content-muted mb-1">{label}</label>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+        className="w-full px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
       />
     </div>
   );
@@ -750,7 +750,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     : '';
 
   const statusConfig: Record<string, { label: string; className: string }> = {
-    draft:    { label: 'Concept',    className: 'bg-gray-700 text-gray-300' },
+    draft:    { label: 'Concept',    className: 'bg-surface-3 text-content-secondary' },
     active:   { label: 'Actief',     className: 'bg-green-800 text-green-300' },
     paused:   { label: 'Gepauzeerd', className: 'bg-yellow-800 text-yellow-300' },
     finished: { label: 'Afgelopen',  className: 'bg-blue-900 text-blue-300' },
@@ -766,8 +766,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
   if (loading || !tournament) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Laden...</p>
+      <main className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-content-muted">Laden...</p>
       </main>
     );
   }
@@ -802,19 +802,19 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   ];
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-surface">
       {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
+      <div className="bg-surface-2 border-b border-border px-4 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
-            <Link href="/nl/dashboard" className="text-gray-400 hover:text-white text-sm">
+            <Link href="/nl/dashboard" className="text-content-muted hover:text-content text-sm">
               ← Dashboard
             </Link>
           </div>
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-xl font-bold text-white">{tournament.name}</h1>
-              <p className="text-sm text-gray-400">
+              <h1 className="text-xl font-bold text-content">{tournament.name}</h1>
+              <p className="text-sm text-content-muted">
                 {courseName} · {tournament.format} · {tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto'}
                 {tournament.start_date && ` · ${format.dateTime(new Date(tournament.start_date), { day: 'numeric', month: 'short', year: 'numeric' })}`}
               </p>
@@ -827,7 +827,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       </div>
 
       {/* Status acties */}
-      <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3">
+      <div className="bg-surface-2/50 border-b border-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex flex-wrap gap-2">
           {tournament.status === 'draft' && (
             <button
@@ -864,7 +864,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
           {tournament.status === 'finished' && (
             <button
               onClick={() => updateStatus('active')}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg"
+              className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
             >
               ↩ Heropenen
             </button>
@@ -872,13 +872,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
           <Link
             href={`/nl/tournament/${params.id}`}
             target="_blank"
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-surface-3 hover:bg-surface-4 text-content text-sm font-medium rounded-lg"
           >
             👁 Leaderboard
           </Link>
           <button
             onClick={() => copyToClipboard(leaderboardUrl, 'url')}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg"
+            className="px-4 py-2 bg-surface-3 hover:bg-surface-4 text-content text-sm font-medium rounded-lg"
           >
             {copied === 'url' ? '✅ Gekopieerd!' : '🔗 Link kopiëren'}
           </button>
@@ -886,7 +886,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-800 px-4 overflow-x-auto">
+      <div className="border-b border-border px-4 overflow-x-auto">
         <div className="max-w-4xl mx-auto flex gap-4 min-w-max">
           {tabs.map(({ key, label }) => (
             <button
@@ -894,8 +894,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               onClick={() => setActiveTab(key)}
               className={`py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key
-                  ? 'border-green-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white'
+                  ? 'border-green-500 text-content'
+                  : 'border-transparent text-content-muted hover:text-content'
               }`}
             >
               {label}
@@ -916,9 +916,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 { label: 'Categorieën', value: categories.length },
                 { label: 'Flights', value: flights.length },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-white">{value}</p>
-                  <p className="text-xs text-gray-400 mt-1">{label}</p>
+                <div key={label} className="bg-surface-2 border border-border rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold text-content">{value}</p>
+                  <p className="text-xs text-content-muted mt-1">{label}</p>
                 </div>
               ))}
             </div>
@@ -929,11 +929,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             )}
 
             {tournament.format === 'match' && (
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+              <div className="bg-surface-2 border border-border rounded-2xl p-5 space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-bold text-white">Matchplay flow</h2>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <h2 className="text-lg font-bold text-content">Matchplay flow</h2>
+                    <p className="text-sm text-content-muted mt-1">
                       Genereer de eerste 1-op-1 paringen voor het toernooi. Zodra scores per hole zijn ingevoerd, verschijnt de stand direct op het publieke leaderboard.
                     </p>
                   </div>
@@ -948,54 +948,54 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     <button
                       onClick={clearMatchplayPairings}
                       disabled={matchplayBusy}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                      className="px-4 py-2 bg-surface-3 hover:bg-surface-4 disabled:opacity-50 text-content text-sm font-medium rounded-lg"
                     >
                       Wis paringen
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-800 bg-gray-950/70 px-3 py-3">
-                  <label className="text-sm text-gray-400">Actieve ronde</label>
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface/70 px-3 py-3">
+                  <label className="text-sm text-content-muted">Actieve ronde</label>
                   <input
                     type="number"
                     min={1}
                     max={tournament.rounds}
                     value={activeMatchplayRound}
                     onChange={(event) => setActiveMatchplayRound(Number(event.target.value) || 1)}
-                    className="w-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white"
+                    className="w-20 rounded-lg border border-border-strong bg-surface-2 px-3 py-2 text-sm text-content"
                   />
                   <button
                     onClick={() => updateActiveMatchplayRound(activeMatchplayRound)}
-                    className="rounded-lg bg-gray-800 px-3 py-2 text-sm text-white hover:bg-gray-700"
+                    className="rounded-lg bg-surface-3 px-3 py-2 text-sm text-content hover:bg-surface-4"
                   >
                     Opslaan ronde
                   </button>
                   <button
                     onClick={advanceMatchplayRound}
-                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white hover:bg-emerald-600"
+                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-content hover:bg-emerald-600"
                   >
                     Volgende ronde
                   </button>
-                  <span className="text-sm text-gray-500">Ronde wordt automatisch doorgeschoven zodra alle duels in de actieve ronde zijn afgerond.</span>
+                  <span className="text-sm text-content-muted">Ronde wordt automatisch doorgeschoven zodra alle duels in de actieve ronde zijn afgerond.</span>
                 </div>
 
                 {matchplayPairings.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nog geen paringen aangemaakt. Gebruik de knop hierboven om de eerste bracket op te bouwen.</p>
+                  <p className="text-sm text-content-muted">Nog geen paringen aangemaakt. Gebruik de knop hierboven om de eerste bracket op te bouwen.</p>
                 ) : (
                   <div className="space-y-2">
                     {matchplayPairings.map((pairing, index) => (
-                      <div key={pairing.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-800 bg-gray-950/70 px-3 py-2 text-sm">
+                      <div key={pairing.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface/70 px-3 py-2 text-sm">
                         <div>
-                          <p className="font-medium text-white">{index + 1}. {pairing.player_a_name} vs {pairing.player_b_name}</p>
-                          <p className="text-xs text-gray-500">live zodra scores binnenkomen</p>
+                          <p className="font-medium text-content">{index + 1}. {pairing.player_a_name} vs {pairing.player_b_name}</p>
+                          <p className="text-xs text-content-muted">live zodra scores binnenkomen</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <label className="text-xs text-gray-500">Ronde</label>
+                          <label className="text-xs text-content-muted">Ronde</label>
                           <select
                             value={pairing.round_number}
                             onChange={(event) => updateMatchplayPairingRound(pairing.id, Number(event.target.value) || 1)}
-                            className="rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1.5 text-sm text-white"
+                            className="rounded-lg border border-border-strong bg-surface-2 px-2.5 py-1.5 text-sm text-content"
                           >
                             {Array.from({ length: tournament.rounds }, (_, roundIndex) => roundIndex + 1).map((roundNumber) => (
                               <option key={roundNumber} value={roundNumber}>
@@ -1017,13 +1017,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             {flights.length > 0 ? (
               <>
                 {/* Sub-tabs: Leaderboard / Startlijst */}
-                <div className="flex gap-1 border-b border-gray-800">
+                <div className="flex gap-1 border-b border-border">
                   <button
                     onClick={() => setOverviewView('leaderboard')}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                       overviewView === 'leaderboard'
-                        ? 'border-green-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-green-500 text-content'
+                        : 'border-transparent text-content-muted hover:text-content'
                     }`}
                   >
                     Leaderboard
@@ -1032,8 +1032,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     onClick={() => setOverviewView('startlist')}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                       overviewView === 'startlist'
-                        ? 'border-green-500 text-white'
-                        : 'border-transparent text-gray-400 hover:text-white'
+                        ? 'border-green-500 text-content'
+                        : 'border-transparent text-content-muted hover:text-content'
                     }`}
                   >
                     Startlijst
@@ -1042,9 +1042,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
                 {/* Leaderboard content */}
                 {overviewView === 'leaderboard' && (
-                  <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <div className="bg-surface-2 border border-border rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+                      <h2 className="text-lg font-bold text-content">Leaderboard</h2>
                       {tournament.status === 'active' && <LiveBadge />}
                     </div>
                     <LeaderboardClient
@@ -1078,33 +1078,33 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       const catName = categories.find(c => c.id === f.category_id)?.name;
                       const playersInFlight = players.filter(p => p.flight_id === f.id);
                       return (
-                        <div key={f.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                        <div key={f.id} className="bg-surface-2 border border-border rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div>
                               {f.name?.trim() && (
-                                <h4 className="text-white font-semibold text-sm">{f.name}</h4>
+                                <h4 className="text-content font-semibold text-sm">{f.name}</h4>
                               )}
-                              <p className="text-xs text-gray-400 mt-0.5">
+                              <p className="text-xs text-content-muted mt-0.5">
                                 {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                 {f.tee_number && ` · Hole ${f.tee_number}`}
                                 {catName && ` · ${catName}`}
                               </p>
                             </div>
-                            <span className="text-xs text-gray-500">{playersInFlight.length} spelers</span>
+                            <span className="text-xs text-content-muted">{playersInFlight.length} spelers</span>
                           </div>
                           <div className="space-y-1">
                             {playersInFlight.length === 0 ? (
-                              <p className="text-xs text-gray-500 italic">Geen spelers</p>
+                              <p className="text-xs text-content-muted italic">Geen spelers</p>
                             ) : (
                               playersInFlight.map(pl => (
-                                <div key={pl.id} className="bg-gray-800 rounded-lg px-3 py-2 flex items-center justify-between">
+                                <div key={pl.id} className="bg-surface-3 rounded-lg px-3 py-2 flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-sm text-white">{pl.name}</span>
+                                    <span className="text-sm text-content">{pl.name}</span>
                                     {pl.handicap !== null && (
-                                      <span className="text-gray-500 text-xs">HCP {pl.handicap}</span>
+                                      <span className="text-content-muted text-xs">HCP {pl.handicap}</span>
                                     )}
                                   </div>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-content-muted">
                                     {pl.gender === 'male' ? 'M' : pl.gender === 'female' ? 'V' : ''}
                                   </span>
                                 </div>
@@ -1119,9 +1119,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               </>
             ) : (
               /* No flights: show leaderboard only */
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <div className="bg-surface-2 border border-border rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+                  <h2 className="text-lg font-bold text-content">Leaderboard</h2>
                   {tournament.status === 'active' && <LiveBadge />}
                 </div>
                 <LeaderboardClient
@@ -1163,54 +1163,54 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         {activeTab === 'edit' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-white mb-4">Toernooi bewerken</h2>
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+              <h2 className="text-lg font-bold text-content mb-4">Toernooi bewerken</h2>
+              <div className="bg-surface-2 border border-border rounded-2xl p-5 space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Naam</label>
+                  <label className="block text-sm text-content-muted mb-1.5">Naam</label>
                   <input
                     type="text"
                     value={editForm.name}
                     onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600"
+                    className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted focus:outline-none focus:border-green-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Beschrijving</label>
+                  <label className="block text-sm text-content-muted mb-1.5">Beschrijving</label>
                   <textarea
                     value={editForm.description}
                     onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
                     rows={2}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600 resize-none"
+                    className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted focus:outline-none focus:border-green-600 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Datum</label>
+                    <label className="block text-sm text-content-muted mb-1.5">Datum</label>
                     <input
                       type="date"
                       value={editForm.start_date}
                       onChange={e => setEditForm(f => ({ ...f, start_date: e.target.value }))}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Aantal rondes</label>
+                    <label className="block text-sm text-content-muted mb-1.5">Aantal rondes</label>
                     <input
                       type="number"
                       min={1}
                       max={99}
                       value={editForm.rounds}
                       onChange={e => setEditForm(f => ({ ...f, rounds: parseInt(e.target.value) || 1 }))}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1.5">Golfbaan</label>
+                  <label className="block text-sm text-content-muted mb-1.5">Golfbaan</label>
                   <select
                     value={editForm.course_id}
                     onChange={e => setEditForm(f => ({ ...f, course_id: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                    className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                   >
                     <option value="">Nog niet gekozen</option>
                     {courses.map(c => (
@@ -1220,11 +1220,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Format</label>
+                    <label className="block text-sm text-content-muted mb-1.5">Format</label>
                     <select
                       value={editForm.format}
                       onChange={e => setEditForm(f => ({ ...f, format: e.target.value }))}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     >
                       <option value="stableford">Stableford</option>
                       <option value="stroke">Stroke play</option>
@@ -1232,11 +1232,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1.5">Scoring</label>
+                    <label className="block text-sm text-content-muted mb-1.5">Scoring</label>
                     <select
                       value={editForm.scoring_type}
                       onChange={e => setEditForm(f => ({ ...f, scoring_type: e.target.value }))}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     >
                       <option value="gross">Bruto</option>
                       <option value="net">Netto</option>
@@ -1258,8 +1258,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         {/* ===== TAB: Spelers ===== */}
         {activeTab === 'players' && (
           <div className="space-y-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-white mb-3">Speler toevoegen</h3>
+            <div className="bg-surface-2 border border-border rounded-xl p-4">
+              <h3 className="text-sm font-medium text-content mb-3">Speler toevoegen</h3>
 
               {/* Required fields row */}
               <div className="flex flex-wrap gap-2 mb-3">
@@ -1269,19 +1269,19 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   onChange={e => setPlayerForm(f => ({ ...f, name: e.target.value }))}
                   onKeyDown={e => e.key === 'Enter' && !showPlayerDetails && addPlayer()}
                   placeholder="Naam *"
-                  className="flex-1 min-w-[160px] px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  className="flex-1 min-w-[160px] px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                 />
                 <input
                   type="number"
                   value={playerForm.handicap}
                   onChange={e => setPlayerForm(f => ({ ...f, handicap: e.target.value }))}
                   placeholder="HCP *"
-                  className="w-24 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                  className="w-24 px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                 />
                 <select
                   value={playerForm.gender}
                   onChange={e => setPlayerForm(f => ({ ...f, gender: e.target.value }))}
-                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+                  className="px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
                 >
                   <option value="">Geslacht</option>
                   <option value="male">Man</option>
@@ -1295,7 +1295,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
                       showPlayerDetails
                         ? 'border-green-600 text-green-400 bg-green-900/20'
-                        : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                        : 'border-border-strong text-content-muted hover:border-border-strong'
                     }`}
                   >
                     {showPlayerDetails ? '− Details' : '+ Details'}
@@ -1312,7 +1312,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
               {/* Expandable details section */}
               {showPlayerDetails && (
-                <div className="border-t border-gray-800 pt-4 mt-2 space-y-4">
+                <div className="border-t border-border pt-4 mt-2 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <InputField label="Voorletters" value={playerForm.initials} onChange={v => setPlayerForm(f => ({ ...f, initials: v }))} />
                     <InputField label="Roepnaam" value={playerForm.callName} onChange={v => setPlayerForm(f => ({ ...f, callName: v }))} />
@@ -1323,8 +1323,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     <InputField label="Mobiel" value={playerForm.phone} onChange={v => setPlayerForm(f => ({ ...f, phone: v }))} />
                     <InputField label="NGF nummer" value={playerForm.ngfNumber} onChange={v => setPlayerForm(f => ({ ...f, ngfNumber: v }))} />
                   </div>
-                  <div className="border-t border-gray-800 pt-4">
-                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Adres</h4>
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-xs font-medium text-content-muted uppercase tracking-wider mb-3">Adres</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       <InputField label="Straat" value={playerForm.street} onChange={v => setPlayerForm(f => ({ ...f, street: v }))} />
                       <InputField label="Huisnummer" value={playerForm.houseNumber} onChange={v => setPlayerForm(f => ({ ...f, houseNumber: v }))} />
@@ -1339,13 +1339,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             </div>
 
             {players.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">Nog geen spelers toegevoegd.</p>
+              <p className="text-center text-content-muted py-8">Nog geen spelers toegevoegd.</p>
             ) : (
               <div className="space-y-2">
                 {players.map((p) => {
                   const isEditing = editingPlayerId === p.id;
                   const statusConfig: Record<string, { label: string; color: string }> = {
-                    registered: { label: 'Aangemeld',    color: 'bg-gray-700 text-gray-300' },
+                    registered: { label: 'Aangemeld',    color: 'bg-surface-3 text-content-secondary' },
                     confirmed:  { label: 'Bevestigd',    color: 'bg-blue-900/40 text-blue-300' },
                     dns:        { label: 'DNS',          color: 'bg-yellow-900/40 text-yellow-300' },
                     dnf:        { label: 'DNF',          color: 'bg-orange-900/40 text-orange-300' },
@@ -1356,20 +1356,20 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   return (
                     <div
                       key={p.id}
-                      className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden"
+                      className="bg-surface-2 border border-border rounded-xl overflow-hidden"
                     >
                       {/* Samengevouwen rij — klik om te bewerken */}
                       <button
                         onClick={() => isEditing ? closePlayerEdit() : openPlayerEdit(p)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-850 transition-colors text-left"
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-2 transition-colors text-left"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-white font-medium truncate">{p.name}</span>
+                          <span className="text-content font-medium truncate">{p.name}</span>
                           {p.handicap !== null && (
-                            <span className="text-gray-400 text-sm shrink-0">HCP {p.handicap}</span>
+                            <span className="text-content-muted text-sm shrink-0">HCP {p.handicap}</span>
                           )}
                           {p.gender && (
-                            <span className="text-gray-500 text-sm shrink-0">({genderLabel(p.gender)})</span>
+                            <span className="text-content-muted text-sm shrink-0">({genderLabel(p.gender)})</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -1381,17 +1381,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.color}`}>
                             {sc.label}
                           </span>
-                          <span className={`text-gray-500 transition-transform ${isEditing ? 'rotate-180' : ''}`}>▾</span>
+                          <span className={`text-content-muted transition-transform ${isEditing ? 'rotate-180' : ''}`}>▾</span>
                         </div>
                       </button>
 
                       {/* Uitgeklapt bewerkpaneel */}
                       {isEditing && (
-                        <div className="border-t border-gray-800 px-4 py-4 space-y-4">
+                        <div className="border-t border-border px-4 py-4 space-y-4">
 
                           {/* Status snelkeuze */}
                           <div>
-                            <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                            <label className="block text-xs text-content-muted mb-1.5">Status</label>
                             <div className="flex flex-wrap gap-1.5">
                               {(['registered', 'confirmed', 'dns', 'dnf', 'dsq', 'withdrawn'] as const).map(s => (
                                 <button
@@ -1400,7 +1400,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                                     p.status === s
                                       ? statusConfig[s]!.color + ' ring-1 ring-inset ring-current'
-                                      : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                                      : 'bg-surface-3 text-content-muted hover:bg-surface-4'
                                   }`}
                                 >
                                   {statusConfig[s]!.label}
@@ -1414,11 +1414,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             <InputField label="Naam *" value={editPlayerForm.name} onChange={v => setEditPlayerForm(f => ({ ...f, name: v }))} />
                             <InputField label="Handicap" type="number" value={editPlayerForm.handicap} onChange={v => setEditPlayerForm(f => ({ ...f, handicap: v }))} />
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Geslacht</label>
+                              <label className="block text-xs text-content-muted mb-1">Geslacht</label>
                               <select
                                 value={editPlayerForm.gender}
                                 onChange={e => setEditPlayerForm(f => ({ ...f, gender: e.target.value }))}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-600"
+                                className="w-full px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
                               >
                                 <option value="">Onbekend</option>
                                 <option value="male">Man</option>
@@ -1437,8 +1437,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           </div>
 
                           {/* Adres */}
-                          <div className="border-t border-gray-800 pt-3">
-                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Adres</h4>
+                          <div className="border-t border-border pt-3">
+                            <h4 className="text-xs font-medium text-content-muted uppercase tracking-wider mb-3">Adres</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               <InputField label="Straat" value={editPlayerForm.street} onChange={v => setEditPlayerForm(f => ({ ...f, street: v }))} />
                               <InputField label="Huisnummer" value={editPlayerForm.houseNumber} onChange={v => setEditPlayerForm(f => ({ ...f, houseNumber: v }))} />
@@ -1450,7 +1450,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                           </div>
 
                           {/* Acties */}
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                          <div className="flex items-center justify-between pt-2 border-t border-border">
                             <button
                               onClick={() => {
                                 if (confirm(`Weet je zeker dat je ${p.name} wilt verwijderen?`)) {
@@ -1465,7 +1465,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             <div className="flex gap-2">
                               <button
                                 onClick={closePlayerEdit}
-                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg"
+                                className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm rounded-lg"
                               >
                                 Annuleren
                               </button>
@@ -1492,7 +1492,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         {activeTab === 'categories' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-content-muted">
                 Categorieën bepalen hoe spelers worden gegroepeerd (bijv. geslacht, handicap).
                 Elke categorie is gekoppeld aan een tee-box.
               </p>
@@ -1505,17 +1505,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             </div>
 
             {categories.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">Nog geen categorieën aangemaakt.</p>
+              <p className="text-center text-content-muted py-8">Nog geen categorieën aangemaakt.</p>
             ) : (
               <div className="space-y-2">
                 {categories.map((cat) => (
                   <div
                     key={cat.id}
-                    className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3"
+                    className="flex items-center justify-between bg-surface-2 border border-border rounded-xl px-4 py-3"
                   >
                     <div>
-                      <p className="text-white font-medium">{cat.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-content font-medium">{cat.name}</p>
+                      <p className="text-xs text-content-muted mt-0.5">
                         {[genderLabel(cat.gender), cat.handicap_min !== null ? `HCP ≥ ${cat.handicap_min}` : '', cat.handicap_max !== null ? `HCP ≤ ${cat.handicap_max}` : ''].filter(Boolean).join(' · ') || 'Alle spelers'}
                         {cat.tee_id && ` · Tee: ${teeLabel(cat.tee_id)}`}
                       </p>
@@ -1523,7 +1523,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     <div className="flex gap-2">
                       <button
                         onClick={() => openCategoryForm(cat)}
-                        className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                        className="text-xs px-3 py-1.5 bg-surface-3 hover:bg-border-strong text-content rounded-lg"
                       >
                         Bewerk
                       </button>
@@ -1542,37 +1542,37 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             {/* Category modal */}
             {showCategoryForm && (
               <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full">
-                  <h3 className="text-lg font-semibold text-white mb-4">
+                <div className="bg-surface-3 rounded-2xl p-6 max-w-md w-full">
+                  <h3 className="text-lg font-semibold text-content mb-4">
                     {editingCategory ? 'Categorie bewerken' : 'Nieuwe categorie'}
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Naam *</label>
+                      <label className="block text-sm text-content-muted mb-1">Naam *</label>
                       <input
                         type="text"
                         value={categoryForm.name}
                         onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="bijv. Heren, Dames"
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                        className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Omschrijving</label>
+                      <label className="block text-sm text-content-muted mb-1">Omschrijving</label>
                       <input
                         type="text"
                         value={categoryForm.description}
                         onChange={e => setCategoryForm(f => ({ ...f, description: e.target.value }))}
                         placeholder="Optionele omschrijving"
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                        className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Geslacht</label>
+                      <label className="block text-sm text-content-muted mb-1">Geslacht</label>
                       <select
                         value={categoryForm.gender}
                         onChange={e => setCategoryForm(f => ({ ...f, gender: e.target.value }))}
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                        className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                       >
                         <option value="">Alle geslachten</option>
                         <option value="male">Man</option>
@@ -1581,32 +1581,32 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm text-gray-400 mb-1">HCP min</label>
+                        <label className="block text-sm text-content-muted mb-1">HCP min</label>
                         <input
                           type="number"
                           value={categoryForm.handicap_min}
                           onChange={e => setCategoryForm(f => ({ ...f, handicap_min: e.target.value }))}
                           placeholder="Geen min"
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                          className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-400 mb-1">HCP max</label>
+                        <label className="block text-sm text-content-muted mb-1">HCP max</label>
                         <input
                           type="number"
                           value={categoryForm.handicap_max}
                           onChange={e => setCategoryForm(f => ({ ...f, handicap_max: e.target.value }))}
                           placeholder="Geen max"
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-600"
+                          className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Tee-box</label>
+                      <label className="block text-sm text-content-muted mb-1">Tee-box</label>
                       <select
                         value={categoryForm.tee_id}
                         onChange={e => setCategoryForm(f => ({ ...f, tee_id: e.target.value }))}
-                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                        className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                       >
                         <option value="">Niet gekozen</option>
                         {tees.map(tee => (
@@ -1620,7 +1620,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   <div className="flex gap-3 mt-5">
                     <button
                       onClick={() => setShowCategoryForm(false)}
-                      className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                      className="flex-1 py-3 bg-surface-3 text-content rounded-xl text-sm"
                     >
                       Annuleren
                     </button>
@@ -1643,14 +1643,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
           <div className="space-y-4">
             {categories.length === 0 ? (
               /* Geen categorieën: toon informatief leeg scherm */
-              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+              <div className="text-center py-16 border border-dashed border-border-strong rounded-2xl">
                 <span className="text-5xl">🗂️</span>
-                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Maak eerst categorieën aan</h3>
-                <p className="text-gray-400 text-sm mb-1 max-w-xs mx-auto">
+                <h3 className="text-lg font-semibold text-content mt-4 mb-2">Maak eerst categorieën aan</h3>
+                <p className="text-content-muted text-sm mb-1 max-w-xs mx-auto">
                   Flights worden gegenereerd op basis van categorieën, zoals Heren, Dames of handicapklassen.
                 </p>
-                <p className="text-gray-500 text-sm mb-6">
-                  Ga naar het tabblad <span className="text-gray-300 font-medium">Categorieën</span> om te beginnen.
+                <p className="text-content-muted text-sm mb-6">
+                  Ga naar het tabblad <span className="text-content-secondary font-medium">Categorieën</span> om te beginnen.
                 </p>
                 <button
                   onClick={() => setActiveTab('categories')}
@@ -1664,13 +1664,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 {flights.length > 0 ? (
                   <>
                     {/* Simpel menu als er al flights zijn */}
-                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between">
+                    <div className="bg-surface-2 border border-border rounded-xl p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-medium text-white">Flights beheren</h3>
+                        <h3 className="text-sm font-medium text-content">Flights beheren</h3>
                         <button
                           onClick={() => setShowFlightSettings(true)}
                           title="Instellingen wijzigen"
-                          className="text-gray-500 hover:text-white transition-colors"
+                          className="text-content-muted hover:text-content transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -1700,17 +1700,17 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
                 {showDeleteFlightsConfirm && (
                   <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full space-y-4">
+                    <div className="bg-surface-3 rounded-2xl p-6 max-w-md w-full space-y-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Weet je het zeker?</h3>
-                        <p className="text-sm text-gray-400 mt-2">
+                        <h3 className="text-lg font-semibold text-content">Weet je het zeker?</h3>
+                        <p className="text-sm text-content-muted mt-2">
                           Dit verwijdert alle bestaande flights en ontkoppelt spelers van hun flight. Deze actie kan niet ongedaan worden gemaakt.
                         </p>
                       </div>
                       <div className="flex gap-3 pt-2">
                         <button
                           onClick={() => setShowDeleteFlightsConfirm(false)}
-                          className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                          className="flex-1 py-3 bg-surface-3 text-content rounded-xl text-sm"
                         >
                           Annuleren
                         </button>
@@ -1730,22 +1730,22 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 ) : (
                   <>
                     {/* Flight generator form (geen flights) */}
-                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                      <h3 className="text-sm font-medium text-white mb-3">
+                    <div className="bg-surface-2 border border-border rounded-xl p-5">
+                      <h3 className="text-sm font-medium text-content mb-3">
                         Flights genereren
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Starttijd *</label>
                           <input
                             type="datetime-local"
                             value={flightForm.start_time}
                             onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Minuten tussen flights</label>
                           <input
                             type="number"
                             min={1}
@@ -1760,11 +1760,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               const clamped = Number.isNaN(parsed) ? 8 : Math.min(30, Math.max(1, parsed));
                               setFlightForm(f => ({ ...f, interval_minutes: clamped }));
                             }}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Max spelers per flight</label>
                           <input
                             type="number"
                             min={1}
@@ -1779,11 +1779,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               const clamped = Number.isNaN(parsed) ? 4 : Math.min(4, Math.max(1, parsed));
                               setFlightForm(f => ({ ...f, max_players: clamped }));
                             }}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Startholes</label>
                           <div className="flex gap-3 pt-1">
                             {startHoleOptions.map(hole => (
                               <label key={hole} className="flex items-center gap-2 cursor-pointer">
@@ -1793,7 +1793,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                   className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
                                     flightForm.start_holes.includes(hole)
                                       ? 'bg-green-900/30 border-green-600 text-green-400'
-                                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                                      : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                                   }`}
                                 >
                                   {hole}
@@ -1805,18 +1805,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Sorteer op</label>
                           <select
                             value={sortBy}
                             onChange={e => setSortBy(e.target.value as 'handicap_asc' | 'random')}
-                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                           >
                             <option value="handicap_asc">Handicap laag → hoog</option>
                             <option value="random">Willekeurig</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Indeling</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Indeling</label>
                           <div className="flex gap-2 pt-1">
                             <button
                               type="button"
@@ -1824,7 +1824,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
                                 !splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
-                                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                                  : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                               }`}
                             >
                               Gemengde categorieen
@@ -1835,7 +1835,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
                                 splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
-                                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                                  : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                               }`}
                             >
                               Per categorie
@@ -1862,20 +1862,20 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 {/* Flight settings modal */}
                 {showFlightSettings && (
                   <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full space-y-4">
-                      <h3 className="text-lg font-semibold text-white">Flight instellingen</h3>
+                    <div className="bg-surface-3 rounded-2xl p-6 max-w-md w-full space-y-4">
+                      <h3 className="text-lg font-semibold text-content">Flight instellingen</h3>
                       <div>
-                        <label className="block text-sm text-gray-400 mb-1.5">Starttijd *</label>
+                        <label className="block text-sm text-content-muted mb-1.5">Starttijd *</label>
                         <input
                           type="datetime-local"
                           value={flightForm.start_time}
                           onChange={e => setFlightForm(f => ({ ...f, start_time: e.target.value }))}
-                          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                          className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Minuten tussen flights</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Minuten tussen flights</label>
                           <input
                             type="number"
                             min={1}
@@ -1890,11 +1890,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               const clamped = Number.isNaN(parsed) ? 8 : Math.min(30, Math.max(1, parsed));
                               setFlightForm(f => ({ ...f, interval_minutes: clamped }));
                             }}
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Max spelers per flight</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Max spelers per flight</label>
                           <input
                             type="number"
                             min={1}
@@ -1909,12 +1909,12 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               const clamped = Number.isNaN(parsed) ? 4 : Math.min(4, Math.max(1, parsed));
                               setFlightForm(f => ({ ...f, max_players: clamped }));
                             }}
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm text-gray-400 mb-1.5">Startholes</label>
+                        <label className="block text-sm text-content-muted mb-1.5">Startholes</label>
                         <div className="flex gap-3">
                           {startHoleOptions.map(hole => (
                             <button
@@ -1924,7 +1924,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               className={`w-10 h-10 rounded-xl border-2 transition-colors font-medium text-sm ${
                                 flightForm.start_holes.includes(hole)
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
-                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                                  : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                               }`}
                             >
                               {hole}
@@ -1934,18 +1934,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Sorteer op</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Sorteer op</label>
                           <select
                             value={sortBy}
                             onChange={e => setSortBy(e.target.value as 'handicap_asc' | 'random')}
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-green-600"
+                            className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content text-sm focus:outline-none focus:border-green-600"
                           >
                             <option value="handicap_asc">Handicap laag → hoog</option>
                             <option value="random">Willekeurig</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm text-gray-400 mb-1.5">Indeling</label>
+                          <label className="block text-sm text-content-muted mb-1.5">Indeling</label>
                           <div className="flex gap-2 pt-1">
                             <button
                               type="button"
@@ -1953,7 +1953,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
                                 !splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
-                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                                  : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                               }`}
                             >
                               Gemengde categorieen
@@ -1964,7 +1964,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                               className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
                                 splitByCategory
                                   ? 'bg-green-900/30 border-green-600 text-green-400'
-                                  : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                                  : 'bg-surface-3 border-border-strong text-content-muted hover:border-border-strong'
                               }`}
                             >
                               Per categorie
@@ -1975,7 +1975,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       <div className="flex gap-3 pt-2">
                         <button
                           onClick={() => setShowFlightSettings(false)}
-                          className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                          className="flex-1 py-3 bg-surface-3 text-content rounded-xl text-sm"
                         >
                           Sluiten
                         </button>
@@ -1986,10 +1986,10 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
                 {/* Flight cards */}
                 {flights.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">Nog geen flights gegenereerd.</p>
+                  <p className="text-center text-content-muted py-8">Nog geen flights gegenereerd.</p>
                 ) : (
                   <>
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-content-muted text-center">
                       Sleep spelers tussen flights om ze te verplaatsen
                     </p>
                     <div className="space-y-4">
@@ -1999,7 +1999,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                         return (
                           <div
                             key={f.id}
-                            className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+                            className="bg-surface-2 border border-border rounded-xl p-4"
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, f.id)}
                           >
@@ -2018,10 +2018,10 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                       }}
                                       placeholder="Naam (optioneel)"
                                       autoFocus
-                                      className="px-2 py-1 bg-gray-800 border border-green-600 rounded-lg text-white text-sm focus:outline-none w-40"
+                                      className="px-2 py-1 bg-surface-3 border border-green-600 rounded-lg text-content text-sm focus:outline-none w-40"
                                     />
                                     <button onClick={() => saveFlightName(f.id)} className="text-green-400 text-sm hover:text-green-300">✓</button>
-                                    <button onClick={() => setEditingFlightId(null)} className="text-gray-500 text-sm hover:text-gray-300">✕</button>
+                                    <button onClick={() => setEditingFlightId(null)} className="text-content-muted text-sm hover:text-content-secondary">✕</button>
                                   </div>
                                 ) : (
                                   <button
@@ -2030,12 +2030,12 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                     title="Klik om naam te bewerken"
                                   >
                                     {f.name?.trim() && (
-                                      <h4 className="text-white font-semibold text-sm group-hover:text-green-400 transition-colors">{f.name}</h4>
+                                      <h4 className="text-content font-semibold text-sm group-hover:text-green-400 transition-colors">{f.name}</h4>
                                     )}
-                                    <span className="text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
+                                    <span className="text-content-muted text-xs opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
                                   </button>
                                 )}
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-content-muted mt-0.5">
                                   {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                   {f.tee_number && ` · Hole ${f.tee_number}`}
                                   {catName && ` · ${catName}`}
@@ -2047,8 +2047,8 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                             {/* Player cards */}
                             <div className="space-y-1.5">
                               {playersInFlight.length === 0 ? (
-                                <div className="border border-dashed border-gray-700 rounded-lg py-3 text-center">
-                                  <p className="text-xs text-gray-500">Sleep een speler hiernaartoe</p>
+                                <div className="border border-dashed border-border-strong rounded-lg py-3 text-center">
+                                  <p className="text-xs text-content-muted">Sleep een speler hiernaartoe</p>
                                 </div>
                               ) : (
                                 playersInFlight.map(pl => (
@@ -2056,20 +2056,20 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                                     key={pl.id}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, pl.id)}
-                                    className={`bg-gray-800 rounded-lg px-3 py-2 flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-gray-750 transition-colors ${
+                                    className={`bg-surface-3 rounded-lg px-3 py-2 flex items-center justify-between cursor-grab active:cursor-grabbing hover:bg-surface-4 transition-colors ${
                                       pl.status === 'dns' ? 'opacity-50' : ''
                                     }`}
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
-                                      <span className="text-gray-400 text-xs cursor-grab">⠿</span>
-                                      <span className={`text-sm truncate ${pl.status === 'dns' ? 'text-gray-500 line-through' : 'text-white'}`}>
+                                      <span className="text-content-muted text-xs cursor-grab">⠿</span>
+                                      <span className={`text-sm truncate ${pl.status === 'dns' ? 'text-content-muted line-through' : 'text-content'}`}>
                                         {pl.name}
                                       </span>
                                       {pl.handicap !== null && (
-                                        <span className="text-gray-500 text-xs shrink-0">HCP {pl.handicap}</span>
+                                        <span className="text-content-muted text-xs shrink-0">HCP {pl.handicap}</span>
                                       )}
                                       {pl.gender && (
-                                        <span className="text-gray-600 text-xs shrink-0">
+                                        <span className="text-content-muted text-xs shrink-0">
                                           {pl.gender === 'male' ? 'M' : pl.gender === 'female' ? 'V' : ''}
                                         </span>
                                       )}
@@ -2105,18 +2105,18 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         {activeTab === 'corrections' && (
           <div className="space-y-4">
             {holes.length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+              <div className="text-center py-16 border border-dashed border-border-strong rounded-2xl">
                 <span className="text-5xl">🏌️</span>
-                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Geen holes gevonden</h3>
-                <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                <h3 className="text-lg font-semibold text-content mt-4 mb-2">Geen holes gevonden</h3>
+                <p className="text-content-muted text-sm max-w-xs mx-auto">
                   Koppel eerst een baan aan het toernooi via het tabblad Bewerken.
                 </p>
               </div>
             ) : players.length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+              <div className="text-center py-16 border border-dashed border-border-strong rounded-2xl">
                 <span className="text-5xl">🧑‍🤝‍🧑</span>
-                <h3 className="text-lg font-semibold text-white mt-4 mb-2">Nog geen spelers</h3>
-                <p className="text-gray-400 text-sm max-w-xs mx-auto">
+                <h3 className="text-lg font-semibold text-content mt-4 mb-2">Nog geen spelers</h3>
+                <p className="text-content-muted text-sm max-w-xs mx-auto">
                   Voeg eerst spelers toe via het tabblad Spelers.
                 </p>
               </div>
@@ -2137,7 +2137,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         {activeTab === 'codes' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-content-muted">
                 Codes geven recorders toegang zonder account. Geldig 24 uur.
               </p>
               <button
@@ -2149,7 +2149,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             </div>
 
             {codes.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">Nog geen codes aangemaakt.</p>
+              <p className="text-center text-content-muted py-8">Nog geen codes aangemaakt.</p>
             ) : (
               <div className="space-y-2">
                 {codes.map((c) => {
@@ -2158,15 +2158,15 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   return (
                     <div
                       key={c.id}
-                      className={`flex items-center justify-between bg-gray-900 border rounded-xl px-4 py-3 ${
-                        valid ? 'border-gray-800' : 'border-gray-800 opacity-50'
+                      className={`flex items-center justify-between bg-surface-2 border rounded-xl px-4 py-3 ${
+                        valid ? 'border-border' : 'border-border opacity-50'
                       }`}
                     >
                       <div>
-                        <code className={`text-lg font-mono font-bold tracking-widest ${valid ? 'text-green-400' : 'text-gray-500'}`}>
+                        <code className={`text-lg font-mono font-bold tracking-widest ${valid ? 'text-green-400' : 'text-content-muted'}`}>
                           {c.code}
                         </code>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-content-muted mt-0.5">
                           {expired ? 'Verlopen' : !c.is_active ? 'Gedeactiveerd' : `Geldig tot ${format.dateTime(new Date(c.expires_at), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
                         </p>
                       </div>
@@ -2174,7 +2174,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                         {valid && (
                           <button
                             onClick={() => copyToClipboard(c.code, c.id)}
-                            className="text-xs px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                            className="text-xs px-3 py-1.5 bg-surface-3 hover:bg-border-strong text-content rounded-lg"
                           >
                             {copied === c.id ? '✅' : 'Kopieer'}
                           </button>
@@ -2200,9 +2200,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       {/* Pauze modal */}
       {showPauseModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold text-white mb-2">Toernooi pauzeren</h3>
-            <p className="text-gray-400 text-sm mb-4">
+          <div className="bg-surface-3 rounded-2xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-content mb-2">Toernooi pauzeren</h3>
+            <p className="text-content-muted text-sm mb-4">
               Geef een reden op — deze wordt zichtbaar op het leaderboard.
             </p>
             <input
@@ -2210,13 +2210,13 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               value={pauseReason}
               onChange={e => setPauseReason(e.target.value)}
               placeholder="bijv. Weersomstandigheden — hervatting om 14:30"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:border-yellow-500 mb-4"
+              className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content placeholder-content-muted text-sm focus:outline-none focus:border-yellow-500 mb-4"
               autoFocus
             />
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPauseModal(false)}
-                className="flex-1 py-3 bg-gray-700 text-white rounded-xl text-sm"
+                className="flex-1 py-3 bg-surface-3 text-content rounded-xl text-sm"
               >
                 Annuleren
               </button>

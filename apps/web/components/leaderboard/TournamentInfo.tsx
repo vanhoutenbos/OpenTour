@@ -61,12 +61,12 @@ export function TournamentInfo({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-sm bg-gray-900 border-l border-gray-800 h-full overflow-y-auto shadow-2xl animate-slide-in-right">
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-5 py-4 flex items-center justify-between">
-          <h2 className="font-bold text-white">Toernooi Informatie</h2>
+      <div className="relative w-full max-w-sm bg-surface-2 border-l border-border h-full overflow-y-auto shadow-2xl animate-slide-in-right">
+        <div className="sticky top-0 bg-surface-2 border-b border-border px-5 py-4 flex items-center justify-between">
+          <h2 className="font-bold text-content">Toernooi Informatie</h2>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-lg bg-surface-3 hover:bg-surface-4 flex items-center justify-center text-content-muted hover:text-content transition-colors"
           >
             ✕
           </button>
@@ -74,17 +74,17 @@ export function TournamentInfo({
 
         <div className="px-5 py-5 space-y-6">
           <div>
-            <h3 className="text-lg font-bold text-white">{name}</h3>
+            <h3 className="text-lg font-bold text-content">{name}</h3>
             {description && (
-              <p className="text-sm text-gray-400 mt-1">{description}</p>
+              <p className="text-sm text-content-muted mt-1">{description}</p>
             )}
           </div>
 
           <div className="space-y-3">
             {items.map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">{label}</span>
-                <span className="text-sm font-medium text-white">{value}</span>
+                <span className="text-sm text-content-muted">{label}</span>
+                <span className="text-sm font-medium text-content">{value}</span>
               </div>
             ))}
           </div>

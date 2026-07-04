@@ -88,54 +88,54 @@ export default function ScorerPage() {
     status === 'active' ? (
       <span className="text-xs font-medium text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">Live</span>
     ) : (
-      <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">Concept</span>
+      <span className="text-xs text-content-muted bg-surface-3 px-2 py-0.5 rounded-full">Concept</span>
     );
 
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-surface flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
-          <h1 className="text-2xl font-bold text-white mt-2">
+          <h1 className="text-2xl font-bold text-content mt-2">
             Open<span className="text-green-500">Tour</span>
           </h1>
-          <p className="text-gray-400 text-sm mt-2">{t('page_title')}</p>
+          <p className="text-content-muted text-sm mt-2">{t('page_title')}</p>
         </div>
 
         {/* Eigen toernooien — alleen zichtbaar als organisator */}
         {isOrganizer && (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-            <p className="text-sm text-gray-400 mb-3">Jouw toernooien</p>
+          <div className="bg-surface-2 border border-border rounded-2xl p-5">
+            <p className="text-sm text-content-muted mb-3">Jouw toernooien</p>
             <div className="space-y-2">
               {ownTournaments.map((t) => (
                 <Link
                   key={t.id}
                   href={`/${locale}/scorer/${t.id}`}
-                  className="flex items-center justify-between w-full px-4 py-3 bg-gray-800 hover:bg-gray-750 hover:border-green-700 border border-gray-700 rounded-xl transition-colors group"
+                  className="flex items-center justify-between w-full px-4 py-3 bg-surface-3 hover:bg-surface-4 hover:border-green-700 border border-border-strong rounded-xl transition-colors group"
                 >
-                  <span className="text-white text-sm font-medium group-hover:text-green-400 transition-colors truncate pr-2">
+                  <span className="text-content text-sm font-medium group-hover:text-green-400 transition-colors truncate pr-2">
                     {t.name}
                   </span>
                   {statusLabel(t.status)}
                 </Link>
               ))}
             </div>
-            <p className="text-xs text-gray-600 mt-3 text-center">
+            <p className="text-xs text-content-muted mt-3 text-center">
               Als organisator kun je direct scores invoeren zonder code.
             </p>
           </div>
         )}
 
         {/* Code invoer */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="bg-surface-2 border border-border rounded-2xl p-6">
           {isOrganizer ? (
-            <h2 className="text-sm font-medium text-gray-400 mb-4">
+            <h2 className="text-sm font-medium text-content-muted mb-4">
               Of voer een toegangscode in
             </h2>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-white mb-1">{t('code_title')}</h2>
-              <p className="text-gray-400 text-sm mb-6">{t('code_description')}</p>
+              <h2 className="text-lg font-semibold text-content mb-1">{t('code_title')}</h2>
+              <p className="text-content-muted text-sm mb-6">{t('code_description')}</p>
             </>
           )}
 
@@ -152,11 +152,11 @@ export default function ScorerPage() {
                 placeholder={t('code_placeholder')}
                 maxLength={8}
                 className="w-full text-center text-2xl tracking-[0.5em] font-mono px-4 py-4
-                           bg-gray-800 border border-gray-700 rounded-xl text-white
-                           placeholder-gray-600 focus:outline-none focus:border-green-600
+                           bg-surface-3 border border-border-strong rounded-xl text-content
+                           placeholder-content-muted focus:outline-none focus:border-green-600
                            transition-colors"
               />
-              <p className="text-xs text-gray-500 mt-2 text-center">{t('code_hint')}</p>
+              <p className="text-xs text-content-muted mt-2 text-center">{t('code_hint')}</p>
             </div>
 
             {error && (

@@ -96,11 +96,11 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-surface flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <span className="text-4xl">🏌️</span>
-          <h1 className="text-2xl font-bold text-white mt-2">
+          <h1 className="text-2xl font-bold text-content mt-2">
             Open<span className="text-green-500">Tour</span>
           </h1>
         </div>
@@ -108,19 +108,19 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
         {sent ? (
           <div className="bg-green-900/30 border border-green-700 rounded-2xl p-6 text-center">
             <span className="text-4xl">📧</span>
-            <h2 className="text-lg font-semibold text-white mt-3 mb-2">Check je e-mail</h2>
-            <p className="text-gray-400 text-sm">
+            <h2 className="text-lg font-semibold text-content mt-3 mb-2">Check je e-mail</h2>
+            <p className="text-content-muted text-sm">
               We stuurden een inloglink naar{' '}
-              <strong className="text-white">{email}</strong>.
+              <strong className="text-content">{email}</strong>.
             </p>
-            <p className="text-gray-500 text-xs mt-4">
+            <p className="text-content-muted text-xs mt-4">
               Link is 24 uur geldig. Geen e-mail? Check je spam.
             </p>
           </div>
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-1">Inloggen</h2>
-            <p className="text-gray-400 text-sm mb-6">
+          <div className="bg-surface-2 border border-border rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-content mb-1">Inloggen</h2>
+            <p className="text-content-muted text-sm mb-6">
               {IS_DEV ? 'Voer een e-mailadres in en log direct in.' : 'Voer je e-mailadres in — we sturen je een inloglink.'}
             </p>
 
@@ -132,15 +132,15 @@ export default function LoginPage({ params: { locale } }: { params: { locale: st
               )}
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1.5">E-mailadres</label>
+                <label className="block text-sm text-content-muted mb-1.5">E-mailadres</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (IS_DEV ? handleDevLink() : handleLogin())}
                   placeholder="jij@voorbeeld.nl"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white
-                             placeholder-gray-500 focus:outline-none focus:border-green-600 transition-colors"
+                  className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content
+                             placeholder-content-muted focus:outline-none focus:border-green-600 transition-colors"
                   autoComplete="email"
                   autoFocus
                 />

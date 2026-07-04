@@ -9,7 +9,11 @@
       "profile": "Profiel",
       "login": "Inloggen",
       "logout": "Uitloggen",
-      "language": "Taal"
+      "language": "Taal",
+      "theme": "Thema",
+      "theme_light": "Licht",
+      "theme_dark": "Donker",
+      "theme_system": "Systeem"
     },
     "actions": {
       "save": "Opslaan",

@@ -82,7 +82,7 @@ export default function DashboardPage() {
   }, [locale, router]);
 
   const statusLabel: Record<string, { label: string; className: string }> = {
-    draft:    { label: 'Concept',     className: 'bg-gray-700 text-gray-300' },
+    draft:    { label: 'Concept',     className: 'bg-surface-3 text-content-secondary' },
     active:   { label: 'Actief',      className: 'bg-green-800 text-green-300' },
     paused:   { label: 'Gepauzeerd',  className: 'bg-yellow-800 text-yellow-300' },
     finished: { label: 'Afgelopen',   className: 'bg-blue-900 text-blue-300' },
@@ -90,17 +90,17 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Laden...</p>
+      <main className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-content-muted">Laden...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-surface">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold text-white">Mijn toernooien</h2>
+          <h2 className="text-lg font-semibold text-content">Mijn toernooien</h2>
           <Link
             href={`/${locale}/tournament/new`}
             className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm
@@ -112,17 +112,17 @@ export default function DashboardPage() {
         <div className="mb-6">
           <Link
             href={`/${locale}/dashboard/getting-started`}
-            className="text-sm text-gray-400 hover:text-green-400 transition-colors"
+            className="text-sm text-content-muted hover:text-green-400 transition-colors"
           >
             {t('gettingStartedLink')}
           </Link>
         </div>
 
         {tournaments.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+          <div className="text-center py-16 border border-dashed border-border-strong rounded-2xl">
             <span className="text-5xl">🏌️</span>
-            <h3 className="text-lg font-semibold text-white mt-4 mb-2">Nog geen toernooien</h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <h3 className="text-lg font-semibold text-content mt-4 mb-2">Nog geen toernooien</h3>
+            <p className="text-content-muted text-sm mb-6">
               Maak je eerste toernooi aan en deel het leaderboard met deelnemers.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               </Link>
               <Link
                 href={`/${locale}/dashboard/getting-started`}
-                className="px-6 py-3 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white
+                className="px-6 py-3 border border-border-strong hover:border-border-strong text-content-secondary hover:text-content
                            font-semibold rounded-xl transition-colors"
               >
                 {t('gettingStartedLink')}
@@ -149,13 +149,13 @@ export default function DashboardPage() {
                 <Link
                   key={t.id}
                   href={`/${locale}/tournament/${t.id}/manage`}
-                  className="block bg-gray-900 border border-gray-800 hover:border-gray-600
+                  className="block bg-surface-2 border border-border hover:border-border-strong
                              rounded-2xl p-4 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-white">{t.name}</h3>
-                      <p className="text-sm text-gray-400 mt-0.5">
+                      <h3 className="font-semibold text-content">{t.name}</h3>
+                      <p className="text-sm text-content-muted mt-0.5">
                         {t.format} ·{' '}
                         {t.start_date
                           ? format.dateTime(new Date(t.start_date), { day: 'numeric', month: 'short', year: 'numeric' })

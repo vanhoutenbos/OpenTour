@@ -22,28 +22,28 @@ function formatScore(entry: LeaderboardEntry): string {
 }
 
 function scoreColor(entry: LeaderboardEntry): string {
-  if (INACTIVE_STATUSES.includes(entry.player_status)) return 'text-gray-500';
+  if (INACTIVE_STATUSES.includes(entry.player_status)) return 'text-score-muted';
   if (entry.format === 'stableford') return 'text-green-400 font-bold';
 
   const par = entry.scoring_type === 'net' ? entry.net_score_to_par : entry.score_to_par;
-  if (par === null || par === undefined) return 'text-white';
+  if (par === null || par === undefined) return 'text-content';
   if (par < 0) return 'text-red-400 font-bold';
   if (par === 0) return 'text-green-400 font-bold';
-  return 'text-gray-300';
+  return 'text-score-muted';
 }
 
 function todayColor(today?: number | null): string {
-  if (today === null || today === undefined) return 'text-gray-500';
+  if (today === null || today === undefined) return 'text-score-muted';
   if (today < 0) return 'text-red-400';
   if (today === 0) return 'text-green-400';
-  return 'text-gray-400';
+  return 'text-score-muted';
 }
 
 function movementIndicator(prev?: number | null, curr?: number | null) {
   if (prev === undefined || prev === null || curr === undefined || curr === null) {
-    return { icon: '—', color: 'text-gray-500', label: 'Ongewijzigd' };
+    return { icon: '—', color: 'text-score-muted', label: 'Ongewijzigd' };
   }
-  if (prev === curr) return { icon: '—', color: 'text-gray-500', label: 'Ongewijzigd' };
+  if (prev === curr) return { icon: '—', color: 'text-score-muted', label: 'Ongewijzigd' };
   if (prev > curr) return { icon: '▲', color: 'text-green-400', label: `Gestegen van ${prev} naar ${curr}` };
   return { icon: '▼', color: 'text-red-400', label: `Gedaald van ${prev} naar ${curr}` };
 }
@@ -132,7 +132,7 @@ export function LeaderboardTable({
   if (entries.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500">Nog geen scores ingevoerd</p>
+        <p className="text-content-muted">Nog geen scores ingevoerd</p>
       </div>
     );
   }
@@ -142,7 +142,7 @@ export function LeaderboardTable({
       <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-800">
         <table className="w-full text-sm whitespace-nowrap">
           <thead>
-            <tr className="text-gray-500 text-xs border-b border-gray-800 uppercase tracking-wider">
+            <tr className="text-content-muted text-xs border-b border-border uppercase tracking-wider">
               {!hideFavorites && <th className="pb-3 w-6" />}
               <th className="pb-3 pr-2 w-10 text-center">Pos.</th>
               <th className="pb-3 w-6 text-center" />
@@ -156,7 +156,7 @@ export function LeaderboardTable({
               <th className="pb-3 text-right w-20">Score</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-800/60">
+          <tbody className="divide-y divide-border/60">
             {filtered.map((entry, index) => {
               const isInactive = INACTIVE_STATUSES.includes(entry.player_status);
               const fav = isFavorite(entry.player_id);
@@ -172,7 +172,7 @@ export function LeaderboardTable({
                       ? 'opacity-50'
                       : fav
                         ? 'bg-yellow-900/10 hover:bg-yellow-900/15'
-                        : 'hover:bg-gray-800/40'
+                        : 'hover:bg-surface-3/40'
                   } ${isLastFavorite ? 'border-b-0' : ''}`}
                   onClick={() => setExpandedPlayer(expanded ? null : entry.player_id)}
                 >
@@ -182,7 +182,7 @@ export function LeaderboardTable({
                       <button
                         onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(entry.player_id); }}
                         className={`text-base transition-all hover:scale-110 ${
-                          fav ? 'text-yellow-400 drop-shadow-glow' : 'text-gray-600 hover:text-gray-400'
+                          fav ? 'text-yellow-400 drop-shadow-glow' : 'text-content-muted hover:text-content-muted'
                         }`}
                         title={fav ? 'Uit favorieten' : 'Toevoegen aan favorieten'}
                       >
@@ -195,10 +195,10 @@ export function LeaderboardTable({
                   <td className="py-3 pr-2 text-center">
                     <div className="flex items-center justify-center gap-0.5">
                       {isInactive ? (
-                        <span className="text-gray-500 font-mono">—</span>
+                        <span className="text-content-muted font-mono">—</span>
                       ) : (
                         <>
-                          <span className="font-mono font-bold text-white text-sm">
+                          <span className="font-mono font-bold text-content text-sm">
                             {entry.position}
                           </span>
                           <span className={`text-xs ${mov.color}`} title={mov.label}>
@@ -210,7 +210,7 @@ export function LeaderboardTable({
                   </td>
 
                   {/* Expander icoon */}
-                  <td className="py-3 text-center text-gray-600">
+                  <td className="py-3 text-center text-content-muted">
                     <span className={`transition-transform text-xs ${expanded ? 'rotate-180 inline-block' : ''}`}>
                       ▾
                     </span>
@@ -220,22 +220,22 @@ export function LeaderboardTable({
                   <td className="py-3 pl-2">
                     <div className="flex items-center gap-1.5">
                       {entry.started_on_hole && entry.started_on_hole !== 1 && (
-                        <span className="text-gray-500 text-xs font-bold" title={`Gestart op hole ${entry.started_on_hole}`}>
+                        <span className="text-content-muted text-xs font-bold" title={`Gestart op hole ${entry.started_on_hole}`}>
                           *
                         </span>
                       )}
                       <span className={`font-medium truncate max-w-[160px] sm:max-w-[240px] block ${
-                        isInactive ? 'text-gray-500 line-through' : 'text-white'
+                        isInactive ? 'text-content-muted line-through' : 'text-content'
                       }`}>
                         {entry.player_name}
                       </span>
                       {(entry.flight_name || entry.flight_sort_order != null) && (
-                        <span className="hidden lg:inline text-xs text-gray-600 ml-1">
+                        <span className="hidden lg:inline text-xs text-content-muted ml-1">
                           {entry.flight_name ?? `Flight ${entry.flight_sort_order}`}
                         </span>
                       )}
                       {isInactive && (
-                        <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded uppercase font-bold">
+                        <span className="text-xs bg-surface-3 text-content-secondary px-1.5 py-0.5 rounded uppercase font-bold">
                           {entry.player_status}
                         </span>
                       )}
@@ -244,14 +244,14 @@ export function LeaderboardTable({
 
                   {/* HCP */}
                   <td className="py-3 text-center">
-                    <span className="text-gray-400 text-xs font-mono">
+                    <span className="text-content-muted text-xs font-mono">
                       {entry.handicap !== null && entry.handicap !== undefined ? entry.handicap : '-'}
                     </span>
                   </td>
 
                   {/* Thru */}
                   <td className="py-3 text-center">
-                    <span className="text-gray-400 font-mono text-xs">
+                    <span className="text-content-muted font-mono text-xs">
                       {isInactive ? '-' : entry.holes_played > 0 ? `${entry.holes_played}` : '-'}
                     </span>
                   </td>
@@ -269,7 +269,7 @@ export function LeaderboardTable({
                     const roundPar = entry.round_to_par?.[i] ?? null;
                     return (
                       <td key={i} className="py-3 text-center">
-                        <span className={`font-mono text-xs ${roundPar !== null ? (roundPar < 0 ? 'text-red-400' : roundPar > 0 ? 'text-gray-400' : 'text-green-400') : 'text-gray-600'}`}>
+                        <span className={`font-mono text-xs ${roundPar !== null ? (roundPar < 0 ? 'text-red-400' : roundPar > 0 ? 'text-score-muted' : 'text-green-400') : 'text-score-muted'}`}>
                           {roundScore !== null ? roundScore : '-'}
                         </span>
                       </td>

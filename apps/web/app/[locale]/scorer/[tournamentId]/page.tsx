@@ -149,15 +149,15 @@ export default function TournamentScorerPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Laden...</p>
+      <main className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-content-muted">Laden...</p>
       </main>
     );
   }
 
   if (error || !tournament) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+      <main className="min-h-screen bg-surface flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error ?? t('tournament_not_found')}</p>
           <Link
@@ -181,11 +181,11 @@ export default function TournamentScorerPage() {
   const scoringLabel = tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto';
 
   return (
-    <main className="min-h-screen bg-gray-950">
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
+    <main className="min-h-screen bg-surface">
+      <div className="bg-surface-2 border-b border-border px-4 py-4">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-xl font-bold text-white mb-1">{tournament.name}</h1>
-          <p className="text-sm text-gray-400">
+          <h1 className="text-xl font-bold text-content mb-1">{tournament.name}</h1>
+          <p className="text-sm text-content-muted">
             {tournament.course?.name && `${tournament.course.name} · `}
             {formatLabel} · {scoringLabel} · {tournament.rounds} ronde
             {tournament.rounds > 1 ? 'n' : ''}
@@ -193,13 +193,13 @@ export default function TournamentScorerPage() {
           <div className="flex items-center gap-4 mt-2">
             <Link
               href={`/${locale}/scorer`}
-              className="text-sm text-gray-500 hover:text-gray-300"
+              className="text-sm text-content-muted hover:text-content-secondary"
             >
               {t('other_code')}
             </Link>
             {isOrganizer && (
               <>
-                <span className="text-gray-700">·</span>
+                <span className="text-content-secondary">·</span>
                 <Link
                   href={`/${locale}/tournament/${tournamentId}/manage`}
                   className="text-sm text-green-600 hover:text-green-400"
@@ -214,10 +214,10 @@ export default function TournamentScorerPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {flights.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-gray-700 rounded-2xl">
+          <div className="text-center py-16 border border-dashed border-border-strong rounded-2xl">
             <span className="text-5xl">⛳</span>
-            <h3 className="text-lg font-semibold text-white mt-4 mb-2">{t('no_flights')}</h3>
-            <p className="text-gray-400 text-sm">{t('no_flights_desc')}</p>
+            <h3 className="text-lg font-semibold text-content mt-4 mb-2">{t('no_flights')}</h3>
+            <p className="text-content-muted text-sm">{t('no_flights_desc')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -227,26 +227,26 @@ export default function TournamentScorerPage() {
                 onClick={() =>
                   router.push(`/${locale}/scorer/${tournamentId}/${flight.id}`)
                 }
-                className="w-full text-left bg-gray-900 border border-gray-800 hover:border-gray-600
+                className="w-full text-left bg-surface-2 border border-border hover:border-border-strong
                            rounded-2xl p-4 transition-colors min-h-[48px]"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white">
+                    <h3 className="font-semibold text-content">
                       {flight.name ?? `Flight ${flight.sort_order}`}
                     </h3>
-                    <p className="text-sm text-gray-400 mt-0.5">
+                    <p className="text-sm text-content-muted mt-0.5">
                       {flight.start_time &&
                         `${new Date(flight.start_time).toLocaleTimeString(locale === 'nl' ? 'nl-NL' : 'en-GB', { hour: '2-digit', minute: '2-digit' })} · `}
                       {flight.hole_count} {t('holes')} · {flight.players.length} {t('players')}
                     </p>
                     {flight.players.length > 0 && (
-                      <p className="text-sm text-gray-500 mt-1 truncate">
+                      <p className="text-sm text-content-muted mt-1 truncate">
                         {flight.players.map((p) => p.name).join(', ')}
                       </p>
                     )}
                   </div>
-                  <span className="text-gray-500 mt-1 text-lg shrink-0">→</span>
+                  <span className="text-content-muted mt-1 text-lg shrink-0">→</span>
                 </div>
               </button>
             ))}

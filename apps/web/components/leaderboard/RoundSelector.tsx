@@ -22,7 +22,7 @@ export function RoundSelector({ rounds, selected, onChange }: Props) {
           className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${
             selected === r
               ? 'bg-green-600 text-white shadow-lg shadow-green-600/30'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+              : 'bg-surface-3 text-content-muted hover:bg-surface-4 hover:text-content'
           }`}
         >
           R{r}
@@ -34,7 +34,7 @@ export function RoundSelector({ rounds, selected, onChange }: Props) {
           className={`w-9 h-9 rounded-lg text-xs font-bold transition-all ${
             selected === null
               ? 'bg-green-600 text-white shadow-lg shadow-green-600/30'
-              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+              : 'bg-surface-3 text-content-muted hover:bg-surface-4 hover:text-content'
           }`}
         >
           ALL

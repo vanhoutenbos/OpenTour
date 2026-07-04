@@ -189,16 +189,16 @@ export function HolePerFlightView({
 
   if (viewState === 'completed') {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+      <div className="bg-surface-2 border border-border rounded-xl p-8 text-center">
         <div className="text-5xl mb-4">✅</div>
-        <h3 className="text-xl font-semibold text-white mb-2">Alle holes ingevuld</h3>
-        <p className="text-gray-400 mb-6">
+        <h3 className="text-xl font-semibold text-content mb-2">Alle holes ingevuld</h3>
+        <p className="text-content-muted mb-6">
           Alle scores voor alle holes zijn opgeslagen.
         </p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={onBack}
-            className="px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors"
+            className="px-6 py-3 bg-surface-3 text-content rounded-xl hover:bg-border-strong transition-colors"
           >
             ← {t('back_to_flights')}
           </button>
@@ -212,10 +212,10 @@ export function HolePerFlightView({
       {viewState === 'select_hole' && (
         <>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">{t('hole_per_flight.select_hole')}</h3>
+            <h3 className="text-lg font-semibold text-content">{t('hole_per_flight.select_hole')}</h3>
             <button
               onClick={onBack}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-sm text-content-muted hover:text-content-secondary transition-colors"
             >
               ← {t('back_to_flights')}
             </button>
@@ -231,11 +231,11 @@ export function HolePerFlightView({
                   className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all min-h-[56px] ${
                     isSaved
                       ? 'bg-green-900/40 border-green-800 text-green-400'
-                      : 'bg-gray-900 border-gray-800 text-gray-300 hover:border-green-700 hover:bg-gray-800/50'
+                      : 'bg-surface-2 border-border text-content-secondary hover:border-green-700 hover:bg-surface-4/50'
                   } active:scale-95`}
                 >
                   <span className="font-bold text-sm">{hole.number}</span>
-                  <span className="text-[10px] text-gray-500">Par {hole.par}</span>
+                  <span className="text-[10px] text-content-muted">Par {hole.par}</span>
                 </button>
               );
             })}
@@ -248,11 +248,11 @@ export function HolePerFlightView({
           <div className="flex items-center justify-between">
             <button
               onClick={backToHoleSelect}
-              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-sm text-content-muted hover:text-content-secondary transition-colors"
             >
               ← {t('hole_per_flight.select_hole')}
             </button>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-content-muted">
               Hole {currentHole.number} · Par {currentHole.par} · SI {currentHole.stroke_index}
             </span>
           </div>
@@ -265,12 +265,12 @@ export function HolePerFlightView({
               return (
                 <div
                   key={player.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+                  className="bg-surface-2 border border-border rounded-xl p-4"
                 >
-                  <p className="text-sm font-medium text-white mb-3">
+                  <p className="text-sm font-medium text-content mb-3">
                     {player.name}
                     {player.handicap != null && (
-                      <span className="text-xs text-gray-500 ml-2">HCP {player.handicap}</span>
+                      <span className="text-xs text-content-muted ml-2">HCP {player.handicap}</span>
                     )}
                   </p>
                   <ScoreInput
@@ -313,16 +313,16 @@ export function HolePerFlightView({
 
           {highScoreWarning && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-              <div className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full">
-                <p className="text-lg font-semibold text-white mb-2">Hoge score ⚠️</p>
-                <p className="text-gray-300 mb-6">
+              <div className="bg-surface-3 rounded-2xl p-6 max-w-sm w-full">
+                <p className="text-lg font-semibold text-content mb-2">Hoge score ⚠️</p>
+                <p className="text-content-secondary mb-6">
                   Je voert {playerScores[highScoreWarning]} slagen in op een par {currentHole.par}
                   {' '}voor {sortedPlayers.find((p) => p.id === highScoreWarning)?.name}. Klopt dit?
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setHighScoreWarning(null)}
-                    className="flex-1 py-3 bg-gray-700 text-white rounded-xl"
+                    className="flex-1 py-3 bg-surface-3 text-content rounded-xl"
                   >
                     Aanpassen
                   </button>

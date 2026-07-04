@@ -26,18 +26,18 @@ export default async function GettingStartedPage({ params: { locale } }: Props) 
   };
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-surface">
       <div className="max-w-3xl mx-auto px-4 py-8">
         <Link
           href={`/${locale}/dashboard`}
-          className="inline-flex items-center text-sm text-gray-400 hover:text-white transition-colors mb-6"
+          className="inline-flex items-center text-sm text-content-muted hover:text-content transition-colors mb-6"
         >
           {t('backToDashboard')}
         </Link>
 
         <div className="mb-10">
-          <h1 className="text-2xl font-bold text-white mb-2">{t('title')}</h1>
-          <p className="text-gray-400">{t('subtitle')}</p>
+          <h1 className="text-2xl font-bold text-content mb-2">{t('title')}</h1>
+          <p className="text-content-muted">{t('subtitle')}</p>
         </div>
 
         <ol className="space-y-4">
@@ -47,7 +47,7 @@ export default async function GettingStartedPage({ params: { locale } }: Props) 
             return (
               <li
                 key={step}
-                className="bg-gray-900 border border-gray-800 rounded-2xl p-5 sm:p-6"
+                className="bg-surface-2 border border-border rounded-2xl p-5 sm:p-6"
               >
                 <div className="flex items-start gap-4">
                   <span
@@ -58,13 +58,13 @@ export default async function GettingStartedPage({ params: { locale } }: Props) 
                     {index + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h2 className="font-semibold text-white mb-1.5">
+                    <h2 className="font-semibold text-content mb-1.5">
                       {t(`steps.${step}.title`)}
                     </h2>
-                    <p className="text-sm text-gray-400 leading-relaxed">
+                    <p className="text-sm text-content-muted leading-relaxed">
                       {t(`steps.${step}.description`)}
                     </p>
-                    <p className="text-xs text-gray-500 italic mt-3">
+                    <p className="text-xs text-content-muted italic mt-3">
                       {t(`steps.${step}.tip`)}
                     </p>
                     {hasCta && (
@@ -83,15 +83,15 @@ export default async function GettingStartedPage({ params: { locale } }: Props) 
           })}
         </ol>
 
-        <div className="mt-10 border-t border-gray-800 pt-8 text-center">
-          <h3 className="text-sm font-semibold text-white mb-1">{t('helpTitle')}</h3>
-          <p className="text-sm text-gray-400 mb-4">{t('helpDescription')}</p>
+        <div className="mt-10 border-t border-border pt-8 text-center">
+          <h3 className="text-sm font-semibold text-content mb-1">{t('helpTitle')}</h3>
+          <p className="text-sm text-content-muted mb-4">{t('helpDescription')}</p>
           <a
             href="https://github.com/vanhoutenbos/opentour"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                       text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-800 transition-colors"
+                       text-content-secondary hover:text-content hover:bg-surface-3 border border-border transition-colors"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path

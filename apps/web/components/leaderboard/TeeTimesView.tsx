@@ -31,7 +31,7 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
 
   if (flights.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-content-muted">
         Nog geen flights gegenereerd
       </div>
     );
@@ -40,7 +40,7 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
   const renderFlight = (flight: FlightInfo) => (
     <div
       key={flight.id}
-      className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+      className="bg-surface-2 border border-border rounded-xl p-4"
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
             </span>
           )}
           {flight.start_time && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-content-muted">
               {format.dateTime(new Date(flight.start_time), {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -58,10 +58,10 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
             </span>
           )}
           {flight.category_name && (
-            <span className="text-xs text-gray-500">{flight.category_name}</span>
+            <span className="text-xs text-content-muted">{flight.category_name}</span>
           )}
         </div>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-content-muted">
           {flight.players.length} spelers
         </span>
       </div>
@@ -69,13 +69,13 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
         {flight.players.map((p) => (
           <div key={p.id} className="flex items-center gap-2 text-sm">
             {p.started_on_hole && p.started_on_hole !== 1 && (
-              <span className="text-gray-500 text-xs font-bold" title={`Gestart op hole ${p.started_on_hole}`}>
+              <span className="text-content-muted text-xs font-bold" title={`Gestart op hole ${p.started_on_hole}`}>
                 *
               </span>
             )}
-            <span className="text-white">{p.name}</span>
+            <span className="text-content">{p.name}</span>
             {p.handicap !== null && p.handicap !== undefined && (
-              <span className="text-gray-500 text-xs">HCP {p.handicap}</span>
+              <span className="text-content-muted text-xs">HCP {p.handicap}</span>
             )}
           </div>
         ))}
@@ -85,20 +85,20 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="text-sm text-gray-400">
+      <div className="text-sm text-content-muted">
         Ronde {round}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Hole 1 */}
         <div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <h3 className="text-xs font-bold text-content-muted uppercase tracking-wider mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
             Hole 1
           </h3>
           <div className="space-y-3">
             {hole1.length === 0 ? (
-              <p className="text-gray-600 text-sm italic">Geen flights</p>
+              <p className="text-content-muted text-sm italic">Geen flights</p>
             ) : (
               hole1.map(renderFlight)
             )}
@@ -107,13 +107,13 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
 
         {/* Hole 10 */}
         <div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <h3 className="text-xs font-bold text-content-muted uppercase tracking-wider mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             Hole 10
           </h3>
           <div className="space-y-3">
             {hole10.length === 0 ? (
-              <p className="text-gray-600 text-sm italic">Geen flights</p>
+              <p className="text-content-muted text-sm italic">Geen flights</p>
             ) : (
               hole10.map(renderFlight)
             )}
@@ -121,7 +121,7 @@ export function TeeTimesView({ flights, round = 1 }: Props) {
         </div>
       </div>
 
-      <div className="text-xs text-gray-600 pt-2">
+      <div className="text-xs text-content-muted pt-2">
         * Speler gestart op hole 10
       </div>
     </div>

@@ -52,7 +52,7 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
   return (
     <div className="flex flex-col gap-6">
       {/* Hole info */}
-      <div className="flex justify-between text-sm text-gray-400">
+      <div className="flex justify-between text-sm text-content-muted">
         <span>Hole {holeNumber}</span>
         <span>Par {par}</span>
         <span>SI {strokeIndex}</span>
@@ -63,8 +63,8 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
         <button
           onClick={() => adjust(-1)}
           disabled={disabled || strokes <= 1}
-          className="w-16 h-16 rounded-full bg-gray-700 text-3xl font-bold text-white
-                     hover:bg-gray-600 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
+          className="w-16 h-16 rounded-full bg-surface-3 text-3xl font-bold text-content
+                     hover:bg-border-strong active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
                      transition-all touch-manipulation"
           aria-label="Eén minder"
         >
@@ -72,8 +72,8 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
         </button>
 
         <div className="text-center">
-          <span className="text-7xl font-bold text-white tabular-nums">{strokes}</span>
-          <p className="text-sm text-gray-400 mt-1">
+          <span className="text-7xl font-bold text-content tabular-nums">{strokes}</span>
+          <p className="text-sm text-content-muted mt-1">
             {strokes - par === 0 ? 'Par' :
              strokes - par === -1 ? 'Birdie' :
              strokes - par <= -2 ? 'Eagle 🦅' :
@@ -86,8 +86,8 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
         <button
           onClick={() => adjust(1)}
           disabled={disabled || strokes >= 99}
-          className="w-16 h-16 rounded-full bg-gray-700 text-3xl font-bold text-white
-                     hover:bg-gray-600 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
+          className="w-16 h-16 rounded-full bg-surface-3 text-3xl font-bold text-content
+                     hover:bg-border-strong active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed
                      transition-all touch-manipulation"
           aria-label="Eén meer"
         >
@@ -111,15 +111,15 @@ export function ScoreInput({ holeNumber, par, strokeIndex, currentStrokes, onSub
       {/* Hoge score waarschuwing */}
       {showWarning && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full">
-            <p className="text-lg font-semibold text-white mb-2">Hoge score ⚠️</p>
-            <p className="text-gray-300 mb-6">
+          <div className="bg-surface-3 rounded-2xl p-6 max-w-sm w-full">
+            <p className="text-lg font-semibold text-content mb-2">Hoge score ⚠️</p>
+            <p className="text-content-secondary mb-6">
               Je voert {strokes} slagen in op een par {par}. Klopt dit?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowWarning(false)}
-                className="flex-1 py-3 bg-gray-700 text-white rounded-xl"
+                className="flex-1 py-3 bg-surface-3 text-content rounded-xl"
               >
                 Aanpassen
               </button>

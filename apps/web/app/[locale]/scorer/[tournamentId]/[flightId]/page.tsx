@@ -297,15 +297,15 @@ export default function FlightScorePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-400">Laden...</p>
+      <main className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-content-muted">Laden...</p>
       </main>
     );
   }
 
   if (error || !tournament) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+      <main className="min-h-screen bg-surface flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error ?? t('data_not_found')}</p>
           <Link
@@ -320,21 +320,21 @@ export default function FlightScorePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950">
+    <main className="min-h-screen bg-surface">
       <SyncStatusBar status={syncStatus} pendingCount={pendingCount} />
 
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-3">
+      <div className="bg-surface-2 border-b border-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="font-semibold text-white">{tournament.name}</h1>
-            <p className="text-sm text-gray-400">
+            <h1 className="font-semibold text-content">{tournament.name}</h1>
+            <p className="text-sm text-content-muted">
               {players.length} {t('players')} · {holes.length} {t('holes')}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href={`/${locale}/scorer/${tournamentId}`}
-              className="text-sm text-gray-500 hover:text-gray-300"
+              className="text-sm text-content-muted hover:text-content-secondary"
             >
               {t('back_to_flights')}
             </Link>
@@ -383,14 +383,14 @@ export default function FlightScorePage() {
 
       {showConfirm && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full">
-            <p className="text-lg font-semibold text-white mb-2">{t('submit_title')}</p>
-            <p className="text-gray-300 mb-6">{t('submit_confirm')}</p>
+          <div className="bg-surface-3 rounded-2xl p-6 max-w-sm w-full">
+            <p className="text-lg font-semibold text-content mb-2">{t('submit_title')}</p>
+            <p className="text-content-secondary mb-6">{t('submit_confirm')}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={submitting}
-                className="flex-1 py-3 bg-gray-700 text-white rounded-xl min-h-[48px]
+                className="flex-1 py-3 bg-surface-3 text-content rounded-xl min-h-[48px]
                            disabled:opacity-50"
               >
                 {t('submit_cancel')}
