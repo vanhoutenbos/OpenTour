@@ -245,7 +245,8 @@
     },
     "mode": {
       "follow_flight": "Meelopen met flight",
-      "holes_per_flight": "Holes per flight invullen"
+      "holes_per_flight": "Holes per flight invullen",
+      "grid": "Alle holes (grid)"
     },
     "hole_per_flight": {
       "select_hole": "Kies een hole",

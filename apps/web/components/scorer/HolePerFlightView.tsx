@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { ScoreInput } from '@/components/scorer/ScoreInput';
+import { PlayerScoreRow } from '@/components/scorer/PlayerScoreRow';
 
 interface Player {
   id: string;
@@ -105,30 +105,9 @@ export function HolePerFlightView({
     setViewState('enter_scores');
   };
 
-  const adjustScore = (playerId: string, delta: number) => {
-    const par = currentHole?.par ?? 4;
-    setPlayerScores((prev) => {
-      const current = prev[playerId] ?? par;
-      return { ...prev, [playerId]: Math.max(1, Math.min(99, current + delta)) };
-    });
-  };
-
-  const setScore = (playerId: string, value: number) => {
-    setPlayerScores((prev) => ({
-      ...prev,
-      [playerId]: Math.max(1, Math.min(99, value || 1)),
-    }));
-  };
-
-  const getScoreLabel = (strokes: number, par: number) => {
-    const diff = strokes - par;
-    if (diff === 0) return 'Par';
-    if (diff === -1) return 'Birdie';
-    if (diff <= -2) return 'Eagle';
-    if (diff === 1) return 'Bogey';
-    if (diff === 2) return 'Double';
-    return `+${diff}`;
-  };
+  const updatePlayerScore = useCallback((playerId: string, strokes: number) => {
+    setPlayerScores((prev) => ({ ...prev, [playerId]: strokes }));
+  }, []);
 
   const handleSave = async () => {
     if (!currentHole) return;
@@ -170,7 +149,10 @@ export function HolePerFlightView({
       if (selectedHoleIndex < sortedHoles.length - 1) {
         const nextIndex = selectedHoleIndex + 1;
         const nextHole = sortedHoles[nextIndex];
-        if (!nextHole) { setViewState('completed'); return; }
+        if (!nextHole) {
+          setViewState('completed');
+          return;
+        }
         setSelectedHoleIndex(nextIndex);
         initScoresForHole(nextHole);
         setViewState('enter_scores');
@@ -192,9 +174,7 @@ export function HolePerFlightView({
       <div className="bg-surface-2 border border-border rounded-xl p-8 text-center">
         <div className="text-5xl mb-4">✅</div>
         <h3 className="text-xl font-semibold text-content mb-2">Alle holes ingevuld</h3>
-        <p className="text-content-muted mb-6">
-          Alle scores voor alle holes zijn opgeslagen.
-        </p>
+        <p className="text-content-muted mb-6">Alle scores voor alle holes zijn opgeslagen.</p>
         <div className="flex gap-3 justify-center">
           <button
             onClick={onBack}
@@ -212,7 +192,9 @@ export function HolePerFlightView({
       {viewState === 'select_hole' && (
         <>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-content">{t('hole_per_flight.select_hole')}</h3>
+            <h3 className="text-lg font-semibold text-content">
+              {t('hole_per_flight.select_hole')}
+            </h3>
             <button
               onClick={onBack}
               className="text-sm text-content-muted hover:text-content-secondary transition-colors"
@@ -257,37 +239,13 @@ export function HolePerFlightView({
             </span>
           </div>
 
-          <div className="space-y-3">
-            {sortedPlayers.map((player) => {
-              const key = `${player.id}-${currentHole.id}`;
-              const currentStrokes = playerScores[player.id] ?? existingScores.get(key) ?? currentHole.par;
-
-              return (
-                <div
-                  key={player.id}
-                  className="bg-surface-2 border border-border rounded-xl p-4"
-                >
-                  <p className="text-sm font-medium text-content mb-3">
-                    {player.name}
-                    {player.handicap != null && (
-                      <span className="text-xs text-content-muted ml-2">HCP {player.handicap}</span>
-                    )}
-                  </p>
-                  <ScoreInput
-                    holeNumber={currentHole.number}
-                    par={currentHole.par}
-                    strokeIndex={currentHole.stroke_index}
-                    currentStrokes={currentStrokes}
-                    hideSave
-                    onChange={(strokes) => {
-                      setPlayerScores((prev) => ({ ...prev, [player.id]: strokes }));
-                    }}
-                    onSubmit={() => {}}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <PlayerScoreRow
+            players={sortedPlayers}
+            par={currentHole.par}
+            scores={playerScores}
+            disabled={viewState === 'saving'}
+            onChange={updatePlayerScore}
+          />
 
           <button
             onClick={handleSave}
@@ -298,14 +256,14 @@ export function HolePerFlightView({
           >
             {viewState === 'saving' ? (
               <>
-                <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white
-                                 rounded-full animate-spin" />
+                <span
+                  className="inline-block w-5 h-5 border-2 border-white/30 border-t-white
+                                 rounded-full animate-spin"
+                />
                 Opslaan...
               </>
             ) : selectedHoleIndex < sortedHoles.length - 1 ? (
-              <>
-                {t('hole_per_flight.enter_all')} →
-              </>
+              <>{t('hole_per_flight.enter_all')} →</>
             ) : (
               'Laatste hole opslaan →'
             )}
@@ -316,8 +274,8 @@ export function HolePerFlightView({
               <div className="bg-surface-3 rounded-2xl p-6 max-w-sm w-full">
                 <p className="text-lg font-semibold text-content mb-2">Hoge score ⚠️</p>
                 <p className="text-content-secondary mb-6">
-                  Je voert {playerScores[highScoreWarning]} slagen in op een par {currentHole.par}
-                  {' '}voor {sortedPlayers.find((p) => p.id === highScoreWarning)?.name}. Klopt dit?
+                  Je voert {playerScores[highScoreWarning]} slagen in op een par {currentHole.par}{' '}
+                  voor {sortedPlayers.find((p) => p.id === highScoreWarning)?.name}. Klopt dit?
                 </p>
                 <div className="flex gap-3">
                   <button
