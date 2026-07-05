@@ -207,7 +207,8 @@
     },
     "mode": {
       "follow_flight": "Walk with flight",
-      "holes_per_flight": "Enter by hole"
+      "holes_per_flight": "Enter by hole",
+      "grid": "All holes (grid)"
     },
     "hole_per_flight": {
       "select_hole": "Choose a hole",
