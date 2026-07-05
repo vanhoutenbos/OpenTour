@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { useAuthSession } from '@/lib/useAuthSession';
 
 interface Tournament {
   id: string;
@@ -21,65 +22,71 @@ export default function DashboardPage() {
   const locale = (params.locale as string) || 'nl';
   const format = useFormatter();
   const t = useTranslations('dashboard');
+  const tErrors = useTranslations('errors');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tournamentsLoading, setTournamentsLoading] = useState(true);
+  const [dataError, setDataError] = useState(false);
+
+  // Server-geverifieerde login-status i.p.v. lokale getSession()/
+  // onAuthStateChange. Die laatste kon "ingelogd" rapporteren op basis van
+  // verouderde/nog-niet-gesynchroniseerde lokale storage terwijl de server
+  // (middleware) de cookie net had ververst — vandaar dat een refresh soms
+  // ten onrechte naar /login stuurde. /api/auth/session is de autoriteit.
+  //
+  // Belangrijk: als de auth-check zelf hikt (degraded) maar we al een
+  // bekende, nog geldige user hebben, blokkeren we niets — de rest van de
+  // pagina werkt gewoon door op basis van dat token. Alleen als Supabase in
+  // het algemeen niet reageert (de data-query hieronder faalt ook) tonen we
+  // een storingsmelding. Eén losse auth-hikje is geen reden om iemand die
+  // verder prima werkt tegen te houden.
+  const { user, loading: authLoading, degraded } = useAuthSession();
+  const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowser();
+    if (authLoading) return;
+
+    if (!user) {
+      // Geen bekende user. Als dat komt door een tijdelijke storing
+      // (degraded) i.p.v. een bevestigd "niet ingelogd", wachten we nog
+      // even in plaats van meteen naar login te sturen.
+      if (degraded) return;
+      if (!redirected) {
+        setRedirected(true);
+        router.replace(`/${locale}/login`);
+      }
+      return;
+    }
+
     let cancelled = false;
-    let loaded = false;
+    const supabase = getSupabaseBrowser();
 
-    const loadDashboard = async (userId: string) => {
-      if (cancelled || loaded) return;
-      loaded = true;
-      try {
-        const { data: rows, error } = await supabase
-          .from('tournaments')
-          .select('id, name, status, format, start_date, created_at')
-          .eq('created_by', userId)
-          .order('created_at', { ascending: false });
-
+    supabase
+      .from('tournaments')
+      .select('id, name, status, format, start_date, created_at')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data: rows, error }) => {
+        if (cancelled) return;
         if (error) {
           console.error('[dashboard] tournaments query error:', error);
-        }
-        if (!cancelled) {
+          setDataError(true);
+        } else {
+          setDataError(false);
           setTournaments((rows as Tournament[]) ?? []);
         }
-      } catch (err) {
-        console.error('[dashboard] tournaments query exception:', err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    // getSession() leest de cookie die de middleware al heeft gerefresht.
-    // Geen extra server-roundtrip — snel en betrouwbaar.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled) return;
-      if (session?.user) {
-        loadDashboard(session.user.id);
-      } else {
-        setLoading(false);
-        router.replace(`/${locale}/login`);
-      }
-    });
-
-    // Vang live events op: inloggen vanuit ander tabblad, uitloggen, token refresh
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cancelled) return;
-      if (event === 'SIGNED_IN' && session?.user) {
-        loadDashboard(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setLoading(false);
-        router.replace(`/${locale}/login`);
-      }
-    });
+        setTournamentsLoading(false);
+      });
 
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
     };
-  }, [locale, router]);
+  }, [authLoading, degraded, user, locale, router, redirected]);
+
+  const loading = authLoading || (!!user && tournamentsLoading);
+  // Storing tonen op de pagina zelf alleen als er nog steeds geen user bekend
+  // is (dus zelfs de laatst bekende staat ontbreekt) OF als de daadwerkelijke
+  // data-call ook faalt — niet bij een geïsoleerd auth-check-hikje.
+  const showOutageNotice = (degraded && !user) || dataError;
 
   const statusLabel: Record<string, { label: string; className: string }> = {
     draft:    { label: 'Concept',     className: 'bg-surface-3 text-content-secondary' },
@@ -96,9 +103,25 @@ export default function DashboardPage() {
     );
   }
 
+  // Geen enkele bekende gebruiker (ook niet van een eerdere, nog geldige
+  // sessie) en de auth-check faalt door een storing: niets te tonen, geen
+  // reden om naar login te sturen (dat zou een gok zijn, geen feit).
+  if (showOutageNotice && !user) {
+    return (
+      <main className="min-h-screen bg-surface flex items-center justify-center px-4">
+        <p className="text-content-muted text-center max-w-sm">{tErrors('supabase_outage')}</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-surface">
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {showOutageNotice && (
+          <div className="mb-4 px-4 py-3 rounded-xl text-sm bg-amber-900/40 text-amber-200 border border-amber-800/60">
+            {tErrors('supabase_outage')}
+          </div>
+        )}
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold text-content">Mijn toernooien</h2>
           <Link

@@ -5,6 +5,7 @@ import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { useAuthSession } from '@/lib/useAuthSession';
 import { Avatar } from '@/components/Avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -15,11 +16,17 @@ const locales = [
 
 export function Navbar() {
   const t = useTranslations('common.nav');
+  const tErrors = useTranslations('errors');
   const pathname = usePathname();
   const params = useParams();
   const locale = (params.locale as string) || 'nl';
 
-  const [user, setUser] = useState<{ email: string; display_name: string | null } | null>(null);
+  // Server-geverifieerde login-status (/api/auth/session) i.p.v. lokale
+  // getSession()/onAuthStateChange — zie useAuthSession voor de reden.
+  const { user: sessionUser, degraded, refresh } = useAuthSession();
+  const user = sessionUser
+    ? { email: sessionUser.email ?? '', display_name: sessionUser.display_name }
+    : null;
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -33,31 +40,6 @@ export function Navbar() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const supabase = getSupabaseBrowser();
-
-    async function fetchProfile(userId: string) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', userId)
-        .maybeSingle();
-      return data?.display_name ?? null;
-    }
-
-    // onAuthStateChange vuurt INITIAL_SESSION direct met de huidige sessie — geen lock nodig
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const display_name = await fetchProfile(session.user.id);
-        setUser({ email: session.user.email ?? '', display_name });
-      } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
@@ -214,6 +196,7 @@ export function Navbar() {
                         onClick={async () => {
                           setProfileOpen(false);
                           await getSupabaseBrowser().auth.signOut();
+                          await refresh();
                         }}
                         className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"
                       >
@@ -247,6 +230,16 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Storingsbanner: alleen zichtbaar als de sessie-check herhaaldelijk
+          faalt door een technische storing. Laatst bekende ingelogde staat
+          (user/Avatar hierboven) blijft intussen gewoon staan — dit is puur
+          een melding, geen uitlog-actie. */}
+      {degraded && (
+        <div className="px-4 py-2 text-sm text-center bg-amber-900/40 text-amber-200 border-t border-amber-800/60">
+          {tErrors('session_check_failed')}
+        </div>
+      )}
 
       {/* Mobile menu */}
       {menuOpen && (
@@ -353,6 +346,7 @@ export function Navbar() {
                     <button
                       onClick={async () => {
                         await getSupabaseBrowser().auth.signOut();
+                        await refresh();
                         setMenuOpen(false);
                       }}
                       className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"

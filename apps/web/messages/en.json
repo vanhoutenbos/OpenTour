@@ -310,7 +310,9 @@
     "magic_link_expired": "Your link has expired. Request a new one via the login page.",
     "tournament_finished": "This tournament has ended. No more scores can be entered.",
     "tournament_paused": "This tournament is temporarily paused. Score entry is blocked.",
-    "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes."
+    "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes.",
+    "session_check_failed": "Couldn't verify your login status due to a technical issue. We're trying again.",
+    "supabase_outage": "Can't reach the server due to a technical issue. Please try again in a few minutes."
   },
   "dashboard": {
     "title": "My tournaments",
