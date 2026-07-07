@@ -311,7 +311,9 @@
     "magic_link_expired": "Je link is verlopen. Vraag een nieuwe aan via de inlogpagina.",
     "tournament_finished": "Dit toernooi is afgesloten. Scores kunnen niet meer worden ingevoerd.",
     "tournament_paused": "Dit toernooi is tijdelijk gepauzeerd. Scores invoeren is geblokkeerd.",
-    "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw."
+    "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw.",
+    "session_check_failed": "Kon je inlogstatus niet controleren door een technische storing. We proberen het opnieuw.",
+    "supabase_outage": "Kan geen contact maken met de server door een technische storing. Probeer het over enkele minuten opnieuw."
   },
   "dashboard": {
     "title": "Mijn toernooien",
