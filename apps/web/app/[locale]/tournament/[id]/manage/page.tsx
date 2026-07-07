@@ -314,7 +314,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     if (t.course_id) {
       const [teeData, holeData] = await Promise.all([
         supabase.from('tees').select('id, name, color').eq('course_id', t.course_id).order('name'),
-        supabase.from('holes').select('id, number, par, stroke_index').eq('course_id', t.course_id).order('number'),
+        // Scorecorrecties werken op de bevroren tournament_holes-snapshot (bestaat pas na activatie),
+        // niet op de live `holes`-tabel — anders zou een latere baanwijziging oude scores laten mismatchen.
+        supabase.from('tournament_holes').select('id, number, par, stroke_index').eq('tournament_id', params.id).order('number'),
       ]);
       setTees((teeData.data as Tee[]) ?? []);
       setHoles((holeData.data as Hole[]) ?? []);

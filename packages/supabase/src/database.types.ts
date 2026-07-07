@@ -119,10 +119,40 @@ export interface Database {
           external_id: string;
           name: string | null;
           color: string | null;
+          slope_rating: number | null;
+          course_rating: number | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tees']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['tees']['Insert']>;
+      };
+      tournament_holes: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          source_hole_id: string | null;
+          number: number;
+          par: number;
+          stroke_index: number;
+          distance_meters: number | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tournament_holes']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['tournament_holes']['Insert']>;
+      };
+      tournament_tees: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          source_tee_id: string | null;
+          name: string | null;
+          color: string | null;
+          slope_rating: number | null;
+          course_rating: number | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tournament_tees']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['tournament_tees']['Insert']>;
       };
       flights: {
         Row: {

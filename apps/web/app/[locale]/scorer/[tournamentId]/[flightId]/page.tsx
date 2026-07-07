@@ -98,22 +98,16 @@ export default function FlightScorePage() {
         const tInfo = tournamentRes.data as TournamentInfo;
         setTournament(tInfo);
 
-        const { data: courseData } = await supabase
-          .from('tournaments')
-          .select('course_id')
-          .eq('id', tournamentId)
-          .single();
+        // Scores verwijzen naar tournament_holes (bevroren bij activatie van het toernooi),
+        // niet naar de live holes-tabel — zo blijft par/SI kloppen ook als de baan later wijzigt.
+        const { data: holeRows } = await supabase
+          .from('tournament_holes')
+          .select('id, number, par, stroke_index')
+          .eq('tournament_id', tournamentId)
+          .order('number', { ascending: true });
 
-        if (courseData?.course_id) {
-          const { data: holeRows } = await supabase
-            .from('holes')
-            .select('id, number, par, stroke_index')
-            .eq('course_id', courseData.course_id)
-            .order('number', { ascending: true });
-
-          if (holeRows) {
-            setHoles(holeRows as Hole[]);
-          }
+        if (holeRows) {
+          setHoles(holeRows as Hole[]);
         }
 
         setPlayers(playersRes.data ?? []);

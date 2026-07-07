@@ -117,10 +117,12 @@ export default function TournamentScorerPage() {
           playersByFlight.set(p.flight_id!, list);
         }
 
+        // Telt de bevroren tournament_holes-snapshot (gezet bij activatie), niet de live holes-tabel,
+        // zodat dit klopt met wat er daadwerkelijk gespeeld werd voor dit toernooi.
         const holesRes = await supabase
-          .from('holes')
+          .from('tournament_holes')
           .select('id', { count: 'exact', head: true })
-          .eq('course_id', tData.course?.id ?? '');
+          .eq('tournament_id', tournamentId);
 
         const holeCount = holesRes.count ?? 18;
 

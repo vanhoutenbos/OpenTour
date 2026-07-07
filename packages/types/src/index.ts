@@ -62,6 +62,43 @@ export interface Tee {
   external_id: string;
   name?: string;
   color?: string;
+  /** WHS: 55–113–155, hoger = moeilijker t.o.v. scratch */
+  slope_rating?: number;
+  /** WHS: verwachte score van een scratch-golfer vanaf deze tee */
+  course_rating?: number;
+  created_at: string;
+}
+
+/**
+ * Bevroren kopie van de holes zoals gespeeld bij dit toernooi.
+ * Wordt automatisch gevuld door een DB-trigger bij de overgang draft → active,
+ * zodat latere wijzigingen aan `holes` (par/SI na hermeting) oude toernooien niet beïnvloeden.
+ * `scores.hole_id` verwijst naar deze tabel, niet meer naar `holes`.
+ */
+export interface TournamentHole {
+  id: string;
+  tournament_id: string;
+  /** Traceerbaarheid naar de bron-hole; niet leidend, kan null zijn als de hole later verwijderd is */
+  source_hole_id?: string;
+  number: number;
+  par: 3 | 4 | 5;
+  stroke_index: number;
+  distance_meters?: number;
+  created_at: string;
+}
+
+/**
+ * Bevroren kopie van de tees zoals bij activatie beschikbaar op de baan.
+ * Groundwork voor de WHS playing-handicap-berekening (nog niet gekoppeld aan flights/categories).
+ */
+export interface TournamentTee {
+  id: string;
+  tournament_id: string;
+  source_tee_id?: string;
+  name?: string;
+  color?: string;
+  slope_rating?: number;
+  course_rating?: number;
   created_at: string;
 }
 
