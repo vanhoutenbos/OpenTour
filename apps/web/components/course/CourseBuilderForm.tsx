@@ -6,8 +6,11 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 type LoopType = 'full_18' | 'front_9' | 'back_9' | 'custom';
 
+type TeeGender = 'male' | 'female' | 'mixed' | null;
+
 interface TeeDraft {
   color: string;
+  gender: TeeGender;
 }
 
 interface HoleDraft {
@@ -44,15 +47,22 @@ interface CourseBuilderFormProps {
 }
 
 const DEFAULT_TEE_ROWS: TeeDraft[] = [
-  { color: 'Wit' },
-  { color: 'Geel' },
+  { color: 'Wit', gender: 'male' },
+  { color: 'Wit', gender: 'female' },
+  { color: 'Geel', gender: 'male' },
 ];
 const DEFAULT_PRIMARY_TEE_COLOR = DEFAULT_TEE_ROWS[0]?.color ?? 'Wit';
 
 const TEE_COLOR_OPTIONS = ['Zwart', 'Wit', 'Geel', 'Blauw', 'Rood', 'Oranje'] as const;
 
-function toTeeKey(color: string) {
-  return color.trim().toLowerCase();
+function toTeeKey(color: string, gender?: TeeGender) {
+  const base = color.trim().toLowerCase();
+  return gender ? `${base}_${gender}` : base;
+}
+
+/** external_id voor opslag in de DB — zelfde logica als toTeeKey */
+function toExternalId(color: string, gender: TeeGender) {
+  return toTeeKey(color, gender);
 }
 
 const DEFAULT_HOLES: HoleDraft[] = Array.from({ length: 18 }).map((_, idx) => ({
@@ -60,8 +70,9 @@ const DEFAULT_HOLES: HoleDraft[] = Array.from({ length: 18 }).map((_, idx) => ({
   par: 4,
   stroke_index: idx + 1,
   distance_meters_by_tee: {
-    wit: '',
-    geel: '',
+    wit_male: '',
+    wit_female: '',
+    geel_male: '',
   },
 }));
 
@@ -93,7 +104,9 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
   const [tees, setTees] = useState<TeeDraft[]>(initialData?.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
   const [holes, setHoles] = useState<HoleDraft[]>(initialData?.holes?.length ? initialData.holes : DEFAULT_HOLES);
   const [loops, setLoops] = useState<LoopDraft[]>(initialData?.loops?.length ? initialData.loops : DEFAULT_LOOPS);
-  const [activeTeeKey, setActiveTeeKey] = useState<string>(toTeeKey(initialData?.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR));
+  const [activeTeeKey, setActiveTeeKey] = useState<string>(
+    toTeeKey(initialData?.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR, initialData?.tees?.[0]?.gender ?? 'male')
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -107,7 +120,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     setTees(initialData.tees?.length ? initialData.tees : DEFAULT_TEE_ROWS);
     setHoles(initialData.holes?.length ? initialData.holes : DEFAULT_HOLES);
     setLoops(initialData.loops?.length ? initialData.loops : DEFAULT_LOOPS);
-    setActiveTeeKey(toTeeKey(initialData.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR));
+    setActiveTeeKey(toTeeKey(initialData.tees?.[0]?.color ?? DEFAULT_PRIMARY_TEE_COLOR, initialData.tees?.[0]?.gender ?? 'male'));
   }, [initialData]);
 
   const updateTee = (index: number, patch: Partial<TeeDraft>) => {
@@ -140,7 +153,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     setTees((prev) => [
       ...prev,
       {
-        color: TEE_COLOR_OPTIONS.find((option) => !prev.some((tee) => tee.color === option)) ?? '',
+        color: TEE_COLOR_OPTIONS.find((option) => !prev.some((tee) => tee.color === option && !tee.gender)) ?? '',
+        gender: null,
       },
     ]);
   };
@@ -171,9 +185,9 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
       if (hole.number < 1) return 'Hole nummer moet groter dan 0 zijn.';
     }
 
-    const teeExternalIds = tees.map((tee) => toTeeKey(tee.color));
+    const teeExternalIds = tees.map((tee) => toExternalId(tee.color, tee.gender));
     if (teeExternalIds.some((externalId) => !externalId)) return 'Elke teebox moet een kleur hebben.';
-    if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke teeboxkleur mag maar 1 keer voorkomen.';
+    if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke combinatie van kleur en geslacht mag maar 1 keer voorkomen.';
 
     for (const hole of holes) {
       if (hole.par < 1 || hole.par > 9) return 'Par moet tussen 1 en 9 liggen.';
@@ -269,9 +283,10 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
       const teePayload = tees.map((tee) => ({
         course_id: courseId,
-        external_id: toTeeKey(tee.color),
+        external_id: toExternalId(tee.color, tee.gender),
         name: tee.color.trim() || null,
         color: tee.color.trim() || null,
+        gender: tee.gender ?? null,
       }));
 
       const { data: teeRows, error: teeError } = await supabase
@@ -286,7 +301,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
         .slice()
         .sort((a, b) => a.number - b.number)
         .map((hole) => {
-          const defaultTeeKey = toTeeKey(tees[0]?.color ?? '');
+          const defaultTeeKey = toExternalId(tees[0]?.color ?? '', tees[0]?.gender ?? null);
           const defaultDistance = hole.distance_meters_by_tee[defaultTeeKey];
 
           return {
@@ -312,7 +327,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         return tees
           .map((tee) => {
-            const teeKey = toTeeKey(tee.color);
+            const teeKey = toExternalId(tee.color, tee.gender);
             const teeId = teeMap.get(teeKey);
             const distance = hole.distance_meters_by_tee[teeKey];
 
@@ -463,17 +478,29 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
 
         <div className="space-y-2">
           {tees.map((tee, index) => (
-            <div key={`${tee.color}-${index}`} className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <select
-                value={tee.color}
-                onChange={(event) => updateTee(index, { color: event.target.value })}
-                className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
-              >
-                <option value="">Kies teebox kleur</option>
-                {TEE_COLOR_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+            <div key={`${tee.color}-${tee.gender ?? 'none'}-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={tee.color}
+                  onChange={(event) => updateTee(index, { color: event.target.value })}
+                  className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
+                >
+                  <option value="">Kies kleur</option>
+                  {TEE_COLOR_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                <select
+                  value={tee.gender ?? ''}
+                  onChange={(event) => updateTee(index, { gender: (event.target.value as TeeGender) || null })}
+                  className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
+                >
+                  <option value="">Geslacht (optioneel)</option>
+                  <option value="male">Heren</option>
+                  <option value="female">Dames</option>
+                  <option value="mixed">Gemengd</option>
+                </select>
+              </div>
               <button
                 type="button"
                 onClick={() => setTees((prev) => prev.filter((_, rowIndex) => rowIndex !== index))}
@@ -493,7 +520,11 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
         <h3 className="text-sm font-semibold text-content">Holes</h3>
         <div className="flex flex-wrap gap-2">
           {tees.map((tee) => {
-            const teeKey = toTeeKey(tee.color);
+            const teeKey = toExternalId(tee.color, tee.gender);
+            const label = tee.gender === 'male' ? `${tee.color} · H`
+              : tee.gender === 'female' ? `${tee.color} · D`
+              : tee.gender === 'mixed' ? `${tee.color} · G`
+              : tee.color || 'Onbekend';
             return (
               <button
                 key={teeKey || tee.color}
@@ -505,7 +536,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                     : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
                 }`}
               >
-                {tee.color || 'Onbekend'}
+                {label}
               </button>
             );
           })}
@@ -560,7 +591,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
               number: prev.length + 1,
               par: 4,
               stroke_index: prev.length + 1,
-              distance_meters_by_tee: Object.fromEntries(tees.map((tee) => [toTeeKey(tee.color), ''])),
+              distance_meters_by_tee: Object.fromEntries(tees.map((tee) => [toExternalId(tee.color, tee.gender), ''])),
             }])}
             className="text-xs px-3 py-1.5 rounded-lg bg-surface-3 hover:bg-border-strong text-content"
           >
