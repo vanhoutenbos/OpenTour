@@ -15,8 +15,8 @@ export interface Database {
           display_name: string;
           email: string | null;
           handicap: number | null;
-          language: 'nl' | 'en';
-          role: 'organizer' | 'recorder';
+          language: Database['public']['Enums']['language'];
+          role: Database['public']['Enums']['user_role'];
           created_at: string;
           updated_at: string;
         };
@@ -30,7 +30,7 @@ export interface Database {
           location: string | null;
           country: string;
           holes_count: number;
-          source: 'egolf4u' | 'custom' | 'community';
+          source: Database['public']['Enums']['course_source'];
           external_id: string | null;
           created_by: string | null;
           is_verified: boolean;
@@ -70,10 +70,10 @@ export interface Database {
           description: string | null;
           course_id: string | null;
           loop_id: string | null;
-          format: 'strokeplay' | 'stableford' | 'matchplay';
-          scoring_type: 'gross' | 'net';
+          format: Database['public']['Enums']['tournament_format'];
+          scoring_type: Database['public']['Enums']['scoring_type'];
           rounds: number;
-          status: 'draft' | 'active' | 'paused' | 'finished';
+          status: Database['public']['Enums']['tournament_status'];
           pause_reason: string | null;
           is_public: boolean;
           start_date: string | null;
@@ -91,7 +91,7 @@ export interface Database {
           course_id: string;
           name: string;
           holes_count: number;
-          loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
+          loop_type: Database['public']['Enums']['loop_type'];
           tee_id: string | null;
           is_default: boolean;
           created_by: string | null;
@@ -121,7 +121,7 @@ export interface Database {
           color: string | null;
           slope_rating: number | null;
           course_rating: number | null;
-          gender: 'male' | 'female' | null;
+          gender: Database['public']['Enums']['gender_binary'] | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tees']['Row'], 'id' | 'created_at'>;
@@ -150,7 +150,7 @@ export interface Database {
           color: string | null;
           slope_rating: number | null;
           course_rating: number | null;
-          gender: 'male' | 'female' | 'mixed' | null;
+          gender: Database['public']['Enums']['gender_category'] | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tournament_tees']['Row'], 'id' | 'created_at'>;
@@ -177,7 +177,7 @@ export interface Database {
           tournament_id: string;
           name: string;
           description: string | null;
-          gender: 'male' | 'female' | 'mixed' | null;
+          gender: Database['public']['Enums']['gender_category'] | null;
           handicap_min: number | null;
           handicap_max: number | null;
           tee_id: string | null;
@@ -197,8 +197,8 @@ export interface Database {
           name: string;
           email: string | null;
           handicap: number | null;
-          gender: 'male' | 'female' | null;
-          status: 'registered' | 'confirmed' | 'withdrawn' | 'dns' | 'dnf' | 'dsq';
+          gender: Database['public']['Enums']['gender_binary'] | null;
+          status: Database['public']['Enums']['player_status'];
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tournament_players']['Row'], 'id' | 'created_at'>;
@@ -358,6 +358,18 @@ export interface Database {
         };
         Returns: string;
       };
+    };
+    Enums: {
+      tournament_format: 'strokeplay' | 'stableford' | 'matchplay';
+      scoring_type: 'gross' | 'net';
+      tournament_status: 'draft' | 'active' | 'paused' | 'finished';
+      player_status: 'registered' | 'confirmed' | 'withdrawn' | 'dns' | 'dnf' | 'dsq';
+      gender_binary: 'male' | 'female';
+      gender_category: 'male' | 'female' | 'mixed';
+      loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
+      user_role: 'organizer' | 'recorder';
+      course_source: 'egolf4u' | 'custom' | 'community';
+      language: 'nl' | 'en';
     };
   };
 }

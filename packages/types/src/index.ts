@@ -15,7 +15,8 @@ export type CourseSource = 'egolf4u' | 'custom' | 'community';
 export type UserRole = 'organizer' | 'recorder';
 export type Language = 'nl' | 'en';
 export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
-export type Gender = 'male' | 'female' | 'mixed';
+export type GenderBinary   = 'male' | 'female';
+export type GenderCategory = 'male' | 'female' | 'mixed';
 export type LoopType = 'full_18' | 'front_9' | 'back_9' | 'custom';
 
 // ============================================================
@@ -66,6 +67,7 @@ export interface Tee {
   slope_rating?: number;
   /** WHS: verwachte score van een scratch-golfer vanaf deze tee */
   course_rating?: number;
+  gender: GenderBinary | null;  // nieuw: WHS-gender voor deze teebox
   created_at: string;
 }
 
@@ -99,6 +101,7 @@ export interface TournamentTee {
   color?: string;
   slope_rating?: number;
   course_rating?: number;
+  gender: GenderCategory | null;  // nieuw: bevroren kopie van tees.gender
   created_at: string;
 }
 
@@ -160,8 +163,7 @@ export interface TournamentCategory {
   tournament_id: string;
   name: string;
   description?: string;
-  gender?: Gender;
-  handicap_min?: number;
+  gender?: GenderCategory;
   handicap_max?: number;
   tee_id?: string;
   sort_order: number;
@@ -177,8 +179,7 @@ export interface TournamentPlayer {
   name: string;
   email?: string;
   handicap?: number;
-  gender?: Gender;
-  status: PlayerStatus;
+  gender?: GenderBinary;
   created_at: string;
 }
 
