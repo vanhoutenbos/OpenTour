@@ -64,7 +64,7 @@ CREATE TABLE tournaments (
   name          TEXT NOT NULL,
   description   TEXT,
   course_id     UUID REFERENCES courses(id),
-  format        TEXT NOT NULL CHECK (format IN ('strokeplay', 'stableford', 'matchplay')),
+  format        TEXT NOT NULL CHECK (format IN ('stroke', 'stableford', 'match')),
   scoring_type  TEXT DEFAULT 'gross' CHECK (scoring_type IN ('gross', 'net')),
   rounds        INT NOT NULL DEFAULT 1 CHECK (rounds > 0),
   status        TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'finished')),

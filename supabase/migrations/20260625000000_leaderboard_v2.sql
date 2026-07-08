@@ -128,7 +128,7 @@ SELECT
       CASE
         WHEN a.format = 'stableford' AND a.scoring_type = 'net'   THEN -a.net_stableford_points
         WHEN a.format = 'stableford' AND a.scoring_type = 'gross' THEN -a.gross_stableford_points
-        WHEN a.format = 'strokeplay' AND a.scoring_type = 'net'   THEN a.total_net_strokes
+        WHEN a.format = 'stroke' AND a.scoring_type = 'net'   THEN a.total_net_strokes
         ELSE a.total_strokes
       END ASC,
       a.holes_played DESC
