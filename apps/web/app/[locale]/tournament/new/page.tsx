@@ -84,7 +84,7 @@ export default function NewTournamentPage() {
     course_id: '',
     loop_id: '',
     tee_id: '',
-    format: 'stableford' as 'stroke' | 'stableford' | 'match',
+    format: 'stableford' as 'strokeplay' | 'stableford' | 'matchplay',
     scoring_type: 'gross' as 'gross' | 'net',
     rounds: 1,
     multi_rounds: false,
@@ -534,8 +534,8 @@ export default function NewTournamentPage() {
               <div className="space-y-2">
                 {[
                   { value: 'stableford', label: 'Stableford', desc: 'Punten per hole — meeste punten wint' },
-                  { value: 'stroke',     label: 'Stroke play', desc: 'Minste slagen over alle holes wint' },
-                  { value: 'match',      label: 'Matchplay',   desc: 'Hole-by-hole duels (1 vs 1)' },
+                  { value: 'strokeplay',     label: 'Stroke play', desc: 'Minste slagen over alle holes wint' },
+                  { value: 'matchplay',      label: 'Matchplay',   desc: 'Hole-by-hole duels (1 vs 1)' },
                 ].map((f) => (
                   <button
                     key={f.value}

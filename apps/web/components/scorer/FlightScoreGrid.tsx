@@ -38,7 +38,7 @@ interface Props {
   tournamentId: string;
   players: Player[];
   holes: Hole[];
-  tournamentFormat: 'stroke' | 'stableford' | 'match';
+  tournamentFormat: 'strokeplay' | 'stableford' | 'matchplay';
   roundNumber?: number;
   onBack: () => void;
 }
@@ -294,7 +294,7 @@ export function FlightScoreGrid({
 
                     let cellClass = 'bg-surface-3 border-border-strong text-score-muted';
                     if (hasScore) {
-                      if (tournamentFormat === 'stroke') {
+                      if (tournamentFormat === 'strokeplay') {
                         cellClass = `bg-surface-3 border-border-strong ${getStrokeplayColorClass(strokes!, hole.par as number)}`;
                       } else if (tournamentFormat === 'stableford') {
                         const points = getStablefordPoints(strokes!, hole.par as number);

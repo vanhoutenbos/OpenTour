@@ -176,7 +176,7 @@ export default function TournamentScorerPage() {
   const formatLabel =
     tournament.format === 'stableford'
       ? 'Stableford'
-      : tournament.format === 'match'
+      : tournament.format === 'matchplay'
         ? 'Matchplay'
         : 'Strokeplay';
 

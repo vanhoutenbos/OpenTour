@@ -24,7 +24,7 @@ interface ScoreGridProps {
   tournamentId: string;
   players: Player[];
   holes: Hole[];
-  tournamentFormat: 'stroke' | 'stableford' | 'match';
+  tournamentFormat: 'strokeplay' | 'stableford' | 'matchplay';
   scoringType: 'gross' | 'net';
   tournamentRounds?: number;
   highlightedHole?: number | null;
@@ -282,7 +282,7 @@ export default function ScoreGrid({
 
                     let cellClass = 'bg-surface-3 border-border-strong text-score-muted';
                     if (hasScore) {
-                      if (tournamentFormat === 'stroke') {
+                      if (tournamentFormat === 'strokeplay') {
                         cellClass = `bg-surface-3 border-border-strong ${getStrokeplayClassification(strokes!, hole.par as number)}`;
                       } else if (tournamentFormat === 'stableford') {
                         const points = getStablefordPoints(strokes!, hole.par as number);

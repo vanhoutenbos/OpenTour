@@ -79,8 +79,8 @@ SELECT
       CASE
         WHEN format = 'stableford' AND scoring_type = 'net'   THEN -SUM(net_stableford)
         WHEN format = 'stableford' AND scoring_type = 'gross' THEN -SUM(gross_stableford)
-        WHEN format = 'stroke'     AND scoring_type = 'net'   THEN SUM(net_strokes)
-        ELSE SUM(strokes)  -- stroke gross (standaard)
+        WHEN format = 'strokeplay' AND scoring_type = 'net'   THEN SUM(net_strokes)
+        ELSE SUM(strokes)  -- strokeplay gross (standaard)
       END ASC,
       -- Tiebreaker: meeste holes gespeeld wint
       COUNT(strokes) DESC

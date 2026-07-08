@@ -650,7 +650,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
   // ---- Matchplay pairings ----
   const generateMatchplayPairings = async () => {
-    if (!tournament || tournament.format !== 'match') return;
+    if (!tournament || tournament.format !== 'matchplay') return;
 
     setMatchplayBusy(true);
     const activePlayers = players
@@ -930,7 +930,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               <PauseBanner reason={tournament.pause_reason} />
             )}
 
-            {tournament.format === 'match' && (
+            {tournament.format === 'matchplay' && (
               <div className="bg-surface-2 border border-border rounded-2xl p-5 space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -2127,7 +2127,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 tournamentId={params.id}
                 players={players as any}
                 holes={holes}
-                tournamentFormat={tournament.format as 'stroke' | 'stableford' | 'match'}
+                tournamentFormat={tournament.format as 'strokeplay' | 'stableford' | 'matchplay'}
                 scoringType={tournament.scoring_type as 'gross' | 'net'}
                 tournamentRounds={tournament.rounds}
               />

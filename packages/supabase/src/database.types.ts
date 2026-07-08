@@ -70,7 +70,7 @@ export interface Database {
           description: string | null;
           course_id: string | null;
           loop_id: string | null;
-          format: 'stroke' | 'stableford' | 'match';
+          format: 'strokeplay' | 'stableford' | 'matchplay';
           scoring_type: 'gross' | 'net';
           rounds: number;
           status: 'draft' | 'active' | 'paused' | 'finished';

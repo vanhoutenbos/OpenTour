@@ -24,7 +24,7 @@ interface Props {
   tournamentId: string;
   players: Player[];
   holes: Hole[];
-  tournamentFormat: 'stroke' | 'stableford' | 'match';
+  tournamentFormat: 'strokeplay' | 'stableford' | 'matchplay';
   scoringType: 'gross' | 'net';
   onBack: () => void;
 }

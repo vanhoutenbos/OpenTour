@@ -143,7 +143,7 @@ SELECT a.player_id, a.player_name, a.handicap, a.player_status, a.flight_name, a
     CASE WHEN a.player_status = ANY (ARRAY['dns'::text, 'dnf'::text, 'dsq'::text]) THEN 1 ELSE 0 END,
     CASE WHEN a.format = 'stableford'::text AND a.scoring_type = 'net'::text THEN -a.net_stableford_points
          WHEN a.format = 'stableford'::text AND a.scoring_type = 'gross'::text THEN -a.gross_stableford_points
-         WHEN a.format = 'stroke'::text AND a.scoring_type = 'net'::text THEN a.total_net_strokes
+         WHEN a.format = 'strokeplay'::text AND a.scoring_type = 'net'::text THEN a.total_net_strokes
          ELSE a.total_strokes END,
     a.holes_played DESC) AS "position"
 FROM aggregated a LEFT JOIN player_rounds pr ON pr.player_id = a.player_id AND pr.tournament_id = a.tournament_id
@@ -151,7 +151,7 @@ ORDER BY (row_number() OVER (PARTITION BY a.tournament_id ORDER BY
     CASE WHEN a.player_status = ANY (ARRAY['dns'::text, 'dnf'::text, 'dsq'::text]) THEN 1 ELSE 0 END,
     CASE WHEN a.format = 'stableford'::text AND a.scoring_type = 'net'::text THEN -a.net_stableford_points
          WHEN a.format = 'stableford'::text AND a.scoring_type = 'gross'::text THEN -a.gross_stableford_points
-         WHEN a.format = 'stroke'::text AND a.scoring_type = 'net'::text THEN a.total_net_strokes
+         WHEN a.format = 'strokeplay'::text AND a.scoring_type = 'net'::text THEN a.total_net_strokes
          ELSE a.total_strokes END,
     a.holes_played DESC));
 

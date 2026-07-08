@@ -29,7 +29,7 @@ interface Hole {
 
 interface TournamentInfo {
   name: string;
-  format: 'stroke' | 'stableford' | 'match';
+  format: 'strokeplay' | 'stableford' | 'matchplay';
   scoring_type: 'gross' | 'net';
   rounds: number;
 }

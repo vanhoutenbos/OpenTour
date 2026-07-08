@@ -183,7 +183,7 @@ export function LeaderboardClient({
   const tabs: { key: LeaderboardTab; label: string; show: boolean }[] = [
     { key: 'leaderboard', label: 'Leaderboard', show: true },
     { key: 'teetimes', label: 'Tee Times', show: true },
-    { key: 'matchplay', label: 'Matchplay', show: scoringFormat === 'match' },
+    { key: 'matchplay', label: 'Matchplay', show: scoringFormat === 'matchplay' },
     { key: 'coursestats', label: 'Course Stats', show: true },
   ];
 
