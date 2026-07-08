@@ -19,6 +19,8 @@ interface TeeRow {
   external_id: string;
   name: string | null;
   color: string | null;
+  slope_rating: number | null;
+  course_rating: number | null;
 }
 
 interface HoleRow {
@@ -59,6 +61,12 @@ export default function EditCoursePage() {
   const [courseHeader, setCourseHeader] = useState<CourseHeader | null>(null);
   const [teeCount, setTeeCount] = useState(0);
   const [loopCount, setLoopCount] = useState(0);
+  const [whsRows, setWhsRows] = useState<
+    { id: string; label: string; slope: string; rating: string }[]
+  >([]);
+  const [whsSaving, setWhsSaving] = useState(false);
+  const [whsError, setWhsError] = useState<string | null>(null);
+  const [whsSuccess, setWhsSuccess] = useState<string | null>(null);
   const [structureView, setStructureView] = useState<{
     teeLabels: string[];
     loopCards: {
@@ -98,7 +106,7 @@ export default function EditCoursePage() {
           .maybeSingle(),
         supabase
           .from('tees')
-          .select('id, external_id, name, color')
+          .select('id, external_id, name, color, slope_rating, course_rating')
           .eq('course_id', courseId)
           .order('created_at', { ascending: true }),
         supabase
@@ -175,6 +183,14 @@ export default function EditCoursePage() {
       });
 
       const teeLabels = teeRows.map((tee) => tee.color || tee.name || tee.external_id);
+      setWhsRows(
+        teeRows.map((tee) => ({
+          id: tee.id,
+          label: tee.color || tee.name || tee.external_id,
+          slope: tee.slope_rating?.toString() ?? '',
+          rating: tee.course_rating?.toString() ?? '',
+        }))
+      );
       const loopCards = loopRows.map((loop) => {
         const holeIdsForLoop = loopHoleRows
           .filter((loopHole) => loopHole.loop_id === loop.id)
@@ -215,6 +231,47 @@ export default function EditCoursePage() {
 
     void loadCourse();
   }, [courseId]);
+
+  async function saveWhsRatings() {
+    setWhsError(null);
+    setWhsSuccess(null);
+
+    for (const row of whsRows) {
+      if (row.slope.trim() !== '') {
+        const slopeNum = Number(row.slope);
+        if (!Number.isInteger(slopeNum) || slopeNum < 55 || slopeNum > 155) {
+          setWhsError(`Slope rating voor ${row.label} moet een geheel getal tussen 55 en 155 zijn.`);
+          return;
+        }
+      }
+      if (row.rating.trim() !== '' && !/^\d{1,3}(\.\d)?$/.test(row.rating.trim())) {
+        setWhsError(`Course rating voor ${row.label} moet een getal zijn met maximaal 1 decimaal (bijv. 71.4).`);
+        return;
+      }
+    }
+
+    setWhsSaving(true);
+    const supabase = getSupabaseBrowser();
+
+    for (const row of whsRows) {
+      const { error: updateError } = await supabase
+        .from('tees')
+        .update({
+          slope_rating: row.slope.trim() === '' ? null : Number(row.slope),
+          course_rating: row.rating.trim() === '' ? null : Number(row.rating),
+        })
+        .eq('id', row.id);
+
+      if (updateError) {
+        setWhsError(`Opslaan mislukt voor ${row.label}: ${updateError.message}`);
+        setWhsSaving(false);
+        return;
+      }
+    }
+
+    setWhsSuccess('Slope en course rating opgeslagen.');
+    setWhsSaving(false);
+  }
 
   return (
     <main className="min-h-screen bg-surface py-8 px-4">
@@ -287,6 +344,74 @@ export default function EditCoursePage() {
                   Submit/publicatie komt later. Voor nu is deze baan alleen zichtbaar en bewerkbaar voor de eigenaar.
                 </p>
               </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
+              <div>
+                <p className="text-sm font-medium text-content">WHS-ratings per tee</p>
+                <p className="text-xs text-content-muted mt-0.5">
+                  Naam en kleur van de tee komen uit de import. Vul hier alleen de slope rating (55–155) en
+                  course rating (bijv. 71.4) in — de rest hoeft niet opnieuw ingevoerd te worden.
+                </p>
+              </div>
+
+              {whsRows.length === 0 ? (
+                <p className="text-sm text-content-muted">Geen teeboxen om te beoordelen.</p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-1 text-xs uppercase tracking-wide text-content-muted">
+                    <span>Tee</span>
+                    <span>Slope</span>
+                    <span>Course rating</span>
+                  </div>
+                  {whsRows.map((row, index) => (
+                    <div key={row.id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
+                      <span className="text-sm text-content-secondary truncate">{row.label}</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={55}
+                        max={155}
+                        step={1}
+                        placeholder="113"
+                        value={row.slope}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setWhsRows((prev) =>
+                            prev.map((r, i) => (i === index ? { ...r, slope: value } : r))
+                          );
+                        }}
+                        className="w-20 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm text-content"
+                      />
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="71.4"
+                        value={row.rating}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setWhsRows((prev) =>
+                            prev.map((r, i) => (i === index ? { ...r, rating: value } : r))
+                          );
+                        }}
+                        className="w-24 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm text-content"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {whsError && <p className="text-sm text-red-400">{whsError}</p>}
+              {whsSuccess && <p className="text-sm text-green-400">{whsSuccess}</p>}
+
+              <button
+                type="button"
+                onClick={() => void saveWhsRatings()}
+                disabled={whsSaving || whsRows.length === 0}
+                className="px-4 py-2 rounded-xl bg-surface-4 hover:bg-surface-3 text-content text-sm disabled:opacity-50"
+              >
+                {whsSaving ? 'Opslaan...' : 'WHS-ratings opslaan'}
+              </button>
             </div>
 
             <div className="space-y-3">
