@@ -180,6 +180,64 @@ BEGIN
 END $$;
 
 -- ============================================================
+-- STAP 2.5: Bestaande DEFAULTs veiligstellen
+-- Postgres kan de kolom-DEFAULT niet automatisch casten naar een
+-- nieuw ENUM-type (er is geen impliciete cast text → enum). Als een
+-- kolom een DEFAULT heeft, faalt de ALTER COLUMN … TYPE hieronder
+-- met "default for column ... cannot be cast automatically".
+--
+-- Oplossing: voor alle 12 kolommen dynamisch de huidige DEFAULT-
+-- expressie opzoeken (via pg_attrdef), opslaan in een temp-tabel,
+-- en de DEFAULT droppen. Kolommen zonder DEFAULT worden overgeslagen.
+-- In STAP 3.5 wordt de DEFAULT teruggezet met een expliciete cast
+-- naar het bijbehorende ENUM-type.
+-- ============================================================
+
+CREATE TEMP TABLE _enum_migration_defaults (
+  tbl          text,
+  col          text,
+  enum_type    text,
+  default_expr text
+) ON COMMIT DROP;
+
+DO $$
+DECLARE
+  rec RECORD;
+  v_default TEXT;
+BEGIN
+  FOR rec IN SELECT * FROM (VALUES
+    ('profiles',             'language',   'language'),
+    ('profiles',             'role',       'user_role'),
+    ('courses',               'source',     'course_source'),
+    ('loops',                 'loop_type',  'loop_type'),
+    ('tees',                  'gender',     'gender_binary'),
+    ('tournaments',           'format',     'tournament_format'),
+    ('tournaments',           'scoring_type','scoring_type'),
+    ('tournaments',           'status',     'tournament_status'),
+    ('tournament_players',    'status',     'player_status'),
+    ('tournament_players',    'gender',     'gender_binary'),
+    ('tournament_categories', 'gender',     'gender_category'),
+    ('tournament_tees',       'gender',     'gender_category')
+  ) AS t(tbl, col, enum_type)
+  LOOP
+    SELECT pg_get_expr(d.adbin, d.adrelid)
+      INTO v_default
+    FROM pg_attrdef d
+    JOIN pg_attribute a
+      ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+    WHERE d.adrelid = ('public.' || rec.tbl)::regclass
+      AND a.attname = rec.col;
+
+    IF v_default IS NOT NULL THEN
+      INSERT INTO _enum_migration_defaults(tbl, col, enum_type, default_expr)
+      VALUES (rec.tbl, rec.col, rec.enum_type, v_default);
+
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I DROP DEFAULT', rec.tbl, rec.col);
+    END IF;
+  END LOOP;
+END $$;
+
+-- ============================================================
 -- STAP 3: Kolommen converteren van TEXT naar ENUM
 -- Volgorde: eerst de kleinere tabellen, dan tournaments (meest gebruikte).
 -- De USING-cast converteert bestaande TEXT-waarden naar ENUM.
@@ -213,6 +271,28 @@ ALTER TABLE tournament_categories
 
 ALTER TABLE tournament_tees
   ALTER COLUMN gender      TYPE public.gender_category USING gender::public.gender_category;
+
+-- ============================================================
+-- STAP 3.5: Opgeslagen DEFAULTs terugzetten
+-- Zet elke eerder opgeslagen DEFAULT terug, nu expliciet gecast
+-- naar het nieuwe ENUM-type. De default_expr ziet er doorgaans uit
+-- als  'nl'::text  — we knippen alles vóór de eerste '::' cast af
+-- (de literal zelf, inclusief quotes) en casten die naar het ENUM.
+-- ============================================================
+
+DO $$
+DECLARE
+  rec RECORD;
+  v_literal TEXT;
+BEGIN
+  FOR rec IN SELECT * FROM _enum_migration_defaults LOOP
+    v_literal := split_part(rec.default_expr, '::', 1);
+    EXECUTE format(
+      'ALTER TABLE public.%I ALTER COLUMN %I SET DEFAULT %s::public.%I',
+      rec.tbl, rec.col, v_literal, rec.enum_type
+    );
+  END LOOP;
+END $$;
 
 -- ============================================================
 -- STAP 4: Verwijder redundante CHECK constraints
