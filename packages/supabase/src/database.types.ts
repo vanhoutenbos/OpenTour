@@ -121,6 +121,7 @@ export interface Database {
           color: string | null;
           slope_rating: number | null;
           course_rating: number | null;
+          gender: 'male' | 'female' | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tees']['Row'], 'id' | 'created_at'>;
@@ -149,6 +150,7 @@ export interface Database {
           color: string | null;
           slope_rating: number | null;
           course_rating: number | null;
+          gender: 'male' | 'female' | 'mixed' | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['tournament_tees']['Row'], 'id' | 'created_at'>;
