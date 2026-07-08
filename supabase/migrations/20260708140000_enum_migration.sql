@@ -54,7 +54,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE public.language AS ENUM ('nl', 'en');
+  CREATE TYPE public.app_language AS ENUM ('nl', 'en');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================
@@ -106,13 +106,13 @@ BEGIN
   END IF;
 
   -- tournaments.format → tournament_format
-  SELECT COUNT(*) INTO v_count FROM tournaments
+    SELECT COUNT(*) INTO v_count FROM tournaments
     WHERE format IS NOT NULL AND format NOT IN ('strokeplay', 'stableford', 'matchplay');
-  IF v_count > 0 THEN
-    SELECT string_agg('id=' || id::text || ' format=' || format, ', ') INTO v_detail
+    IF v_count > 0 THEN
+      SELECT string_agg('id=' || id::text || ' format=' || format, ', ') INTO v_detail
       FROM tournaments WHERE format IS NOT NULL AND format NOT IN ('strokeplay', 'stableford', 'matchplay');
-    RAISE EXCEPTION 'Ongeldige waarden in tournaments.format: %', v_detail;
-  END IF;
+      RAISE EXCEPTION 'Ongeldige waarden in tournaments.format: %', v_detail;
+    END IF;
 
   -- tournaments.scoring_type → scoring_type
   SELECT COUNT(*) INTO v_count FROM tournaments
@@ -168,13 +168,13 @@ BEGIN
     RAISE EXCEPTION 'Ongeldige waarden in courses.source: %', v_detail;
   END IF;
 
-  -- profiles.language → language
-  SELECT COUNT(*) INTO v_count FROM profiles
-    WHERE language IS NOT NULL AND language NOT IN ('nl', 'en');
-  IF v_count > 0 THEN
-    SELECT string_agg('id=' || id::text || ' language=' || language, ', ') INTO v_detail
-      FROM profiles WHERE language IS NOT NULL AND language NOT IN ('nl', 'en');
-    RAISE EXCEPTION 'Ongeldige waarden in profiles.language: %', v_detail;
+  -- profiles.language → language (quote column name - 'language' is reserved word)
+    SELECT COUNT(*) INTO v_count FROM profiles
+      WHERE "language" IS NOT NULL AND "language" NOT IN ('nl', 'en');
+    IF v_count > 0 THEN
+      SELECT string_agg('id=' || id::text || ' language=' || "language", ', ') INTO v_detail
+        FROM profiles WHERE "language" IS NOT NULL AND "language" NOT IN ('nl', 'en');
+      RAISE EXCEPTION 'Ongeldige waarden in profiles.language: %', v_detail;
   END IF;
 
 END $$;
@@ -206,7 +206,7 @@ DECLARE
   v_default TEXT;
 BEGIN
   FOR rec IN SELECT * FROM (VALUES
-    ('profiles',             'language',   'language'),
+      ('profiles',             'language',   'app_language'),
     ('profiles',             'role',       'user_role'),
     ('courses',               'source',     'course_source'),
     ('loops',                 'loop_type',  'loop_type'),
@@ -245,7 +245,7 @@ END $$;
 -- ============================================================
 
 ALTER TABLE profiles
-  ALTER COLUMN language    TYPE public.language    USING language::public.language,
+  ALTER COLUMN "language" TYPE public.app_language USING "language"::public.app_language,
   ALTER COLUMN role        TYPE public.user_role   USING role::public.user_role;
 
 ALTER TABLE courses

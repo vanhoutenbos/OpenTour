@@ -15,7 +15,7 @@ export interface Database {
           display_name: string;
           email: string | null;
           handicap: number | null;
-          language: Database['public']['Enums']['language'];
+          language: Database['public']['Enums']['app_language'];
           role: Database['public']['Enums']['user_role'];
           created_at: string;
           updated_at: string;
