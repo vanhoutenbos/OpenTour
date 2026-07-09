@@ -216,10 +216,78 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
 
 ---
 
+### US-CRS-08 — Meerdere tees per baan met eigen SI/afstand (loops)
+
+- **Rol:** Organisator/baanbeheerder
+- **Doel:** Dat ik meerdere teeboxen (bijv. geel, rood, wit) per baan kan vastleggen, elk met eigen indeling
+- **Waarde:** Verschillende spelers/categorieën spelen vanaf verschillende tees met een correcte, eigen stroke index en afstand
+- **Prioriteit:** S
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-CRS-01
+- **Acceptatiecriteria:**
+  - Een baan kan meerdere `loops` hebben (front9/back9/custom-samenstelling)
+  - Elke tee heeft eigen holes-configuratie via `loop_holes` (par, SI, afstand kunnen per tee verschillen)
+  - Beheer via `TeeManagerSection` op de baanpagina
+- **Opmerkingen:**
+  - Dit vervangt de MVP-aanname uit het oorspronkelijke document dat er "één set holes per baan" is (§7.1) — dat gold alleen voor de allereerste eGolf4u-import
+
+**Technische specificatie**
+**Migratie:** `tees_loops` — tabellen `tees`, `loops`, `loop_holes`, `hole_tee_distances`
+**Componenten:** `TeeManagerSection` (`components/course/`)
+
+---
+
+### US-CRS-09 — WHS slope- en course-rating per tee invoeren
+
+- **Rol:** Organisator/baanbeheerder
+- **Doel:** Dat ik de WHS slope rating en course rating per tee kan invoeren
+- **Waarde:** Net-scoring kan straks de officiële WHS-formule gebruiken in plaats van de vereenvoudigde versie
+- **Prioriteit:** C
+- **Fase:** MVP
+- **Status:** 🔄 In Progress
+- **Afhankelijk van:** US-CRS-08
+- **Acceptatiecriteria:**
+  - Invoervelden voor `slope_rating` en `course_rating` per tee
+  - Waarden zijn optioneel (geen harde eis om ze in te vullen)
+  - **Nog niet gebouwd:** de playing-handicap-formule (`index × slope/113 + (rating − par)`) daadwerkelijk gebruiken in de leaderboard/scoring-berekening — vandaag draait daar nog altijd de vereenvoudigde net-berekening uit §7.2 van het oorspronkelijke document
+- **Opmerkingen:**
+  - Grondwerk is gelegd; de doorkoppeling naar de leaderboard-view is de volgende stap
+
+**Technische specificatie**
+**Migratie:** `tees_loops` (`slope_rating`, `course_rating` kolommen op `tees`), meegenomen in `tournament_tees` bij toernooi-activering
+**Componenten:** `TeeManagerSection`, WHS-ratingspaneel op `app/[locale]/course/[id]/page.tsx`
+
+---
+
+### US-CRS-10 — Courseconfiguratie bevriezen bij toernooistart (snapshot)
+
+- **Rol:** Systeem (automatisch, geen directe gebruikersactie)
+- **Doel:** Dat de par, stroke index en tee-indeling van een baan bevroren worden zodra een toernooi start
+- **Waarde:** Als een organisator de baan ná toernooistart bewerkt (bijv. voor een ander, toekomstig toernooi), verandert de score-berekening van een lopend/afgerond toernooi niet met terugwerkende kracht
+- **Prioriteit:** M
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-CRS-08, US-ORG-05
+- **Acceptatiecriteria:**
+  - Bij statusovergang `draft` → `active`: automatische kopie van holes/tees naar toernooi-specifieke tabellen
+  - Alle leaderboard- en scoreviews lezen vanaf dat moment uit de bevroren kopie, niet uit de live baan-tabellen
+- **Opmerkingen:**
+  - Loste een concrete migratiedrift op (zie de CI/CD-notitie in epic 09) — de eerste versie van dit patroon was toegepast op productie voordat de migratie zelf gecommit was
+
+**Technische specificatie**
+**Tabellen:** `tournament_holes`, `tournament_tees` (kopie van `holes`/`tees` op moment van activering)
+**Trigger:** Postgres `AFTER UPDATE`-trigger op `tournaments`, vuurt bij `status: draft → active`
+**Views omgezet:** `tournament_leaderboard`, `matchplay_standings`, `player_hole_scores`, `course_hole_stats` wijzen nu naar `tournament_holes` i.p.v. `holes`
+**FK-wijziging:** `scores.hole_id` verwijst nu naar `tournament_holes.id`
+
+---
+
 ## Open vragen
 
 | # | Vraag |
 |---|---|
-| CRS-O1 | Moeten we meerdere tee-bronnen ondersteunen (geel, rood, wit) met verschillende par/SI? (Voor nu: één set holes per baan.) |
+| CRS-O1 | ~~Moeten we meerdere tee-bronnen ondersteunen (geel, rood, wit) met verschillende par/SI?~~ **Opgelost:** zie US-CRS-08, tees + loops ondersteunen dit sinds de `tees_loops`-migratie. |
 | CRS-O2 | Hoe omgaan met banen die zijn gerenoveerd? Verouderde data markeren of overschrijven? |
 | CRS-O3 | TheGolfAPI of een andere bron voor internationale banen? Evaluatie nodig. |
+| CRS-O4 | Moet de playing-handicap-formule (US-CRS-09) automatisch worden toegepast zodra beide ratings zijn ingevuld, of moet de organisator dit expliciet activeren per toernooi? |

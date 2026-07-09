@@ -399,32 +399,40 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 ### US-ORG-13a — Aantal rondes instellen bij aanmaken
 
 - **Rol:** Organisator van een toernooi
-- **Doel:** Dat ik bij het aanmaken van een toernooi het aantal rondes kan kiezen (1 t/m 4)
+- **Doel:** Dat ik bij het aanmaken van een toernooi kan aangeven dat het meerdere rondes heeft, en het aantal opgeven
 - **Waarde:** Ik kan een meerdaags evenement opzetten zonder achteraf aanpassingen
 - **Prioriteit:** S
-- **Fase:** Later
+- **Fase:** MVP
+- **Status:** ✅ Done
 - **Afhankelijk van:** US-ORG-01
 - **Acceptatiecriteria:**
-  - Keuzerondje bij aanmaken: 1, 2, 3 of 4 rondes
-  - Bij meerdere rondes: optie om per ronde een andere baan te kiezen
-  - Standaardwaarde is 1 ronde (bestaand gedrag)
-  - Wijzigen van aantal rondes na aanmaken is niet mogelijk
+  - Toggle "Meerdere rondes" in de wizard; uit = 1 ronde (bestaand gedrag)
+  - Bij aan: getal-invoerveld voor aantal rondes, 2 t/m 99
+  - Aantal rondes is achteraf aan te passen via de Edit-tab in het beheerscherm
 - **Opmerkingen:**
-  - MVP heeft alleen 1 ronde (18 holes)
-  - De Haenen pilot gebruikt enkele ronden
+  - Per ronde een andere baan kiezen is niet mogelijk — één toernooi gebruikt altijd één baan/configuratie (zie US-CRS-10, de courseconfiguratie wordt bevroren bij activering)
+
+**Technische specificatie**
+**Componenten:** `TournamentWizard` (`app/[locale]/tournament/new/page.tsx`) — `multi_rounds` toggle + `rounds` number input
+**Data flow:** `form.rounds` → `tournaments.rounds` bij aanmaken; bewerkbaar via `editForm.rounds` op de manage-pagina
+**Validatie:** `rounds` tussen 2 en 99 bij `multi_rounds = true`, anders vast op 1
 
 ### US-ORG-13b — Scores per ronde bijhouden
 
 - **Rol:** Organisator van een toernooi
 - **Doel:** Dat scores per ronde worden geregistreerd, met voor elke ronde een aparte scorekaart
-- **Waarde:** Spelers kunnen per ronde hun prestaties zien, ook bij wisselende banen
+- **Waarde:** Spelers kunnen per ronde hun prestaties zien, ook bij een meerdaags toernooi
 - **Prioriteit:** S
-- **Fase:** Later
+- **Fase:** MVP
+- **Status:** ✅ Done
 - **Afhankelijk van:** US-ORG-13a, US-ORG-03
 - **Acceptatiecriteria:**
-  - Per speler wordt een aparte scorekaart aangemaakt voor elke ronde
-  - Scores uit ronde 1 worden niet beïnvloed door ronde 2
-  - Na afronden van alle rondes worden scores samengevoegd voor het totaalklassement
+  - Elke score heeft een `round_number`; scores van verschillende rondes overschrijven elkaar niet
+  - `RoundSelector` component laat de recorder/organisator wisselen tussen rondes
+
+**Technische specificatie**
+**Componenten:** `RoundSelector` (leaderboard + scorer), `scores.round_number` (uniek per tournament/player/hole/round)
+**Data flow:** conditionele upsert (`upsert_score_if_newer`) werkt per `round_number`, dus rondes conflicteren nooit met elkaar
 
 ### US-ORG-13c — Leaderboard met subtotalen per ronde
 
@@ -432,12 +440,16 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 - **Doel:** Dat het leaderboard subtotalen per ronde toont en een totaalscore
 - **Waarde:** Spelers en toeschouwers zien precies hoe de eindstand is opgebouwd
 - **Prioriteit:** S
-- **Fase:** Later
+- **Fase:** MVP
+- **Status:** ✅ Done
 - **Afhankelijk van:** US-ORG-13b, US-SPE-04
 - **Acceptatiecriteria:**
-  - Leaderboard toont kolommen: ronde 1, ronde 2, ..., totaal
-  - Sortering op totaalscore (of totaal stableford-punten)
-  - Bij nog niet gestarte rondes: kolom toont "—"
+  - Leaderboard toont per ronde een subtotaal (`round_scores`) en een "vandaag"-score (`today_score`) naast het totaal (`round_to_par`)
+  - Bij nog niet gestarte rondes: geen crash, lege/nul-waarden
+
+**Technische specificatie**
+**View:** `tournament_leaderboard` (herzien in de `leaderboard_v2`-migratie) — kolommen `round_scores`, `round_to_par`, `today_score`
+**Componenten:** `RoundSelector`, `LeaderboardTable`
 
 ---
 
@@ -764,9 +776,92 @@ De organisator is de primaire doelgroep van het platform. Als het voor de organi
 
 ---
 
+### US-ORG-21 — Categorieën per handicap/geslacht beheren
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik spelerscategorieën kan aanmaken (bijv. op handicap of geslacht) en spelers daaraan koppelen
+- **Waarde:** Ik kan flights en prijzen indelen per categorie, zoals gebruikelijk bij clubwedstrijden
+- **Prioriteit:** S
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-ORG-01
+- **Acceptatiecriteria:**
+  - Categorieën-tab in het beheerscherm met CRUD (aanmaken, hernoemen, verwijderen)
+  - Bij automatisch flights genereren kan gekozen worden om te splitsen op categorie
+  - Een speler zonder toegewezen categorie is duidelijk zichtbaar (niet stil genegeerd)
+- **Opmerkingen:**
+  - Gender is een los veld op zowel `tournament_players` als `tees` (voor tee-kleur per geslacht), los van de categorie-indeling
+
+**Technische specificatie**
+**Componenten:** Categorieën-tab (`app/[locale]/tournament/[id]/manage/page.tsx`)
+**Data flow:** `tournament_categories` tabel (CRUD via Supabase client); `tournament_players.category_id` wordt gezet bij flights genereren op categorie
+
+---
+
+### US-ORG-22 — Toernooi na aanmaken alsnog privé maken
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een per ongeluk publiek aangemaakt toernooi alsnog privé kan maken
+- **Waarde:** Ik kan een fout herstellen zonder het toernooi te moeten verwijderen en opnieuw aan te maken
+- **Prioriteit:** M
+- **Fase:** MVP
+- **Status:** ⬜ To Do
+- **Afhankelijk van:** US-ORG-01
+- **Acceptatiecriteria:**
+  - Toggle "Zichtbaar voor iedereen" op de Edit-tab van het beheerscherm
+  - Wijzigen van de toggle update `tournaments.is_public` direct
+  - Bij uitzetten: toernooi verdwijnt uit publieke overzichten, blijft bereikbaar via directe URL + toegangscode/login
+- **Opmerkingen:**
+  - **Gevonden gat tijdens documentatie-audit (2026-07-08):** `is_public` staat hardcoded op `true` bij aanmaken (`tournament/new/page.tsx`) en er is nergens in de UI een manier om dit achteraf te wijzigen. De kolom en RLS-policies ondersteunen het al (zie §7.4 van het oorspronkelijke ontwerpdocument) — dit is puur een ontbrekende UI-knop.
+
+---
+
+### US-ORG-23 — Uitgebreide spelergegevens vastleggen
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik naast naam en handicap ook NGF-nummer, adresgegevens en geboortedatum van spelers kan vastleggen
+- **Waarde:** Ik heb de gegevens die nodig zijn voor officiële wedstrijdadministratie en eventuele NGF-export
+- **Prioriteit:** C
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-ORG-02
+- **Acceptatiecriteria:**
+  - Formulier voor speler toevoegen/bewerken bevat: geslacht, voorletters, roepnaam, tussenvoegsel, achternaam, geboortedatum, adres (straat, huisnummer, toevoeging, postcode, plaats, land), telefoon, NGF-nummer
+  - Alle velden zijn optioneel behalve naam
+- **Opmerkingen:**
+  - Dit gaat verder dan het "minimale dataverzameling"-principe uit §18.1 van het oorspronkelijke document — heroverweeg of al deze velden standaard getoond moeten worden, of alleen op verzoek (progressive disclosure), gezien AVG-dataminimalisatie
+
+**Technische specificatie**
+**Migratie:** `add_gender_to_players` ("uitgebreide spelervelden") — 14 nieuwe kolommen op `tournament_players`
+**Componenten:** speler-formulieren (toevoegen + bewerken) in de Players-tab van het beheerscherm
+
+---
+
+### US-ORG-24 — Matchplay pairings genereren
+
+- **Rol:** Organisator van een toernooi met format `matchplay`
+- **Doel:** Dat ik automatisch 1-tegen-1 koppelingen (pairings) kan genereren voor een matchplay-toernooi
+- **Waarde:** Ik hoef pairings niet handmatig te administreren
+- **Prioriteit:** M
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-ORG-03
+- **Acceptatiecriteria:**
+  - Pairings worden gegenereerd binnen een flight
+  - Pairings zijn round-aware (apart per ronde bij een meerdaags matchplay-toernooi)
+- **Opmerkingen:**
+  - Zie ook US-SPE-13a/13b voor de leaderboard-weergave van de matchplay-stand
+
+**Technische specificatie**
+**Componenten:** `generateMatchplayPairings` (manage page)
+**Data flow:** schrijft naar `matchplay_pairings` (met `round_number`); leaderboard leest via de `matchplay_standings` view
+
+---
+
 ## Open vragen
 
 | # | Vraag |
 |---|---|
 | ORG-O1 | Moeten spelers verplicht een e-mailadres hebben? (Voor nu: optioneel, alleen naam is verplicht.) |
 | ORG-O2 | Automatisch afsluiten van toernooi wanneer alle spelers 18 holes hebben ingeleverd, of altijd handmatig? |
+| ORG-O3 | US-ORG-23 legt veel persoonlijke spelergegevens vast (adres, geboortedatum, NGF-nummer). Moet dit optioneel/verborgen zijn tenzij de organisator het expliciet nodig heeft, gezien het dataminimalisatie-principe? |

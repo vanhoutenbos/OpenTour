@@ -159,3 +159,41 @@ Infrastructurele verbeteringen en developer experience: CI/CD, dependency hygien
 - **Opmerkingen:**
   - Lage prioriteit omdat deze endpoint alleen actief is met een specifieke env flag (`NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK=true`)
   - Is alleen bedoeld voor lokale ontwikkeling, niet voor productie
+
+---
+
+### US-INFRA-11 — Licht/donker/systeem thema
+
+- **Rol:** Elke gebruiker (organisator, recorder, toeschouwer)
+- **Doel:** Dat ik zelf kan kiezen tussen een licht, donker of systeem-gestuurd kleurthema
+- **Waarde:** Comfortabel gebruik in verschillende lichtomstandigheden (bijv. 's avonds binnen vs. in fel zonlicht op de baan)
+- **Prioriteit:** C
+- **Fase:** Later
+- **Status:** ✅ Done
+- **Afhankelijk van:** —
+- **Acceptatiecriteria:**
+  - Themakeuze zichtbaar en bedienbaar vanuit de navigatie
+  - Voorkeur blijft bewaard tussen bezoeken
+- **Opmerkingen:**
+  - Los van de bewuste keuze in §13.1 van het oorspronkelijke document om score/status-kleuren (eagle/birdie/bogey e.d.) altijd vast te houden, ongeacht thema
+
+**Technische specificatie**
+**Componenten:** `ThemeProvider`, `ThemeToggle` (`components/`), bibliotheek `next-themes`
+
+---
+
+### US-INFRA-12 — Documentatie-audit: user-stories synchroniseren met codebase
+
+- **Rol:** Ontwikkelaar/onderhouder
+- **Doel:** Dat `progress.json` en de epic-bestanden periodiek gecontroleerd worden tegen de daadwerkelijke code en migraties
+- **Waarde:** Statusoverzicht blijft betrouwbaar als basis voor planning, in plaats van te verouderen naarmate er buiten dit systeem om wordt gebouwd
+- **Prioriteit:** S
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** —
+- **Acceptatiecriteria:**
+  - Elke correctie/toevoeging is gecontroleerd tegen echte code (grep/read), niet aangenomen
+  - `last_updated` in `progress.json` wordt bijgewerkt
+- **Opmerkingen:**
+  - Uitgevoerd op 2026-07-08: 60 commits sinds de vorige update (25 juni) bleken niet verwerkt in de statustracking — o.a. meerdaagse toernooien, matchplay, categorieën, tees/loops/WHS, courseconfiguratie-snapshot, en de auth-sessie-herbouw stonden nog als "todo" of ontbraken volledig
+  - Aanbeveling: dit als vast onderdeel van de release-checklist opnemen, niet als eenmalige actie

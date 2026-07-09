@@ -280,6 +280,49 @@ Authenticatie moet laagdrempelig zijn (geen wachtwoordgedoe) maar ook veilig (be
 
 ---
 
+### US-AUTH-09 — Toegangscode zonder vervaldatum
+
+- **Rol:** Organisator van een toernooi
+- **Doel:** Dat ik een toegangscode kan genereren die niet automatisch na 24 uur verloopt
+- **Waarde:** Voor toernooien die langer duren dan 24 uur hoef ik niet halverwege een nieuwe code rond te sturen
+- **Prioriteit:** S
+- **Fase:** Later
+- **Status:** 🔄 In Progress
+- **Afhankelijk van:** US-ORG-09
+- **Acceptatiecriteria:**
+  - Optie "Nooit laten verlopen" bij het genereren van een code
+  - Codes zonder vervaldatum blijven werken totdat de organisator ze handmatig deactiveert
+- **Opmerkingen:**
+  - Database ondersteunt dit al (`expires_at` mag `NULL` zijn), maar de manage-UI genereert vandaag nog altijd met een vaste looptijd van 24 uur — er is geen knop om dit te kiezen
+
+**Technische specificatie**
+**Migratie:** `optional_access_code_expiry` — `access_codes.expires_at` is nullable geworden
+**Ontbrekend:** UI-optie in de Codes-tab van het beheerscherm
+
+---
+
+### US-AUTH-10 — Server-geverifieerde sessie als single source of truth
+
+- **Rol:** Elke ingelogde gebruiker (organisator of recorder)
+- **Doel:** Dat mijn inlogstatus altijd correct is, ook na een netwerkstoring of verlopen sessie
+- **Waarde:** Ik krijg geen valse "ingelogd"-status te zien terwijl mijn sessie eigenlijk verlopen is
+- **Prioriteit:** M
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-AUTH-01, US-AUTH-02
+- **Acceptatiecriteria:**
+  - Eén centraal endpoint bepaalt de sessiestatus via een echte netwerkcheck (niet alleen een lokale cookie-check)
+  - Bij een tijdelijke netwerkfout blijft de laatst bekende status zichtbaar (optimistisch), met een duidelijke "degraded" indicator na herhaalde fouten
+  - Bij een echt verlopen/ongeldige sessie: actieve cookie-opruiming en terugleiding naar inloggen
+- **Opmerkingen:**
+  - Vervangt een eerdere opzet waarbij de aanwezigheid van een cookie werd aangenomen als "ingelogd", zonder verificatie bij Supabase
+
+**Technische specificatie**
+**Componenten:** `app/api/auth/session/route.ts` (gebruikt `getUser()` voor echte verificatie, `Cache-Control: no-store`), `useAuthSession` hook
+**Gedrag bij fouten:** `AuthSessionMissingError`/401/403 → cookie actief opgeruimd; 5xx/netwerkfout → HTTP 503, cookie blijft staan, hook markeert sessie als `degraded` na 2 opeenvolgende fouten
+
+---
+
 ## Open vragen
 
 | # | Vraag |

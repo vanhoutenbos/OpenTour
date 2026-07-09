@@ -540,6 +540,28 @@ Recorders gebruiken de app onder vaak lastige omstandigheden: buiten, in bewegin
 
 ---
 
+### US-SCR-19 — Grid-weergave: meerdere spelers naast elkaar per hole
+
+- **Rol:** Recorder (bijv. wedstrijdcommissie op de tee)
+- **Doel:** Dat ik een horizontaal scorebord zie met alle spelers van de flight naast elkaar en de holes eronder
+- **Waarde:** Ik houd in één oogopslag de hele flight bij, zonder tussen spelers of holes te schakelen
+- **Prioriteit:** S
+- **Fase:** MVP
+- **Status:** ✅ Done
+- **Afhankelijk van:** US-SCR-02
+- **Acceptatiecriteria:**
+  - Derde scoring-modus naast "meelopen" en "holes per flight", te kiezen op het modus-keuzescherm
+  - Ondersteunt meerdere spelers naast elkaar (getest tot 4 kolommen)
+  - Zelfde offline/sync-gedrag als de andere twee modi
+- **Opmerkingen:**
+  - Losstaand van de organisator-`ScoreGrid` op de manage-pagina (die is voor correcties achteraf, niet voor scoreinvoer op de baan) — nooit met elkaar verwarren bij toekomstige wijzigingen
+
+**Technische specificatie**
+**Componenten:** `FlightScoreGrid`, gekozen via `ScoringModeSelector` (mode `'grid'`)
+**Data flow:** zelfde offline-eerst pad als `FlightHoleView`/`HolePerFlightView`: lokaal opslaan in Dexie → `upsert_score_if_newer` bij sync
+
+---
+
 ## Open vragen
 
 | # | Vraag |
@@ -547,3 +569,4 @@ Recorders gebruiken de app onder vaak lastige omstandigheden: buiten, in bewegin
 | SCR-O1 | Moet de PWA een installatieprompt tonen ("Voeg toe aan startscherm") of volstaat gebruik in de browser? |
 | SCR-O2 | Wat is de minimale ondersteunde iOS-versie? PWA met Service Worker vereist iOS 14.3+. |
 | SCR-O3 | Hoe omgaan met een recorder die per ongeluk de verkeerde flight selecteert? Correctie achteraf door organisator? |
+| SCR-O4 | `HoleByHoleView.tsx` bestaat nog in de repo maar wordt nergens meer geïmporteerd sinds de drie-modi-rebuild. Opruimen of bewaren als fallback? |
