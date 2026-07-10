@@ -3,7 +3,8 @@
 > **Status:** In ontwikkeling — levend document, versie 1.0  
 > **Doel:** Centrale referentie voor alle product- en technische beslissingen.  
 > **Onderscheid MVP vs. Later** is overal expliciet aangegeven.  
-> Versiehistorie via Git. Aanvullingen direct hier verwerken.
+> Versiehistorie via Git. Aanvullingen direct hier verwerken.  
+> **Documentatie-audit 2026-07-08:** dit document is gecontroleerd tegen de daadwerkelijke code en migraties in deze repo. Correcties zijn inline gemarkeerd. Uitgangspunt: het document mag dingen bevatten die nog niet gebouwd zijn (altijd duidelijk gelabeld als "gepland"/"Later"/"nog niet gebouwd"), maar de code mag nooit iets bevatten dat hier niet in staat.
 
 ---
 
@@ -129,7 +130,7 @@ OpenTour lost dit op met een **gratis, open source platform** dat iedereen — v
 - Grote +/- knoppen voor snelle invoer (18 holes in <2 minuten)
 - Auto-advance naar volgende hole na opslaan
 - Duidelijke sync-status (online/offline/error)
-- Twee modi: meelopen met flight, of holes-per-flight invullen
+- Drie modi: meelopen met flight, holes-per-flight invullen, of grid-weergave (meerdere spelers naast elkaar, tot 4 kolommen)
 
 **Later:**
 - Eigen positie op leaderboard zien vanuit de app
@@ -267,14 +268,20 @@ Golfverenigingen, clubsecretarissen, wedstrijdcommissies, spelers en supporters 
 - Toernooi aanmaken met naam, datum, baan, format (stroke/stableford/match)
 - Baanconfiguratie: aanmaken van holes met par en stroke index
 - Bestaande baan kiezen uit database (o.a. eGolf4u-import)
-- Spelers toevoegen: handmatig (naam + optionele handicap)
-- Flights aanmaken: automatisch genereren + handmatig aanpassen
+- Meerdere tees per baan (bijv. geel/rood/wit), elk met eigen par/SI/afstand, en optioneel WHS slope- en course-rating (playing-handicap-formule daarop nog niet doorgekoppeld naar scoring)
+- Baanconfiguratie wordt bevroren op het moment dat een toernooi start (snapshot), zodat latere wijzigingen aan de baan lopende/afgeronde toernooien niet beïnvloeden
+- Een organisator beheert alleen zijn eigen banen; banen zijn standaard privé (zie "Besluit over banenbeheer" in sectie 3)
+- Spelers toevoegen: handmatig, met naam als enige verplicht veld en optioneel handicap, geslacht, geboortedatum, adres, telefoon en NGF-nummer (zie de correctie in §5.2)
+- Spelerscategorieën (bijv. op handicap of geslacht) aanmaken en spelers daaraan koppelen, met optie om flights per categorie te genereren
+- Flights aanmaken: automatisch genereren + handmatig aanpassen (drag-and-drop)
 - Starttijden per flight instellen
+- Toernooien met meerdere rondes (2 t/m 99), met per-ronde scores en een per-ronde leaderboard-subtotaal
+- Matchplay pairings automatisch genereren binnen een flight (round-aware)
 - Statustransities: draft, active, paused, finished (alle omkeerbaar)
 - Pauzeren met reden (weergegeven op leaderboard)
 - Speler markeren als DNS, DNF of DSQ
 - Scorecorrecties uitvoeren door organisator
-- Toegangscodes (8 tekens) genereren, vervallen na 24 uur, deactiveren
+- Toegangscodes (8 tekens) genereren, standaard vervallen na 24 uur (optioneel zonder vervaldatum op databaseniveau, UI-optie hiervoor nog niet gebouwd), deactiveren
 
 **Score invoeren:**
 - Inloggen via 8-tekens code of magic link
@@ -284,7 +291,7 @@ Golfverenigingen, clubsecretarissen, wedstrijdcommissies, spelers en supporters 
 - UI-status: online/offline/sync
 - Auto-advance naar volgende hole
 - Bevestigingsstap voor definitief indienen
-- Twee modi: meelopen met flight, en holes-per-flight invullen
+- Drie modi: meelopen met flight, holes-per-flight invullen, of grid-weergave (meerdere spelers naast elkaar)
 
 **Leaderboard:**
 - Publiek zichtbaar via URL, geen account vereist
@@ -293,6 +300,10 @@ Golfverenigingen, clubsecretarissen, wedstrijdcommissies, spelers en supporters 
 - Scores, positie, holes gespeeld, flight-naam
 - Spelerstatus (DNS/DNF/DSQ) onderaan ranglijst
 - Pauzebanner met reden bij gepauzeerd toernooi
+- Matchplay-weergave (hole-by-hole stand per pairing) voor toernooien met format `match`
+- Flight-filter en spelerzoeker
+- Favoriete spelers markeren (lokaal opgeslagen in de browser, max. 5, nooit naar de server verstuurd)
+- Rondeselectie en per-ronde subtotalen bij meerdaagse toernooien
 
 **Authenticatie:**
 - Magic link voor organisatoren
@@ -311,15 +322,12 @@ Golfverenigingen, clubsecretarissen, wedstrijdcommissies, spelers en supporters 
 ### 4.2 Handig maar later
 
 - CSV-import van spelers
-- Drag-and-drop flight aanpassen
-- Matchplay view in leaderboard
 - QR-code genereren voor leaderboard-URL
 - CSV/PDF export van uitslagen
 - E-mailnotificaties naar deelnemers
-- Toernooien met meerdere rondes
-- i18n EN naast NL
 - Kiosk-modus leaderboard
-- Flight-filter op leaderboard
+
+> **Correctie (documentatie-audit 2026-07-08):** deze lijst bevatte eerder ook drag-and-drop flight-aanpassing, de matchplay-weergave, meerdaagse toernooien, flight-filter op het leaderboard en EN-vertaling — die vijf zijn inmiddels allemaal gebouwd en zijn verplaatst naar §4.1. Twee dingen die niet in de MVP-scope stonden zijn er ondertussen ook bij gekomen zonder specifieke planning: een licht/donker/systeem-thema en een lokale "favorieten"-markering op het leaderboard (zie §4.1).
 
 ### 4.3 Premium / later monetiseerbaar
 
@@ -345,12 +353,18 @@ OpenTour verwerkt persoonsgegevens omdat toernooien nu eenmaal spelersnamen en s
 | E-mailadres organisator | Authenticatie (magic link) | Zolang account actief | Ja, voor organisator |
 | Naam speler/recorder | Scorekaart, leaderboard | Duur toernooi + archief uitslag | Ja |
 | Handicap | Net scoring-berekening | Duur toernooi | Nee (optioneel) |
+| Geslacht, geboortedatum, adres, telefoon, NGF-nummer | Wedstrijdadministratie, mogelijke toekomstige NGF-export | Duur toernooi | Nee (optioneel, invoerbaar door organisator) |
 | Scores per hole | Leaderboard, uitslag | Permanent (archief) | Ja |
-| Toegangscode (hash) | Authenticatie recorder | Tot 24 uur na aanmaken | Ja |
+| Toegangscode | Authenticatie recorder | Tot vervaldatum (standaard 24 uur, optioneel langer) | Ja |
 | IP-adres | Rate limiting, foutopsporing | 30 dagen max | Automatisch |
 | E-mail recorder | Optionele accountkoppeling | Zolang account actief | Nee |
+| Favoriete spelers (toeschouwer) | Persoonlijke filter op het leaderboard | Lokaal in de browser (localStorage), nooit naar de server | Nee |
 
-**Wat we niet opslaan:** locatiegegevens, browsergeschiedenis, telefoonnummer, geslacht, leeftijd, adres, betalingsgegevens.
+**Wat we niet opslaan:** locatiegegevens (GPS), browsergeschiedenis, betalingsgegevens.
+
+> **Correctie (documentatie-audit 2026-07-08):** een eerdere versie van dit document stelde dat geslacht, telefoonnummer, leeftijd en adres niet worden opgeslagen. Sinds de uitgebreide spelervelden (voor wedstrijdadministratie/NGF-doeleinden) is dat niet meer juist — deze velden zijn optioneel invoerbaar door de organisator. Zie ook open vraag ORG-O3 in `docs/user-stories/02-organizer-flow.md`: moeten deze velden standaard verborgen zijn (progressive disclosure) in plaats van standaard getoond, gezien het dataminimalisatie-principe hieronder?
+>
+> Ook is de toegangscode zelf **niet** gehashed in de database (in tegenstelling tot wat een eerdere versie van dit document stelde) — de code staat als leesbare tekst opgeslagen, omdat hij direct aan de organisator getoond en door de recorder ingetypt moet worden.
 
 ### 5.3 Privacy-by-design keuzes
 
@@ -362,27 +376,27 @@ OpenTour verwerkt persoonsgegevens omdat toernooien nu eenmaal spelersnamen en s
 
 **Naam zichtbaarheid op leaderboard:**
 - Standaard: volledige naam zichtbaar (toernooicontext)
-- Organisator kan per speler kiezen: naam verbergen, initialen tonen, of alias gebruiken
-- Bij verzoek: organisator kan naam (laten) anonimiseren
-- Na toernooi: uitslag blijft als archief, maar organisator kan namen verwijderen of anonimiseren
+- **Gepland, nog niet gebouwd:** organisator kan per speler kiezen: naam verbergen, initialen tonen, of alias gebruiken (zie US-PRI-03/04 in `docs/user-stories/06-privacy-and-exports.md`)
+- **Gepland, nog niet gebouwd:** bij verzoek kan de organisator een naam (laten) anonimiseren
+- Na toernooi: uitslag blijft als archief; het verwijderen/anonimiseren van namen achteraf is eveneens nog niet gebouwd
 
-**Wanneer anonimiseren:**
+**Wanneer anonimiseren (gepland, zie US-PRI-03):**
 - Op verzoek van de speler (AVG-recht op verwijdering)
 - Na een door de organisator ingestelde bewaartermijn
 - Bij verwijdering van het toernooi
 
-**Gegevens verwijderen:**
+**Gegevens verwijderen (gepland, nog niet gebouwd — zie epic 06 in `docs/user-stories/`):**
 - Organisator verwijdert account: alle gekoppelde toernooien blijven bestaan, maar het profiel wordt ontkoppeld
 - Speler vraagt verwijdering: naam wordt geanonimiseerd in alle toernooien, scores blijven maar zijn niet meer naar een persoon te herleiden
 - Toernooi verwijderen: alle bijbehorende data wordt verwijderd
 
-### 5.4 Praktische uitvoering
+### 5.4 Praktische uitvoering (streefbeeld — nog niet volledig gebouwd)
 
-- In het systeem: elke tournament_players-rij heeft een naamveld. Bij anonimisatie wordt de naam vervangen door een placeholder.
-- In de database: geen CASCADE DELETE van spelers naar scores, zodat scores bewaard blijven bij anonimisatie.
-- In de UI: organisator ziet een knop "Anonimiseer" per speler of voor alle niet-actieve spelers na afloop.
-- In de API: een end-point die de naam vervangt door een hash.
-- Bewaartermijn: standaard wordt data 12 maanden na toernooi-einde bewaard, daarna optioneel anonimiseren door organisator.
+- In het systeem: elke tournament_players-rij heeft een naamveld. Bij anonimisatie wordt de naam vervangen door een placeholder. **(Gepland — US-PRI-03 staat nog als "todo".)**
+- In de database: geen CASCADE DELETE van spelers naar scores, zodat scores bewaard blijven bij anonimisatie. **(Dit deel klopt al met de huidige database-inrichting.)**
+- In de UI: organisator ziet een knop "Anonimiseer" per speler of voor alle niet-actieve spelers na afloop. **(Nog niet gebouwd.)**
+- In de API: een end-point die de naam vervangt door een hash. **(Nog niet gebouwd — er is momenteel ook geen publieke REST API buiten het leaderboard-endpoint, zie §6.3.)**
+- Bewaartermijn: standaard wordt data 12 maanden na toernooi-einde bewaard, daarna optioneel anonimiseren door organisator. **(Beleidsvoornemen — nog niet technisch afgedwongen.)**
 
 ### 5.5 Verwerkersoverzicht
 
@@ -430,12 +444,10 @@ OpenTour onderscheidt zich door data niet op te sluiten in een propriëtair ecos
 - Alle toernooi-data in gestructureerd formaat
 - Documentatie via OpenAPI/Swagger (later)
 
-**REST API (MVP):**
-- Leaderboard data: GET /api/tournaments/:id/leaderboard
-- Spelerdata: GET /api/tournaments/:id/players
-- Scores: GET /api/tournaments/:id/scores
-- Tournooidata: GET /api/tournaments/:id
-- Authenticatie via Supabase JWT of anonieme key voor publieke data
+**REST API:**
+- **Daadwerkelijk gebouwd (MVP):** `GET /api/leaderboard/:tournamentId` — gecachte leaderboard-data via de Cloudflare Worker (zie §7). Publiek, geen authenticatie nodig voor publieke toernooien.
+- **Gepland, nog niet gebouwd:** losse REST-resources per entiteit (`/api/tournaments/:id/players`, `/api/tournaments/:id/scores`, `/api/tournaments/:id`), authenticatie via Supabase JWT voor niet-publieke data, en OpenAPI/Swagger-documentatie.
+- Tot die tijd is de Supabase PostgREST auto-API (via de `anon key` en RLS) het feitelijke mechanisme waarmee de frontend data ophaalt buiten het leaderboard-endpoint om — dit is geen publiek gedocumenteerde API voor derden.
 
 ### 6.4 Aansluiting op golfstandaarden
 
@@ -495,7 +507,7 @@ Cloudflare Worker           Supabase (PostgreSQL + Auth + Storage)
 | Website + leaderboard + PWA | Next.js (TypeScript) | MVP |
 | Hosting website | Vercel (gratis tier) | MVP |
 | Database | PostgreSQL (via Supabase) | MVP |
-| Authenticatie | Supabase Auth (magic link, Google OAuth) | MVP |
+| Authenticatie | Supabase Auth (magic link; Google OAuth gepland, nog niet gebouwd) | MVP |
 | Caching leaderboard | Cloudflare Workers + Cache API | MVP |
 | Offline opslag | IndexedDB (via Dexie.js) | MVP |
 | Score synchronisatie | Conditionele upsert in PostgreSQL | MVP |
@@ -543,14 +555,19 @@ De scoreer-app is een PWA die volledig werkt zonder internet:
 | Tabel | Doel | MVP |
 |---|---|---|
 | profiles | Gebruikersprofielen (aanvulling op auth.users) | Ja |
-| courses | Golfbanen | Ja |
+| courses | Golfbanen (eigenaar via created_by, privé standaard) | Ja |
 | holes | Holes per baan (par, stroke index) | Ja |
-| tournaments | Toernooien | Ja |
+| tees, loops, loop_holes | Meerdere teeboxen per baan, elk met eigen indeling en optionele WHS-ratings | Ja |
+| tournaments | Toernooien (incl. rondes) | Ja |
+| tournament_holes, tournament_tees | Bevroren kopie van de baanconfiguratie op moment van toernooistart | Ja |
+| tournament_categories | Spelerscategorieën (bijv. handicap/geslacht) per toernooi | Ja |
 | flights | Startgroepen | Ja |
-| tournament_players | Deelnemers per toernooi | Ja |
+| tournament_players | Deelnemers per toernooi (uitgebreid met optionele contact-/NGF-velden) | Ja |
 | scores | Scores per speler per hole per ronde | Ja |
 | access_codes | Toegangscodes voor recorders | Ja |
-| matchplay_pairings | 1v1 koppelingen voor matchplay | Ja |
+| matchplay_pairings | 1v1 koppelingen voor matchplay, per ronde | Ja |
+
+*Dit is nog steeds een beknopt overzicht — zie `supabase/migrations/` voor de volledige, actuele SQL-definities. Vertrouw bij twijfel altijd op de migraties, niet op deze tabel.*
 
 ### 7.8 Authenticatie en rollen
 
@@ -589,7 +606,7 @@ De scoreer-app is een PWA die volledig werkt zonder internet:
 **Scope:**
 - Volledige MVP-scope zoals beschreven in sectie 4.
 - Supabase + Vercel + Cloudflare infrastructuur.
-- NL-only (i18n skelet aanwezig, geen EN-UI in MVP).
+- NL en EN beide live (in een eerdere versie van dit document stond dat alleen NL live zou zijn in de MVP — dat bleek achterhaald).
 - eGolf4u baandatabase geïmporteerd.
 - Handmatige spelersinvoer (geen CSV-import in MVP).
 
@@ -606,10 +623,10 @@ De scoreer-app is een PWA die volledig werkt zonder internet:
 
 **Nog niet gebouwd:**
 - CSV-import spelers
-- Matchplay leaderboard view
-- i18n EN
 - E-mailnotificaties
 - QR-code
+
+> **Correctie (documentatie-audit 2026-07-08):** matchplay-weergave en EN-vertaling stonden hier eerder ook genoemd als nog te bouwen — beide zijn al live.
 
 ### Fase 2: Pilot-validatie en verbeteren (maand 4-6)
 
@@ -621,9 +638,6 @@ De scoreer-app is een PWA die volledig werkt zonder internet:
 **Scope:**
 - Bugfixes en UX-verbeteringen op basis van pilot-feedback.
 - CSV-import spelers.
-- i18n EN.
-- Verbeterde leaderboard-weergave (flight-filter, spelerzoeker).
-- Matchplay leaderboard view.
 
 **Succescriteria:**
 - NPS >= 40 van pilotgebruikers.
@@ -648,7 +662,6 @@ De scoreer-app is een PWA die volledig werkt zonder internet:
 - Zelf-hosting documentatie en tooling verbeteren.
 
 **Scope:**
-- Meerdere rondes per toernooi.
 - Seizoensranglijsten.
 - Clubaccounts met meerdere organisatoren.
 - QR-code generatie.
@@ -932,6 +945,8 @@ Als het platform eenmaal bewezen heeft waardevol te zijn, ontstaat er vanzelf vr
 | Extra analytics | Clubs | Clubstatistieken, trends, deelnemersaantallen |
 | Prioriteitsondersteuning | Organisatoren | Snelle hulp bij toernooien |
 
+> **Stand van zaken (documentatie-audit 2026-07-08):** de plek voor sponsorblokken staat al visueel in het leaderboard (drie posities: top/mid/bottom), maar toont nog alleen placeholder-tekst — er is geen backend, geen advertentiedata en geen manier voor een organisator om dit te vullen. De overige premium-features in deze tabel zijn nog niet gestart.
+
 ### 12.4 Hoe gratis basis behouden blijft zonder het product kapot te maken
 
 - Premium features zijn **toevoegingen**, geen onthoudingen. Er wordt geen gratis functie verwijderd om hem betaald aan te bieden.
@@ -954,16 +969,16 @@ Als het platform eenmaal bewezen heeft waardevol te zijn, ontstaat er vanzelf vr
 
 | # | Vraag | Context | Prioriteit |
 |---|---|---|---|
-| 1 | Merknaam en domeinnaam? | Nog niet gekozen. Beïnvloedt marketing en SEO. | Hoog |
+| 1 | Eigen domeinnaam (i.p.v. de Vercel-subdomein)? | Merknaam is intussen de facto **OpenTour** (repo, package-namen). Een eigen domein lijkt nog niet geregeld. | Hoog |
 | 2 | Lanceringstrategie: via welke kanalen eerste gebruikers? | Instagram, LinkedIn, Reddit, directe e-mail naar NL-organisatoren? | Hoog |
 | 3 | NGF/WHS handicap integratie mogelijk in de toekomst? | NGF moet toestemming geven. Geen prioriteit voor MVP. | Laag |
 | 4 | Baandatabase buiten NL: TheGolfAPI of andere bron? | eGolf4u dekt alleen NL. Evaluatie nodig na MVP. | Medium |
 | 5 | Aparte Discord community of GitHub Discussions? | Afhankelijk van community-omvang na launch. | Laag |
-| 6 | Figma designs: zelf ontwerpen of component library? | shadcn/ui of Radix als basis. | Medium |
+| 6 | ~~Figma designs: zelf ontwerpen of component library?~~ | **Beantwoord:** een eigen Tailwind-tokensysteem, geen shadcn/ui of Radix (zie §14.3). | — |
 | 7 | Magic link fallback als e-mail niet aankomt? | OTP-code per e-mail overwegen als alternatief. | Medium |
 | 8 | PWA-betrouwbaarheid op oudere Android? | Testen op Android 8.0 Chromium WebView; resultaat bepaalt of PWA volstaat. | Medium |
 | 9 | Welke prijs voor premium features? | Moet hostingkosten dekken; marktconform bepalen na MVP. | Laag |
-| 10 | Hoe omgaan met niet-NL gebruikers die meedoen aan een NL toernooi? | Leaderboard is taal-onafhankelijk; vooralsnog NL-interface. | Laag |
+| 10 | Hoe omgaan met niet-NL gebruikers die meedoen aan een NL toernooi? | Leaderboard-interface is nu in zowel NL als EN beschikbaar. | Laag |
 
 ### 13.2 Genomen beslissingen
 
@@ -1030,25 +1045,27 @@ Zie het volledige schema in `supabase/migrations/` voor de actuele SQL-definitie
 
 | Laag | Technologie | Waarom |
 |---|---|---|
-| Frontend | Next.js (TypeScript) | SSG/SSR, PWA, Vercel hosting |
-| Styling | shadcn/ui (Radix + Tailwind) | Consistente UI, toegankelijk |
+| Frontend | Next.js 14 (App Router, TypeScript) | SSG/SSR, PWA, Vercel hosting |
+| Styling | Tailwind CSS met een eigen semantisch design-tokensysteem (CSS-variabelen voor surface/border/content/score-kleuren, licht+donker+systeem via `next-themes`) | Consistente UI, licht/donker-thema, geen externe componentbibliotheek |
 | Backend | Supabase (PostgreSQL) | Auth, DB, Storage, self-hostable |
 | Cache | Cloudflare Workers + Cache API | Gratis edge-caching, rate limiting |
 | Offline | IndexedDB (Dexie.js) | PWA offline opslag |
-| i18n | next-i18next | NL + EN vanaf dag 1 |
+| i18n | next-intl | NL + EN, beide live |
 | CI/CD | GitHub Actions | Lint, typecheck, test, build, deploy |
 | Monorepo | Turborepo | Build caching, gedeelde packages |
 
-### 14.4 Gebruikersflows (samenvatting)
+> **Correctie (documentatie-audit 2026-07-08):** een eerdere versie noemde shadcn/ui (Radix + Tailwind) en next-i18next. Geen van beide wordt gebruikt in de huidige codebase — styling is een eigen Tailwind-tokensysteem, i18n loopt via next-intl (App Router-conventie, `app/[locale]/...`).
 
-Zie sectie 13 van het oorspronkelijke document voor de uitgebreide beschrijving van:
-- Toernooi aanmaken (organisator, ~5 minuten)
-- Score invoeren (recorder, twee modi)
-- Toegangscode kwijt (recorder)
-- Speler uitgevallen (organisator)
-- Leaderboard volgen (toeschouwer)
-- Toernooi afsluiten (organisator)
-- Toernooistatus wijzigen
+### 14.4 Gebruikersflows
+
+Voor de uitgebreide, onderhouden beschrijving van gebruikersflows (met acceptatiecriteria en technische specificatie per stap): zie `docs/user-stories/`, met name:
+- Toernooi aanmaken en beheren: `02-organizer-flow.md`
+- Score invoeren (drie modi): `03-scorer-flow.md`
+- Leaderboard volgen: `04-spectator-leaderboard.md`
+- Toegangscode kwijt, inloggen: `05-authentication-and-access.md`
+- Baanbeheer en eigenaarschap: `10-course-ownership-and-visibility.md`
+
+*(Een eerdere versie van dit document verwees hiervoor naar "sectie 13 van het oorspronkelijke document" — dat was `golf-app-design-document-v03-definitief.md`, dat sindsdien niet meer wordt bijgehouden. De user-stories in GitHub zijn nu de actuele bron.)*
 
 ---
 
