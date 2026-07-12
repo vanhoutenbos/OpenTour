@@ -71,6 +71,9 @@ export interface Database {
           course_id: string | null;
           loop_id: string | null;
           format: Database['public']['Enums']['tournament_format'];
+          /** Structuur over tijd, los van format. Zie migratie
+           * 20260712051028_ladder_competition_backend.sql. */
+          competition_type: Database['public']['Enums']['competition_type'];
           scoring_type: Database['public']['Enums']['scoring_type'];
           rounds: number;
           status: Database['public']['Enums']['tournament_status'];
@@ -242,9 +245,66 @@ export interface Database {
           flight_id: string | null;
           round_number: number;
           created_at: string;
+          /** Fase 0: handmatig ingevoerde handicapverrekening, zie migratie
+           * 20260712051028_ladder_competition_backend.sql (analyseplan §6). */
+          strokes_given: number | null;
+          strokes_receiver_player_id: string | null;
         };
         Insert: Omit<Database['public']['Tables']['matchplay_pairings']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['matchplay_pairings']['Insert']>;
+      };
+      ladder_settings: {
+        Row: {
+          tournament_id: string;
+          rung_growth: 'pyramid_double' | 'pyramid_linear';
+          top_rung_winner_count: number;
+          challenge_scope: 'rung_above' | 'n_positions_above';
+          challenge_max_positions: number | null;
+          handicap_allowance_pct: number;
+          response_deadline_days: number;
+          seeding_method: 'random' | 'handicap_asc' | 'handicap_desc';
+          split_pyramid_by_category: boolean;
+          self_service_challenges: boolean;
+          min_matches_per_period: number;
+          period_length_days: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['ladder_settings']['Row'], 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['ladder_settings']['Insert']>;
+      };
+      ladder_positions: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          tournament_player_id: string;
+          category_id: string | null;
+          rung_number: number;
+          position_in_rung: number;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['ladder_positions']['Row'], 'id' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['ladder_positions']['Insert']>;
+      };
+      ladder_challenges: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          challenger_player_id: string;
+          challenged_player_id: string;
+          status: Database['public']['Enums']['ladder_challenge_status'];
+          deadline_at: string;
+          matchplay_pairing_id: string | null;
+          winner_player_id: string | null;
+          result_type: 'played' | 'forfeit' | 'no_show' | 'declined' | null;
+          created_by: string | null;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['ladder_challenges']['Row'], 'id' | 'created_at' | 'status' | 'resolved_at'> & {
+          status?: Database['public']['Enums']['ladder_challenge_status'];
+        };
+        Update: Partial<Database['public']['Tables']['ladder_challenges']['Insert']>;
       };
     };
     Views: {
@@ -358,6 +418,22 @@ export interface Database {
         };
         Returns: string;
       };
+      generate_ladder_pyramid: {
+        Args: {
+          p_tournament_id: string;
+          p_sort_by: string;
+          p_split_by_category: boolean;
+        };
+        Returns: void;
+      };
+      resolve_ladder_challenge: {
+        Args: {
+          p_challenge_id: string;
+          p_winner_player_id: string;
+          p_result_type: string;
+        };
+        Returns: void;
+      };
     };
     Enums: {
       tournament_format: 'strokeplay' | 'stableford' | 'matchplay';
@@ -370,6 +446,12 @@ export interface Database {
       user_role: 'organizer' | 'recorder';
       course_source: 'egolf4u' | 'custom' | 'community';
       language: 'nl' | 'en';
+      /** Structuur van het toernooi over tijd, los van format (scoringmechaniek).
+       * Zie migratie 20260712051028_ladder_competition_backend.sql. Gereserveerd
+       * voor een latere fase: 'league'. */
+      competition_type: 'single' | 'ladder';
+      /** Nieuw: laddercompetitie uitdaging-status (echte Postgres ENUM). */
+      ladder_challenge_status: 'pending' | 'accepted' | 'declined' | 'expired' | 'completed' | 'forfeited';
     };
   };
 }

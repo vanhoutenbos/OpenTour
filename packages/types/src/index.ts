@@ -8,6 +8,10 @@
 // ============================================================
 
 export type TournamentFormat = 'strokeplay' | 'stableford' | 'matchplay';
+/** Structuur van het toernooi over tijd, los van format (scoringmechaniek).
+ * 'single' = regulier toernooi (default). 'ladder' vereist format='matchplay'.
+ * Gereserveerd voor een latere fase: 'league'. */
+export type CompetitionType = 'single' | 'ladder';
 export type ScoringType = 'gross' | 'net';
 export type TournamentStatus = 'draft' | 'active' | 'paused' | 'finished';
 export type PlayerStatus = 'registered' | 'confirmed' | 'withdrawn' | 'dns' | 'dnf' | 'dsq';
@@ -18,6 +22,12 @@ export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 export type GenderBinary   = 'male' | 'female';
 export type GenderCategory = 'male' | 'female' | 'mixed';
 export type LoopType = 'full_18' | 'front_9' | 'back_9' | 'custom';
+export type LadderRungGrowth = 'pyramid_double' | 'pyramid_linear';
+export type LadderChallengeScope = 'rung_above' | 'n_positions_above';
+export type LadderSeedingMethod = 'random' | 'handicap_asc' | 'handicap_desc';
+export type LadderChallengeStatus =
+  'pending' | 'accepted' | 'declined' | 'expired' | 'completed' | 'forfeited';
+export type LadderResultType = 'played' | 'forfeit' | 'no_show' | 'declined';
 
 // ============================================================
 // DATABASE ENTITEITEN
@@ -133,6 +143,9 @@ export interface Tournament {
   course_id?: string;
   loop_id?: string;
   format: TournamentFormat;
+  /** Structuur over tijd, los van format. Zie migratie
+   * 20260712051028_ladder_competition_backend.sql (analyseplan §2). */
+  competition_type: CompetitionType;
   scoring_type: ScoringType;
   rounds: number;
   status: TournamentStatus;
@@ -212,7 +225,53 @@ export interface MatchplayPairing {
   player_a_id: string;
   player_b_id: string;
   flight_id?: string;
+  round_number: number;
   created_at: string;
+  /** Fase 0: handmatig ingevoerde handicapverrekening (analyseplan §6). NULL = bruto. */
+  strokes_given: number | null;
+  strokes_receiver_player_id: string | null;
+}
+
+export interface LadderSettings {
+  tournament_id: string;
+  rung_growth: LadderRungGrowth;
+  top_rung_winner_count: number;
+  challenge_scope: LadderChallengeScope;
+  challenge_max_positions: number | null;
+  handicap_allowance_pct: number;
+  response_deadline_days: number;
+  seeding_method: LadderSeedingMethod;
+  split_pyramid_by_category: boolean;
+  self_service_challenges: boolean;
+  min_matches_per_period: number;
+  period_length_days: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LadderPosition {
+  id: string;
+  tournament_id: string;
+  tournament_player_id: string;
+  category_id: string | null;
+  rung_number: number;
+  position_in_rung: number;
+  updated_at: string;
+}
+
+export interface LadderChallenge {
+  id: string;
+  tournament_id: string;
+  challenger_player_id: string;
+  challenged_player_id: string;
+  status: LadderChallengeStatus;
+  deadline_at: string;
+  matchplay_pairing_id: string | null;
+  winner_player_id: string | null;
+  result_type: LadderResultType | null;
+  created_by: string | null;
+  created_at: string;
+  resolved_at: string | null;
 }
 
 // ============================================================
