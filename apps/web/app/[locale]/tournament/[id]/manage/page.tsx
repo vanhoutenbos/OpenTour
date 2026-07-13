@@ -18,6 +18,8 @@ interface Tournament {
   description: string | null;
   course_id: string | null;
   format: string;
+  /** Structuur over tijd, los van format. Zie analyseplan §2 en de addendum. */
+  competition_type: string;
   scoring_type: string;
   rounds: number;
   status: string;
@@ -1054,6 +1056,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       tournamentName={tournament.name}
                       activeMatchplayRound={activeMatchplayRound}
                       format={tournament.format}
+                      competitionType={tournament.competition_type}
                       scoringType={tournament.scoring_type}
                       isActive={tournament.status === 'active'}
                       status={tournament.status}
@@ -1131,6 +1134,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   tournamentName={tournament.name}
                   activeMatchplayRound={activeMatchplayRound}
                   format={tournament.format}
+                  competitionType={tournament.competition_type}
                   scoringType={tournament.scoring_type}
                   isActive={tournament.status === 'active'}
                   status={tournament.status}

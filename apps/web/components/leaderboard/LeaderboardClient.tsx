@@ -11,8 +11,9 @@ import { LeaderboardTable } from './LeaderboardTable';
 import { TeeTimesView } from './TeeTimesView';
 import { CourseStats } from './CourseStats';
 import { MatchplayView } from './MatchplayView';
+import { LadderPyramidView } from './LadderPyramidView';
 
-type LeaderboardTab = 'leaderboard' | 'matchplay' | 'teetimes' | 'coursestats';
+type LeaderboardTab = 'leaderboard' | 'matchplay' | 'ladder' | 'teetimes' | 'coursestats';
 
 interface FlightInfo {
   id: string;
@@ -35,6 +36,9 @@ interface Props {
   tournamentName: string;
   tournamentDescription?: string | null;
   format: string;
+  /** Structuur over tijd, los van format. 'ladder' toont de piramide i.p.v. het
+   * reguliere leaderboard/matchplay-bracket. Zie analyseplan §2 en de addendum. */
+  competitionType?: string;
   scoringType: string;
   isActive: boolean;
   status: string;
@@ -54,6 +58,7 @@ export function LeaderboardClient({
   activeMatchplayRound,
   tournamentDescription,
   format: scoringFormat,
+  competitionType = 'single',
   scoringType,
   isActive,
   status,
@@ -77,7 +82,7 @@ export function LeaderboardClient({
   const [selectedFlight, setSelectedFlight] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<LeaderboardTab>('leaderboard');
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>(competitionType === 'ladder' ? 'ladder' : 'leaderboard');
 
   const { favorites, isFavorite, toggleFavorite, favoriteCount } = useFavorites(tournamentId);
 
@@ -174,16 +179,23 @@ export function LeaderboardClient({
     return list;
   }, [entries, searchQuery, selectedFlight, showFavoritesOnly, isFavorite]);
 
-  // Als ingebed in het organisatorscherm: altijd leaderboard tab, geen navigatie
+  // Als ingebed in het organisatorscherm: altijd de hoofdweergave, geen navigatie
   useEffect(() => {
-    if (hideExtras) setActiveTab('leaderboard');
-  }, [hideExtras]);
+    if (hideExtras) setActiveTab(competitionType === 'ladder' ? 'ladder' : 'leaderboard');
+  }, [hideExtras, competitionType]);
 
-  // Subtab configuratie — alleen zichtbaar op de publieke leaderboard pagina
+  // Subtab configuratie — alleen zichtbaar op de publieke leaderboard pagina.
+  // Een ladder-toernooi heeft format='matchplay' (individuele wedstrijden worden
+  // matchplay-gescoord, zie analyseplan addendum), maar moet NIET de generieke
+  // Matchplay-bracket-tab tonen (die veronderstelt vooraf vastgelegde rondes, wat
+  // niet past bij een doorlopende laddercompetitie) — vandaar de expliciete
+  // competitionType !== 'ladder' voorwaarde hieronder.
+  const isLadder = competitionType === 'ladder';
   const tabs: { key: LeaderboardTab; label: string; show: boolean }[] = [
-    { key: 'leaderboard', label: 'Leaderboard', show: true },
-    { key: 'teetimes', label: 'Tee Times', show: true },
-    { key: 'matchplay', label: 'Matchplay', show: scoringFormat === 'matchplay' },
+    { key: 'ladder', label: 'Piramide', show: isLadder },
+    { key: 'leaderboard', label: 'Leaderboard', show: !isLadder },
+    { key: 'teetimes', label: 'Tee Times', show: !isLadder },
+    { key: 'matchplay', label: 'Matchplay', show: scoringFormat === 'matchplay' && !isLadder },
     { key: 'coursestats', label: 'Course Stats', show: true },
   ];
 
@@ -249,6 +261,11 @@ export function LeaderboardClient({
         {/* MATCHPLAY */}
         {activeTab === 'matchplay' && (
           <MatchplayView tournamentId={tournamentId} activeRound={activeMatchplayRound} />
+        )}
+
+        {/* LADDER */}
+        {activeTab === 'ladder' && (
+          <LadderPyramidView tournamentId={tournamentId} />
         )}
 
         {/* COURSE STATS */}

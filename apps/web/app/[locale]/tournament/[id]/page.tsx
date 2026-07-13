@@ -12,6 +12,8 @@ interface TournamentRow {
   name: string;
   description: string | null;
   format: string;
+  /** Structuur over tijd, los van format. Zie analyseplan §2 en de addendum. */
+  competition_type: string;
   scoring_type: string;
   status: string;
   pause_reason: string | null;
@@ -179,6 +181,7 @@ export default async function LeaderboardPage({ params }: Props) {
           tournamentName={tournament.name}
           tournamentDescription={tournament.description}
           format={tournament.format}
+          competitionType={tournament.competition_type}
           scoringType={tournament.scoring_type}
           isActive={tournament.status === 'active'}
           status={tournament.status}
