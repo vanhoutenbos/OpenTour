@@ -7,6 +7,7 @@ import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { userError } from '@/lib/errors';
 import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
+import { LadderManagementPanel } from '@/components/leaderboard/LadderManagementPanel';
 import { LiveBadge } from '@/components/leaderboard/LiveBadge';
 import { PauseBanner } from '@/components/leaderboard/PauseBanner';
 import { clampRound, deriveActiveRound, normalizeActiveRound, type MatchplayMatch } from '@/components/leaderboard/matchplayUtils';
@@ -109,7 +110,7 @@ interface Flight {
   sort_order?: number | null;
 }
 
-type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'corrections' | 'codes';
+type Tab = 'overview' | 'edit' | 'players' | 'categories' | 'flights' | 'ladder' | 'corrections' | 'codes';
 
 function InputField({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
@@ -800,7 +801,9 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     { key: 'edit', label: 'Bewerken' },
     { key: 'players', label: `Spelers (${players.length})` },
     { key: 'categories', label: `Categorieën (${categories.length})` },
-    { key: 'flights', label: `Flights (${flights.length})` },
+    ...(tournament?.competition_type === 'ladder'
+      ? [{ key: 'ladder' as Tab, label: 'Piramide' }]
+      : [{ key: 'flights' as Tab, label: `Flights (${flights.length})` }]),
     { key: 'corrections', label: 'Scorecorrecties' },
     { key: 'codes', label: 'Toegangscodes' },
   ];
@@ -1642,6 +1645,11 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               </div>
             )}
           </div>
+        )}
+
+        {/* ===== TAB: Ladder (piramide) ===== */}
+        {activeTab === 'ladder' && tournament.competition_type === 'ladder' && (
+          <LadderManagementPanel tournamentId={params.id} />
         )}
 
         {/* ===== TAB: Flights ===== */}

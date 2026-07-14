@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useFormatter } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { CourseBuilderForm } from '@/components/course/CourseBuilderForm';
+import { isLadderBetaUser } from '@/lib/featureFlags';
 
 interface Course {
   id: string;
@@ -65,6 +66,7 @@ export default function NewTournamentPage() {
   const [loadingLoops, setLoadingLoops] = useState(false);
   const [loadingTees, setLoadingTees] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [showCourseBuilder, setShowCourseBuilder] = useState(false);
 
   // Categorieën die lokaal worden opgebouwd vóór submit
@@ -88,6 +90,13 @@ export default function NewTournamentPage() {
     scoring_type: 'gross' as 'gross' | 'net',
     rounds: 1,
     multi_rounds: false,
+    // Laddercompetitie (beta, alleen zichtbaar voor info@vanhoutensolutions.nl —
+    // zie analyseplan §2 en de addendum over competition_type vs. format).
+    competition_type: 'single' as 'single' | 'ladder',
+    ladder_top_rung_winner_count: 1,
+    ladder_handicap_allowance_pct: 100,
+    ladder_response_deadline_days: 14,
+    ladder_min_matches_per_period: 0,
   };
 
   const [form, setForm] = useState({ ...defaultForm });
@@ -152,6 +161,7 @@ export default function NewTournamentPage() {
       }
 
       setCurrentUserId(data.user.id);
+      setCurrentUserEmail(data.user.email ?? '');
       void loadCourses(data.user.id);
     });
   }, [router, locale]);
@@ -218,6 +228,7 @@ export default function NewTournamentPage() {
         course_id: form.course_id || null,
         loop_id: form.loop_id || null,
         format: form.format,
+        competition_type: form.competition_type,
         scoring_type: form.scoring_type,
         rounds: form.rounds,
         status: 'draft',
@@ -233,7 +244,26 @@ export default function NewTournamentPage() {
       return;
     }
 
-    // 2. Categorieën aanmaken (als die er zijn)
+    // 2. Ladder-instellingen aanmaken (alleen bij een laddercompetitie — de
+    // RLS-gate zorgt dat dit alleen lukt voor info@vanhoutensolutions.nl,
+    // wat sowieso de enige is die competition_type='ladder' kon kiezen)
+    if (form.competition_type === 'ladder') {
+      const { error: ladderError } = await supabase.from('ladder_settings').insert({
+        tournament_id: data.id,
+        top_rung_winner_count: form.ladder_top_rung_winner_count,
+        handicap_allowance_pct: form.ladder_handicap_allowance_pct,
+        response_deadline_days: form.ladder_response_deadline_days,
+        min_matches_per_period: form.ladder_min_matches_per_period,
+      });
+      if (ladderError) {
+        setError(`Toernooi aangemaakt, maar ladder-instellingen opslaan mislukt: ${ladderError.message}`);
+        setLoading(false);
+        router.push(`/${locale}/tournament/${data.id}/manage`);
+        return;
+      }
+    }
+
+    // 3. Categorieën aanmaken (als die er zijn)
     if (categories.length > 0) {
       const { error: catError } = await supabase.from('tournament_categories').insert(
         categories.map((c, i) => ({
@@ -529,27 +559,117 @@ export default function NewTournamentPage() {
               <p className="text-content-muted text-sm">Hoe wordt de winnaar bepaald?</p>
             </div>
 
-            <div>
-              <label className="block text-sm text-content-muted mb-2">Scoringssysteem</label>
-              <div className="space-y-2">
-                {[
-                  { value: 'stableford', label: 'Stableford', desc: 'Punten per hole — meeste punten wint' },
-                  { value: 'strokeplay',     label: 'Stroke play', desc: 'Minste slagen over alle holes wint' },
-                  { value: 'matchplay',      label: 'Matchplay',   desc: 'Hole-by-hole duels (1 vs 1)' },
-                ].map((f) => (
-                  <button
-                    key={f.value}
-                    onClick={() => updateForm({ format: f.value as typeof form.format })}
-                    className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
-                      form.format === f.value ? 'bg-green-900/30 border-green-600 text-content' : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
-                    }`}
-                  >
-                    <span className="font-medium">{f.label}</span>
-                    <span className="text-content-muted text-sm block">{f.desc}</span>
-                  </button>
-                ))}
+            {isLadderBetaUser(currentUserEmail) && (
+              <div>
+                <label className="block text-sm text-content-muted mb-2">
+                  Competitievorm <span className="text-amber-400">(beta)</span>
+                </label>
+                <div className="flex gap-3">
+                  {[
+                    { value: 'single', label: 'Regulier toernooi', desc: 'Eén event, zelf format kiezen' },
+                    { value: 'ladder', label: 'Laddercompetitie', desc: 'Piramide, spelers dagen elkaar uit' },
+                  ].map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => {
+                        if (c.value === 'ladder') {
+                          updateForm({ competition_type: 'ladder', format: 'matchplay' });
+                        } else {
+                          updateForm({ competition_type: 'single' });
+                        }
+                      }}
+                      className={`flex-1 py-3 px-4 rounded-xl border transition-colors text-left ${
+                        form.competition_type === c.value ? 'bg-green-900/30 border-green-600 text-content' : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
+                      }`}
+                    >
+                      <span className="font-medium block">{c.label}</span>
+                      <span className="text-content-muted text-xs">{c.desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {form.competition_type === 'ladder' ? (
+              <div className="rounded-xl border border-border bg-surface-2/60 p-4 space-y-4">
+                <p className="text-content-muted text-sm">
+                  Een laddercompetitie bestaat uit matchplay-wedstrijden (handicapverrekening
+                  stel je hieronder in). Het format hierboven staat daarom vast op Matchplay.
+                </p>
+
+                <div>
+                  <label className="block text-sm text-content-muted mb-1">
+                    Handicap allowance (% van het baanhandicap-verschil)
+                  </label>
+                  <input
+                    type="number" min={0} max={100}
+                    value={form.ladder_handicap_allowance_pct}
+                    onChange={(e) => updateForm({ ladder_handicap_allowance_pct: Number(e.target.value) })}
+                    className="w-full px-4 py-2 rounded-xl border border-border-strong bg-surface-3 text-content"
+                  />
+                  <p className="text-content-muted text-xs mt-1">
+                    NGF-voorbeeld gebruikt 100%; sommige clubs kiezen bewust lager (bv. 70-75%). 0% = bruto.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-content-muted mb-1">Aantal winnaars bovenste trede</label>
+                  <input
+                    type="number" min={1}
+                    value={form.ladder_top_rung_winner_count}
+                    onChange={(e) => updateForm({ ladder_top_rung_winner_count: Number(e.target.value) })}
+                    className="w-full px-4 py-2 rounded-xl border border-border-strong bg-surface-3 text-content"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-content-muted mb-1">Reactietermijn op een uitdaging (dagen)</label>
+                  <input
+                    type="number" min={1}
+                    value={form.ladder_response_deadline_days}
+                    onChange={(e) => updateForm({ ladder_response_deadline_days: Number(e.target.value) })}
+                    className="w-full px-4 py-2 rounded-xl border border-border-strong bg-surface-3 text-content"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-content-muted mb-1">
+                    Minimumaantal wedstrijden per speler (0 = geen minimum)
+                  </label>
+                  <input
+                    type="number" min={0}
+                    value={form.ladder_min_matches_per_period}
+                    onChange={(e) => updateForm({ ladder_min_matches_per_period: Number(e.target.value) })}
+                    className="w-full px-4 py-2 rounded-xl border border-border-strong bg-surface-3 text-content"
+                  />
+                  <p className="text-content-muted text-xs mt-1">
+                    Wordt nu alleen getoond in het beheerscherm; automatische uitsluiting volgt later.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm text-content-muted mb-2">Scoringssysteem</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'stableford', label: 'Stableford', desc: 'Punten per hole — meeste punten wint' },
+                    { value: 'strokeplay',     label: 'Stroke play', desc: 'Minste slagen over alle holes wint' },
+                    { value: 'matchplay',      label: 'Matchplay',   desc: 'Hole-by-hole duels (1 vs 1)' },
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => updateForm({ format: f.value as typeof form.format })}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
+                        form.format === f.value ? 'bg-green-900/30 border-green-600 text-content' : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
+                      }`}
+                    >
+                      <span className="font-medium">{f.label}</span>
+                      <span className="text-content-muted text-sm block">{f.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm text-content-muted mb-2">Bruto of netto?</label>
