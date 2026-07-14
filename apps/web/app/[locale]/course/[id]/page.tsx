@@ -134,6 +134,7 @@ export default function EditCoursePage() {
 
       const teeDrafts = teeRows.map((tee) => ({
         color: tee.color ?? '',
+        gender: tee.gender,
       }));
 
       const holeDrafts = holeRows.map((hole) => {

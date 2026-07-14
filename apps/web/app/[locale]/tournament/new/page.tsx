@@ -875,7 +875,8 @@ export default function NewTournamentPage() {
                 { label: 'Baan',      value: courses.find(c => c.id === form.course_id)?.name ?? 'Nog niet gekozen' },
                 { label: 'Loop',      value: loops.find(l => l.id === form.loop_id)?.name ?? '—' },
                 { label: 'Afslag',    value: tees.find(t => t.id === form.tee_id)?.color ?? '—' },
-                { label: 'Format',    value: { stableford: 'Stableford', stroke: 'Stroke play', match: 'Matchplay' }[form.format] },
+                { label: 'Competitievorm', value: form.competition_type === 'ladder' ? 'Laddercompetitie (beta)' : 'Regulier toernooi' },
+                { label: 'Format',    value: { stableford: 'Stableford', strokeplay: 'Stroke play', matchplay: 'Matchplay' }[form.format] },
                 { label: 'Scoring',   value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
                 { label: 'Rondes',    value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
               ].map(({ label, value }) => (
