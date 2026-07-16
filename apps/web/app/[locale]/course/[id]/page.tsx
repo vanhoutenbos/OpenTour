@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CourseBuilderForm, type CourseBuilderInitialData } from '@/components/course/CourseBuilderForm';
 import { TeeManagerSection, type TeeRecord } from '@/components/course/TeeManagerSection';
+import { LoopManagerSection, type LoopRecord } from '@/components/course/LoopManagerSection';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface CourseHeader {
@@ -30,6 +31,7 @@ interface LoopRow {
   name: string;
   loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
   tee_id: string | null;
+  is_default: boolean | null;
 }
 
 interface LoopHoleRow {
@@ -56,20 +58,16 @@ export default function EditCoursePage() {
   const [teeCount, setTeeCount] = useState(0);
   const [loopCount, setLoopCount] = useState(0);
   const [tees, setTees] = useState<TeeRecord[]>([]);
+  const [loops, setLoops] = useState<LoopRecord[]>([]);
+  const [holeRefs, setHoleRefs] = useState<{ id: string; number: number }[]>([]);
   const [structureView, setStructureView] = useState<{
-    loopCards: {
-      id: string;
-      name: string;
-      loopType: string;
-      holeNumbers: string;
-    }[];
     holeRows: {
       number: number;
       par: 3 | 4 | 5;
       stroke_index: number;
       distance_meters: string;
     }[];
-  }>({ loopCards: [], holeRows: [] });
+  }>({ holeRows: [] });
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -104,7 +102,7 @@ export default function EditCoursePage() {
           .order('number', { ascending: true }),
         supabase
           .from('loops')
-          .select('id, name, loop_type, tee_id')
+          .select('id, name, loop_type, tee_id, is_default')
           .eq('course_id', courseId)
           .order('created_at', { ascending: true }),
         supabase
@@ -170,8 +168,10 @@ export default function EditCoursePage() {
       });
 
       setTees(teeRows);
-      const loopCards = loopRows.map((loop) => {
-        const holeIdsForLoop = loopHoleRows
+      setHoleRefs(holeRows.map((hole) => ({ id: hole.id, number: hole.number })));
+
+      const loopRecords: LoopRecord[] = loopRows.map((loop) => {
+        const holeNumbersForLoop = loopHoleRows
           .filter((loopHole) => loopHole.loop_id === loop.id)
           .sort((a, b) => a.position - b.position)
           .map((loopHole) => holeRows.find((hole) => hole.id === loopHole.hole_id)?.number)
@@ -180,10 +180,13 @@ export default function EditCoursePage() {
         return {
           id: loop.id,
           name: loop.name,
-          loopType: loop.loop_type,
-          holeNumbers: holeIdsForLoop.join(', '),
+          loop_type: loop.loop_type,
+          tee_id: loop.tee_id,
+          is_default: loop.is_default ?? false,
+          holeNumbers: holeNumbersForLoop,
         };
       });
+      setLoops(loopRecords);
 
       const holeRowsView = holeRows.map((hole) => ({
         number: hole.number,
@@ -199,9 +202,8 @@ export default function EditCoursePage() {
         loops: loopDrafts,
       });
       setTeeCount(teeDrafts.length);
-      setLoopCount(loopDrafts.length);
+      setLoopCount(loopRecords.length);
       setStructureView({
-        loopCards,
         holeRows: holeRowsView,
       });
       setLoading(false);
@@ -277,29 +279,21 @@ export default function EditCoursePage() {
               }}
             />
 
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-content">Lussen</p>
-              <div className="space-y-2">
-                {structureView.loopCards.length === 0 ? (
-                  <p className="text-sm text-content-muted">Geen lussen aanwezig.</p>
-                ) : (
-                  structureView.loopCards.map((loop) => (
-                    <div key={loop.id} className="rounded-xl border border-border bg-surface px-4 py-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-content">{loop.name}</p>
-                          <p className="text-xs text-content-muted mt-0.5">
-                            {loop.loopType}
-                          </p>
-                        </div>
-                        <span className="text-xs text-content-muted">{loop.holeNumbers.split(',').filter(Boolean).length} holes</span>
-                      </div>
-                      <p className="text-xs text-content-muted mt-2 break-words">{loop.holeNumbers || 'Geen holes gekoppeld'}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <LoopManagerSection
+              courseId={courseId}
+              holes={holeRefs}
+              tees={tees.map((tee) => ({
+                id: tee.id,
+                label: [tee.color ?? tee.name ?? tee.external_id, tee.gender ? `(${tee.gender})` : null]
+                  .filter(Boolean)
+                  .join(' '),
+              }))}
+              initialLoops={loops}
+              onLoopsChanged={(updated) => {
+                setLoops(updated);
+                setLoopCount(updated.length);
+              }}
+            />
 
             <div className="space-y-3">
               <p className="text-sm font-medium text-content">Holes</p>
