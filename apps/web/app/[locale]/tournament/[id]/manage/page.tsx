@@ -163,6 +163,10 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   });
   const [editSaving, setEditSaving] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
+  const [showDeleteTournamentConfirm, setShowDeleteTournamentConfirm] = useState(false);
+  const [deleteTournamentInput, setDeleteTournamentInput] = useState('');
+  const [tournamentDeleting, setTournamentDeleting] = useState(false);
+  const [tournamentDeleteError, setTournamentDeleteError] = useState<string | null>(null);
 
   // Add player
   const [playerForm, setPlayerForm] = useState({
@@ -358,6 +362,25 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const updateStatus = async (status: string, extra: Record<string, unknown> = {}) => {
     await supabase.from('tournaments').update({ status, ...extra }).eq('id', params.id);
     await loadData();
+  };
+
+  const deleteTournament = async () => {
+    setTournamentDeleteError(null);
+    setTournamentDeleting(true);
+    const { error, count } = await supabase
+      .from('tournaments')
+      .delete({ count: 'exact' })
+      .eq('id', params.id);
+    setTournamentDeleting(false);
+    if (error) {
+      setTournamentDeleteError(userError(error, 'Kon het toernooi niet verwijderen.'));
+      return;
+    }
+    if (!count) {
+      setTournamentDeleteError('Verwijderen is niet gelukt. Mogelijk heb je hier geen rechten voor.');
+      return;
+    }
+    router.push('/dashboard');
   };
 
   // ---- Add player ----
@@ -1258,6 +1281,67 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   className="w-full py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
                 >
                   {editSaving ? 'Opslaan...' : editSuccess ? '✓ Opgeslagen!' : 'Wijzigingen opslaan'}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-bold text-red-400 mb-4">Gevarenzone</h2>
+              <div className="bg-red-950/30 border border-red-900/50 rounded-2xl p-5 space-y-3">
+                <p className="text-sm text-content-muted">
+                  Het toernooi verwijderen kan niet ongedaan worden gemaakt. Alle gekoppelde gegevens
+                  worden permanent verwijderd: spelers, flights, scores, toegangscodes en (indien van
+                  toepassing) ladder- en matchplay-gegevens.
+                </p>
+                <button
+                  onClick={() => { setDeleteTournamentInput(''); setTournamentDeleteError(null); setShowDeleteTournamentConfirm(true); }}
+                  className="py-2 px-4 bg-red-900/40 hover:bg-red-900 text-red-300 rounded-xl text-sm font-semibold"
+                >
+                  Toernooi verwijderen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showDeleteTournamentConfirm && tournament && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="bg-surface-3 rounded-2xl p-6 max-w-md w-full space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-content">Toernooi definitief verwijderen?</h3>
+                <p className="text-sm text-content-muted mt-2">
+                  Dit verwijdert <span className="font-semibold text-content">&quot;{tournament.name}&quot;</span> en
+                  alle spelers, flights, scores, toegangscodes en overige gekoppelde gegevens. Dit kan
+                  niet ongedaan worden gemaakt.
+                </p>
+                <p className="text-sm text-content-muted mt-3">
+                  Typ de naam van het toernooi om te bevestigen:
+                </p>
+                <input
+                  type="text"
+                  value={deleteTournamentInput}
+                  onChange={e => setDeleteTournamentInput(e.target.value)}
+                  placeholder={tournament.name}
+                  className="mt-2 w-full px-4 py-3 bg-surface-2 border border-border-strong rounded-xl text-content placeholder-content-muted focus:outline-none focus:border-red-600"
+                />
+                {tournamentDeleteError && (
+                  <p className="text-red-400 text-sm mt-2">{tournamentDeleteError}</p>
+                )}
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowDeleteTournamentConfirm(false)}
+                  disabled={tournamentDeleting}
+                  className="flex-1 py-3 bg-surface-3 text-content rounded-xl text-sm disabled:opacity-50"
+                >
+                  Annuleren
+                </button>
+                <button
+                  onClick={deleteTournament}
+                  disabled={tournamentDeleting || deleteTournamentInput !== tournament.name}
+                  className="flex-1 py-3 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold"
+                >
+                  {tournamentDeleting ? 'Verwijderen...' : 'Ja, definitief verwijderen'}
                 </button>
               </div>
             </div>
