@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CourseBuilderForm, type CourseBuilderInitialData } from '@/components/course/CourseBuilderForm';
 import { TeeManagerSection, type TeeRecord } from '@/components/course/TeeManagerSection';
+import { HoleManagerSection, type HoleRecord } from '@/components/course/HoleManagerSection';
 import { LoopManagerSection, type LoopRecord } from '@/components/course/LoopManagerSection';
 import { LoopRatingsSection, type LoopSummary, type LoopTeeRatingRecord } from '@/components/course/LoopRatingsSection';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
@@ -59,18 +60,13 @@ export default function EditCoursePage() {
   const [teeCount, setTeeCount] = useState(0);
   const [loopCount, setLoopCount] = useState(0);
   const [tees, setTees] = useState<TeeRecord[]>([]);
+  const [holes, setHoles] = useState<HoleRecord[]>([]);
   const [loops, setLoops] = useState<LoopRecord[]>([]);
-  const [holeRefs, setHoleRefs] = useState<{ id: string; number: number }[]>([]);
   const [loopSummaries, setLoopSummaries] = useState<LoopSummary[]>([]);
   const [loopTeeRatings, setLoopTeeRatings] = useState<LoopTeeRatingRecord[]>([]);
-  const [structureView, setStructureView] = useState<{
-    holeRows: {
-      number: number;
-      par: 3 | 4 | 5;
-      stroke_index: number;
-      distance_meters: string;
-    }[];
-  }>({ holeRows: [] });
+  // holeRefs (id + number only) is what LoopManagerSection needs; derive it
+  // from `holes` so it can never drift out of sync (e.g. after a rename or delete).
+  const holeRefs = holes.map((hole) => ({ id: hole.id, number: hole.number }));
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -175,7 +171,7 @@ export default function EditCoursePage() {
       });
 
       setTees(teeRows);
-      setHoleRefs(holeRows.map((hole) => ({ id: hole.id, number: hole.number })));
+      setHoles(holeRows);
       setLoopSummaries(loopRows.map((loop) => ({ id: loop.id, name: loop.name, loop_type: loop.loop_type })));
       setLoopTeeRatings((loopTeeRatingRows as LoopTeeRatingRecord[] | null) ?? []);
 
@@ -197,13 +193,6 @@ export default function EditCoursePage() {
       });
       setLoops(loopRecords);
 
-      const holeRowsView = holeRows.map((hole) => ({
-        number: hole.number,
-        par: hole.par,
-        stroke_index: hole.stroke_index,
-        distance_meters: hole.distance_meters?.toString() ?? '—',
-      }));
-
       setInitialData({
         course,
         tees: teeDrafts,
@@ -212,9 +201,6 @@ export default function EditCoursePage() {
       });
       setTeeCount(teeDrafts.length);
       setLoopCount(loopRecords.length);
-      setStructureView({
-        holeRows: holeRowsView,
-      });
       setLoading(false);
     }
 
@@ -288,10 +274,13 @@ export default function EditCoursePage() {
               }}
             />
 
-            <LoopRatingsSection
-              loops={loopSummaries}
-              tees={tees}
-              initialRatings={loopTeeRatings}
+            <HoleManagerSection
+              courseId={courseId}
+              initialHoles={holes}
+              onHolesChanged={(updated) => {
+                setHoles(updated);
+                setCourseHeader((prev) => (prev ? { ...prev, holes_count: updated.length } : prev));
+              }}
             />
 
             <LoopManagerSection
@@ -310,27 +299,11 @@ export default function EditCoursePage() {
               }}
             />
 
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-content">Holes</p>
-              <div className="overflow-hidden rounded-xl border border-border">
-                <div className="grid grid-cols-4 bg-surface-2 px-4 py-2 text-xs uppercase tracking-wide text-content-muted">
-                  <span>Nr</span>
-                  <span>Par</span>
-                  <span>SI</span>
-                  <span>Meter</span>
-                </div>
-                <div className="divide-y divide-border bg-surface">
-                  {structureView.holeRows.map((hole) => (
-                    <div key={hole.number} className="grid grid-cols-4 px-4 py-2 text-sm text-content-secondary">
-                      <span>{hole.number}</span>
-                      <span>{hole.par}</span>
-                      <span>{hole.stroke_index}</span>
-                      <span>{hole.distance_meters}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <LoopRatingsSection
+              loops={loopSummaries}
+              tees={tees}
+              initialRatings={loopTeeRatings}
+            />
           </div>
         )}
 
