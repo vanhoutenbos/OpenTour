@@ -130,6 +130,19 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['tees']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['tees']['Insert']>;
       };
+      loop_tee_ratings: {
+        Row: {
+          id: string;
+          loop_id: string;
+          tee_id: string;
+          slope_rating: number | null;
+          course_rating: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['loop_tee_ratings']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['loop_tee_ratings']['Insert']>;
+      };
       tournament_holes: {
         Row: {
           id: string;

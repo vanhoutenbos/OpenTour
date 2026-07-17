@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { CourseBuilderForm, type CourseBuilderInitialData } from '@/components/course/CourseBuilderForm';
 import { TeeManagerSection, type TeeRecord } from '@/components/course/TeeManagerSection';
 import { LoopManagerSection, type LoopRecord } from '@/components/course/LoopManagerSection';
+import { LoopRatingsSection, type LoopSummary, type LoopTeeRatingRecord } from '@/components/course/LoopRatingsSection';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface CourseHeader {
@@ -60,6 +61,8 @@ export default function EditCoursePage() {
   const [tees, setTees] = useState<TeeRecord[]>([]);
   const [loops, setLoops] = useState<LoopRecord[]>([]);
   const [holeRefs, setHoleRefs] = useState<{ id: string; number: number }[]>([]);
+  const [loopSummaries, setLoopSummaries] = useState<LoopSummary[]>([]);
+  const [loopTeeRatings, setLoopTeeRatings] = useState<LoopTeeRatingRecord[]>([]);
   const [structureView, setStructureView] = useState<{
     holeRows: {
       number: number;
@@ -83,7 +86,7 @@ export default function EditCoursePage() {
         return;
       }
 
-      const [{ data: course }, { data: tees }, { data: holes }, { data: loops }, { data: loopHoles }, { data: holeTeeDistances }] = await Promise.all([
+      const [{ data: course }, { data: tees }, { data: holes }, { data: loops }, { data: loopHoles }, { data: holeTeeDistances }, { data: loopTeeRatingRows }] = await Promise.all([
         supabase
           .from('courses')
           .select('id, name, location, country, holes_count')
@@ -114,6 +117,10 @@ export default function EditCoursePage() {
           .from('hole_tee_distances')
           .select('hole_id, tee_id, distance_meters')
           .in('hole_id', (await supabase.from('holes').select('id').eq('course_id', courseId)).data?.map((row) => row.id) ?? []),
+        supabase
+          .from('loop_tee_ratings')
+          .select('id, loop_id, tee_id, slope_rating, course_rating')
+          .in('loop_id', (await supabase.from('loops').select('id').eq('course_id', courseId)).data?.map((row) => row.id) ?? []),
       ]);
 
       if (!course) {
@@ -169,6 +176,8 @@ export default function EditCoursePage() {
 
       setTees(teeRows);
       setHoleRefs(holeRows.map((hole) => ({ id: hole.id, number: hole.number })));
+      setLoopSummaries(loopRows.map((loop) => ({ id: loop.id, name: loop.name, loop_type: loop.loop_type })));
+      setLoopTeeRatings((loopTeeRatingRows as LoopTeeRatingRecord[] | null) ?? []);
 
       const loopRecords: LoopRecord[] = loopRows.map((loop) => {
         const holeNumbersForLoop = loopHoleRows
@@ -277,6 +286,12 @@ export default function EditCoursePage() {
                 setTees(updated);
                 setTeeCount(updated.length);
               }}
+            />
+
+            <LoopRatingsSection
+              loops={loopSummaries}
+              tees={tees}
+              initialRatings={loopTeeRatings}
             />
 
             <LoopManagerSection

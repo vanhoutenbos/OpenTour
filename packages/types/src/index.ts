@@ -136,6 +136,23 @@ export interface LoopHole {
   distance_meters?: number;
 }
 
+/**
+ * Per-lus WHS-rating override. Eén teebox (kleur + geslacht, zie `Tee`)
+ * kan een andere slope_rating/course_rating hebben afhankelijk van de lus
+ * die gespeeld wordt (bijv. 18 holes vs. losse voor-9 of achter-9).
+ * Ontbreekt een rij voor een (loop_id, tee_id) combinatie, dan valt de
+ * snapshot-trigger terug op `tees.slope_rating` / `tees.course_rating`.
+ */
+export interface LoopTeeRating {
+  id: string;
+  loop_id: string;
+  tee_id: string;
+  slope_rating?: number;
+  course_rating?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Tournament {
   id: string;
   name: string;
