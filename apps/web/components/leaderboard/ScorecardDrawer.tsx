@@ -25,8 +25,13 @@ function groupHolesByRound(holes: PlayerHoleScore[]): PlayerRoundDetail[] {
   const result: PlayerRoundDetail[] = [];
   for (const [roundNumber, roundHoles] of roundMap) {
     const sorted = roundHoles.sort((a, b) => a.hole_number - b.hole_number);
-    const totalStrokes = sorted.reduce((sum, h) => sum + (h.strokes ?? 0), 0);
-    const totalPar = sorted.reduce((sum, h) => sum + h.par, 0);
+    // Alleen gespeelde holes tellen mee in de totalen — de holes-array bevat nu
+    // altijd de volledige loop (ook holes die nog niet gespeeld zijn), dus filteren
+    // voorkomt dat "totaal par" de hele ronde pakt terwijl "totaal slagen" alleen
+    // de gespeelde holes bevat.
+    const played = sorted.filter((h) => h.strokes !== undefined && h.strokes !== null);
+    const totalStrokes = played.reduce((sum, h) => sum + (h.strokes ?? 0), 0);
+    const totalPar = played.reduce((sum, h) => sum + h.par, 0);
     result.push({
       round_number: roundNumber,
       holes: sorted,
@@ -172,14 +177,15 @@ export function ScorecardDrawer({
     </tr>
   );
 
+  const isPlayed = (h: PlayerHoleScore) => h.strokes !== undefined && h.strokes !== null;
   const totalFront = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+    holes.filter((h) => h.hole_number <= 9 && isPlayed(h)).reduce((s, h) => s + (h.strokes ?? 0), 0);
   const totalBack = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+    holes.filter((h) => h.hole_number > 9 && isPlayed(h)).reduce((s, h) => s + (h.strokes ?? 0), 0);
   const parFront = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + h.par, 0);
+    holes.filter((h) => h.hole_number <= 9 && isPlayed(h)).reduce((s, h) => s + h.par, 0);
   const parBack = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + h.par, 0);
+    holes.filter((h) => h.hole_number > 9 && isPlayed(h)).reduce((s, h) => s + h.par, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
