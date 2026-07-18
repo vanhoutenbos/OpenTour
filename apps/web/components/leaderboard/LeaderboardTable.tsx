@@ -295,6 +295,7 @@ export function LeaderboardTable({
           tournamentId={tournamentId}
           handicap={entries.find((e) => e.player_id === expandedPlayer)?.handicap}
           roundsInTournament={tournamentRounds}
+          format={scoringFormat}
           onClose={() => setExpandedPlayer(null)}
         />
       )}

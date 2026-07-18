@@ -10,6 +10,8 @@ interface Props {
   tournamentId: string;
   handicap?: number | undefined;
   roundsInTournament: number;
+  /** 'strokeplay' | 'stableford' | 'matchplay' — bepaalt welk getal prominent getoond wordt per vakje */
+  format: string;
   onClose: () => void;
 }
 
@@ -36,33 +38,79 @@ function groupHolesByRound(holes: PlayerHoleScore[]): PlayerRoundDetail[] {
   return result.sort((a, b) => a.round_number - b.round_number);
 }
 
-function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle }: {
+function getStablefordPoints(strokes: number, par: number): number {
+  if (strokes <= par - 2) return 4;
+  if (strokes === par - 1) return 3;
+  if (strokes === par) return 2;
+  if (strokes === par + 1) return 1;
+  return 0;
+}
+
+function getStablefordColorClass(points: number): string {
+  if (points === 0) return 'text-score-muted';
+  if (points === 4) return 'font-bold text-green-400';
+  return 'text-green-300';
+}
+
+/**
+ * Eén vakje van de scorekaart.
+ * - Strokeplay: aantal slagen prominent in het midden, stableford-punten klein rechtsboven.
+ * - Stableford: stableford-punten prominent in het midden, aantal slagen klein rechtsboven.
+ * - Matchplay: ongewijzigd, alleen slagen (punten zijn hier niet relevant).
+ */
+function ScoreSymbol({ strokes, par, isBirdie, isBogey, isEagle, format }: {
   strokes?: number | undefined;
   par: number;
   isBirdie: boolean;
   isBogey: boolean;
   isEagle: boolean;
+  format: string;
 }) {
   if (strokes === undefined || strokes === null) {
     return <span className="text-content-muted">-</span>;
   }
 
-  const baseClass = 'inline-flex items-center justify-center w-8 h-8 text-sm font-mono font-bold';
+  const strokesShapeClass = isEagle
+    ? 'score-eagle'
+    : isBirdie
+      ? 'score-birdie'
+      : isBogey
+        ? 'score-bogey'
+        : strokes >= par + 2
+          ? 'score-double-bogey'
+          : '';
 
-  if (isEagle) {
-    return <span className={`${baseClass} score-eagle text-yellow-400`}>{strokes}</span>;
-  }
-  if (isBirdie) {
-    return <span className={`${baseClass} score-birdie text-red-400`}>{strokes}</span>;
-  }
-  if (isBogey) {
-    return <span className={`${baseClass} score-bogey text-score-muted`}>{strokes}</span>;
-  }
-  if (strokes >= par + 2) {
-    return <span className={`${baseClass} score-double-bogey text-blue-400`}>{strokes}</span>;
-  }
+  const strokesColorClass = isEagle
+    ? 'text-yellow-400'
+    : isBirdie
+      ? 'text-red-400'
+      : isBogey
+        ? 'text-score-muted'
+        : strokes >= par + 2
+          ? 'text-blue-400'
+          : 'text-content';
 
-  return <span className={`${baseClass} text-content`}>{strokes}</span>;
+  const points = getStablefordPoints(strokes, par);
+  const showPointsProminent = format === 'stableford';
+
+  const mainValue = showPointsProminent ? points : strokes;
+  const mainShapeClass = showPointsProminent ? '' : strokesShapeClass;
+  const mainColorClass = showPointsProminent ? getStablefordColorClass(points) : strokesColorClass;
+
+  const cornerValue = showPointsProminent ? strokes : points;
+
+  return (
+    <span className="relative inline-flex items-center justify-center w-9 h-9">
+      <span className={`inline-flex items-center justify-center w-8 h-8 text-sm font-mono font-bold ${mainShapeClass} ${mainColorClass}`}>
+        {mainValue}
+      </span>
+      {format !== 'matchplay' && (
+        <span className="absolute top-0 right-0 text-[9px] leading-none font-mono text-content-muted">
+          {cornerValue}
+        </span>
+      )}
+    </span>
+  );
 }
 
 export function ScorecardDrawer({
@@ -71,6 +119,7 @@ export function ScorecardDrawer({
   tournamentId,
   handicap,
   roundsInTournament,
+  format,
   onClose,
 }: Props) {
   const [rounds, setRounds] = useState<PlayerRoundDetail[]>([]);
@@ -230,6 +279,7 @@ export function ScorecardDrawer({
                             isBirdie={h.to_par === -1}
                             isBogey={h.to_par === 1}
                             isEagle={h.to_par != null && h.to_par <= -2}
+                            format={format}
                           />
                         ))}
                         <tr className="border-t border-border-strong">
@@ -275,6 +325,7 @@ export function ScorecardDrawer({
                             isBirdie={h.to_par === -1}
                             isBogey={h.to_par === 1}
                             isEagle={h.to_par != null && h.to_par <= -2}
+                            format={format}
                           />
                         ))}
                         <tr className="border-t border-border-strong">
@@ -329,6 +380,12 @@ export function ScorecardDrawer({
                 <span><span className="score-bogey inline-block w-5 h-5 text-center leading-5 text-score-muted mr-1">□</span> Bogey</span>
                 <span><span className="score-double-bogey inline-block w-5 h-5 text-center leading-5 text-blue-400 mr-1">▫</span> Double+</span>
                 <span className="text-content-muted">M = Meters · SI = Stroke Index</span>
+                {format === 'stableford' && (
+                  <span className="text-content-muted">Klein cijfer rechtsboven = slagen</span>
+                )}
+                {format === 'strokeplay' && (
+                  <span className="text-content-muted">Klein cijfer rechtsboven = stableford-punten</span>
+                )}
               </div>
 
               {/* Stats */}
@@ -343,7 +400,6 @@ export function ScorecardDrawer({
                     <span>○ {birdies} Birdies</span>
                     <span>— {pars} Pars</span>
                     <span>□ {bogeys} Bogeys</span>
-                    <span>GIR: {active.holes.filter((h) => h.to_par !== null && h.to_par !== undefined && h.to_par <= 0).length}/{active.holes.length}</span>
                   </div>
                 );
               })()}
