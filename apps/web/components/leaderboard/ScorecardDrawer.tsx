@@ -58,6 +58,18 @@ function getStablefordColorClass(points: number): string {
 }
 
 /**
+ * Rijlabel voor de score-rij in de scorekaart, afhankelijk van spelvorm.
+ * - Strokeplay: 'Slagen' (het hoofdgetal is het aantal slagen)
+ * - Stableford: 'Punten' (het hoofdgetal is het aantal stableford-punten)
+ * - Matchplay: 'Score' (ongewijzigd, alleen slagen relevant)
+ */
+function getScoreRowLabel(format: string): string {
+  if (format === 'strokeplay') return 'Slagen';
+  if (format === 'stableford') return 'Punten';
+  return 'Score';
+}
+
+/**
  * Eén vakje van de scorekaart.
  * - Strokeplay: aantal slagen prominent in het midden, stableford-punten klein rechtsboven.
  * - Stableford: stableford-punten prominent in het midden, aantal slagen klein rechtsboven.
@@ -278,7 +290,7 @@ export function ScorecardDrawer({
                         {renderHoleRow('SI', front, (h) => (
                           <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
-                        {renderHoleRow('Score', front, (h) => (
+                        {renderHoleRow(getScoreRowLabel(format), front, (h) => (
                           <ScoreSymbol
                             strokes={h.strokes}
                             par={h.par}
@@ -324,7 +336,7 @@ export function ScorecardDrawer({
                         {renderHoleRow('SI', back, (h) => (
                           <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
-                        {renderHoleRow('Score', back, (h) => (
+                        {renderHoleRow(getScoreRowLabel(format), back, (h) => (
                           <ScoreSymbol
                             strokes={h.strokes}
                             par={h.par}
