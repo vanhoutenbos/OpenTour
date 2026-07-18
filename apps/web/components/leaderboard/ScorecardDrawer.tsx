@@ -400,7 +400,6 @@ export function ScorecardDrawer({
                     <span>○ {birdies} Birdies</span>
                     <span>— {pars} Pars</span>
                     <span>□ {bogeys} Bogeys</span>
-                    <span>GIR: {active.holes.filter((h) => h.to_par !== null && h.to_par !== undefined && h.to_par <= 0).length}/{active.holes.length}</span>
                   </div>
                 );
               })()}
