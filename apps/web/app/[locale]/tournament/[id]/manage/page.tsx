@@ -1471,6 +1471,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     dns:        { label: 'DNS',          color: 'bg-yellow-900/40 text-yellow-300' },
                     dnf:        { label: 'DNF',          color: 'bg-orange-900/40 text-orange-300' },
                     dsq:        { label: 'DSQ',          color: 'bg-red-900/40 text-red-300' },
+                    withdrawn:  { label: 'Teruggetrokken', color: 'bg-surface-3 text-content-muted' },
                   };
                   const sc = statusConfig[p.status] ?? statusConfig.registered!;
 
