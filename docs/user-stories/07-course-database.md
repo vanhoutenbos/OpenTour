@@ -283,6 +283,22 @@ Een toernooi zonder baan is geen toernooi. De baandatabase is de stille ruggengr
 
 ---
 
+### US-CRS-11 — Holes een eigen naam en status geven
+
+- **Rol:** Organisator / baanbeheerder
+- **Doel:** Een hole een eigen naam kunnen geven (bijv. "De Vuurtoren") en een statuslabel zoals "Signature" of "Onderhoud"
+- **Waarde:** Herkenbaarheid en sfeer op scorekaart en leaderboard; "Onderhoud" kan spelers vooraf waarschuwen voor tijdelijke aanpassingen aan een hole
+- **Prioriteit:** L
+- **Fase:** Later
+- **Status:** Nog niet gestart — wens genoteerd n.a.v. redesign baanbeheer-pagina (2026-07-23), geen schema of UI voor
+- **Afhankelijk van:** —
+- **Acceptatiecriteria:**
+  - Nog te bepalen. Openstaande vragen: is "status" een vaste set labels (Actief/Signature/Onderhoud) of vrij invoerbaar? Blokkeert een "Onderhoud"-status scores invoeren op die hole, of is het puur informatief?
+- **Opmerkingen:**
+  - Geen kolommen hiervoor in `holes` — bij oppakken: nieuwe migratie nodig (bijv. `holes.name TEXT`, `holes.status` als enum of TEXT+CHECK)
+
+---
+
 ## Open vragen
 
 | # | Vraag |
