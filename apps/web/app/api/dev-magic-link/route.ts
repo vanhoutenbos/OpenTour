@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
-const DEV_PASSWORD = 'dev-password-opentour-2025';
+const DEV_PASSWORD = process.env.DEV_MAGIC_LINK_PASSWORD
+  || (process.env.NODE_ENV === 'development'
+    ? 'dev-password-opentour-2025'
+    : crypto.randomBytes(16).toString('hex'));
 
 export async function POST(request: NextRequest) {
   const devEnabled =
