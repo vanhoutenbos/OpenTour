@@ -25,8 +25,13 @@ function groupHolesByRound(holes: PlayerHoleScore[]): PlayerRoundDetail[] {
   const result: PlayerRoundDetail[] = [];
   for (const [roundNumber, roundHoles] of roundMap) {
     const sorted = roundHoles.sort((a, b) => a.hole_number - b.hole_number);
-    const totalStrokes = sorted.reduce((sum, h) => sum + (h.strokes ?? 0), 0);
-    const totalPar = sorted.reduce((sum, h) => sum + h.par, 0);
+    // Alleen gespeelde holes tellen mee in de totalen — de holes-array bevat nu
+    // altijd de volledige loop (ook holes die nog niet gespeeld zijn), dus filteren
+    // voorkomt dat "totaal par" de hele ronde pakt terwijl "totaal slagen" alleen
+    // de gespeelde holes bevat.
+    const played = sorted.filter((h) => h.strokes !== undefined && h.strokes !== null);
+    const totalStrokes = played.reduce((sum, h) => sum + (h.strokes ?? 0), 0);
+    const totalPar = played.reduce((sum, h) => sum + h.par, 0);
     result.push({
       round_number: roundNumber,
       holes: sorted,
@@ -50,6 +55,18 @@ function getStablefordColorClass(points: number): string {
   if (points === 0) return 'text-score-muted';
   if (points === 4) return 'font-bold text-green-400';
   return 'text-green-300';
+}
+
+/**
+ * Rijlabel voor de score-rij in de scorekaart, afhankelijk van spelvorm.
+ * - Strokeplay: 'Slagen' (het hoofdgetal is het aantal slagen)
+ * - Stableford: 'Punten' (het hoofdgetal is het aantal stableford-punten)
+ * - Matchplay: 'Score' (ongewijzigd, alleen slagen relevant)
+ */
+function getScoreRowLabel(format: string): string {
+  if (format === 'strokeplay') return 'Slagen';
+  if (format === 'stableford') return 'Punten';
+  return 'Score';
 }
 
 /**
@@ -172,14 +189,15 @@ export function ScorecardDrawer({
     </tr>
   );
 
+  const isPlayed = (h: PlayerHoleScore) => h.strokes !== undefined && h.strokes !== null;
   const totalFront = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+    holes.filter((h) => h.hole_number <= 9 && isPlayed(h)).reduce((s, h) => s + (h.strokes ?? 0), 0);
   const totalBack = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + (h.strokes ?? 0), 0);
+    holes.filter((h) => h.hole_number > 9 && isPlayed(h)).reduce((s, h) => s + (h.strokes ?? 0), 0);
   const parFront = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number <= 9).reduce((s, h) => s + h.par, 0);
+    holes.filter((h) => h.hole_number <= 9 && isPlayed(h)).reduce((s, h) => s + h.par, 0);
   const parBack = (holes: PlayerHoleScore[]) =>
-    holes.filter((h) => h.hole_number > 9).reduce((s, h) => s + h.par, 0);
+    holes.filter((h) => h.hole_number > 9 && isPlayed(h)).reduce((s, h) => s + h.par, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -272,7 +290,7 @@ export function ScorecardDrawer({
                         {renderHoleRow('SI', front, (h) => (
                           <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
-                        {renderHoleRow('Score', front, (h) => (
+                        {renderHoleRow(getScoreRowLabel(format), front, (h) => (
                           <ScoreSymbol
                             strokes={h.strokes}
                             par={h.par}
@@ -318,7 +336,7 @@ export function ScorecardDrawer({
                         {renderHoleRow('SI', back, (h) => (
                           <span className="text-xs text-content-muted font-mono">{h.stroke_index}</span>
                         ))}
-                        {renderHoleRow('Score', back, (h) => (
+                        {renderHoleRow(getScoreRowLabel(format), back, (h) => (
                           <ScoreSymbol
                             strokes={h.strokes}
                             par={h.par}

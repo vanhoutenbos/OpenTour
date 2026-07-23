@@ -881,15 +881,43 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               >
                 ✓ Afsluiten
               </button>
+              {!hasScores && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Toernooi terugzetten naar concept? Dit maakt het toernooi weer bewerkbaar en onzichtbaar voor deelnemers.')) {
+                      updateStatus('draft');
+                    }
+                  }}
+                  className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
+                  title="Alleen mogelijk zolang er nog geen scores zijn ingevoerd"
+                >
+                  ↩ Terug naar concept
+                </button>
+              )}
             </>
           )}
           {tournament.status === 'paused' && (
-            <button
-              onClick={() => updateStatus('active', { pause_reason: null })}
-              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg"
-            >
-              ▶ Hervatten
-            </button>
+            <>
+              <button
+                onClick={() => updateStatus('active', { pause_reason: null })}
+                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg"
+              >
+                ▶ Hervatten
+              </button>
+              {!hasScores && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Toernooi terugzetten naar concept? Dit maakt het toernooi weer bewerkbaar en onzichtbaar voor deelnemers.')) {
+                      updateStatus('draft', { pause_reason: null });
+                    }
+                  }}
+                  className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
+                  title="Alleen mogelijk zolang er nog geen scores zijn ingevoerd"
+                >
+                  ↩ Terug naar concept
+                </button>
+              )}
+            </>
           )}
           {tournament.status === 'finished' && (
             <button
@@ -1443,6 +1471,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     dns:        { label: 'DNS',          color: 'bg-yellow-900/40 text-yellow-300' },
                     dnf:        { label: 'DNF',          color: 'bg-orange-900/40 text-orange-300' },
                     dsq:        { label: 'DSQ',          color: 'bg-red-900/40 text-red-300' },
+                    withdrawn:  { label: 'Teruggetrokken', color: 'bg-surface-3 text-content-muted' },
                   };
                   const sc = statusConfig[p.status] ?? statusConfig.registered!;
 
