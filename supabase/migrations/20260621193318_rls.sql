@@ -178,21 +178,27 @@ CREATE POLICY "tp_update" ON tournament_players
 -- SCORES
 -- ============================================================
 
--- Scores van publieke toernooien zijn publiek leesbaar
+-- Publieke scores zijn alleen leesbaar voor geauthenticeerde gebruikers (geen anonieme toegang)
 CREATE POLICY "scores_select_public" ON scores
-  FOR SELECT USING (
+  FOR SELECT TO authenticated
+  USING (
     EXISTS (
       SELECT 1 FROM tournaments t
       WHERE t.id = tournament_id AND t.is_public = true
     )
   );
 
--- Recorder mag scores invoeren via geldige toegangscode
+-- Recorder mag scores invoeren via geldige toegangscode voor ACTIEVE toernooien
 -- LET OP: WITH CHECK (niet USING) voor INSERT policies
 CREATE POLICY "scores_insert_recorder" ON scores
   FOR INSERT TO authenticated
   WITH CHECK (
     EXISTS (
+      SELECT 1 FROM tournaments t
+      WHERE t.id = scores.tournament_id
+        AND t.status = 'active'
+        AND t.is_public = true
+    ) AND EXISTS (
       SELECT 1 FROM access_codes ac
       WHERE ac.tournament_id = scores.tournament_id
         AND ac.is_active = true
@@ -203,11 +209,16 @@ CREATE POLICY "scores_insert_recorder" ON scores
     )
   );
 
--- Recorder mag scores bijwerken
+-- Recorder mag scores bijwerken voor-- Controleert op actieve toernooien en geldige toegangscode
 CREATE POLICY "scores_update_recorder" ON scores
   FOR UPDATE TO authenticated
   USING (
     EXISTS (
+      SELECT 1 FROM tournaments t
+      WHERE t.id = scores.tournament_id
+        AND t.status = 'active'
+        AND t.is_public = true
+    ) AND EXISTS (
       SELECT 1 FROM access_codes ac
       WHERE ac.tournament_id = scores.tournament_id
         AND ac.is_active = true
@@ -216,6 +227,11 @@ CREATE POLICY "scores_update_recorder" ON scores
   )
   WITH CHECK (
     EXISTS (
+      SELECT 1 FROM tournaments t
+      WHERE t.id = scores.tournament_id
+        AND t.status = 'active'
+        AND t.is_public = true
+    ) AND EXISTS (
       SELECT 1 FROM access_codes ac
       WHERE ac.tournament_id = scores.tournament_id
         AND ac.is_active = true
