@@ -161,6 +161,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
     scoring_type: 'gross',
     rounds: 1,
     start_date: '',
+    is_public: true,
   });
   const [editSaving, setEditSaving] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -190,6 +191,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
   });
   const [playerSaving, setPlayerSaving] = useState(false);
   const [playerDeletingId, setPlayerDeletingId] = useState<string | null>(null);
+  const [playerAnonymizingId, setPlayerAnonymizingId] = useState<string | null>(null);
 
   // Categories
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -243,6 +245,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       scoring_type: t.scoring_type,
       rounds: t.rounds,
       start_date: t.start_date ? t.start_date.slice(0, 10) : '',
+      is_public: t.is_public,
     });
 
     // Vul de starttijd voor in het flight-formulier vanuit de toernooistart
@@ -351,6 +354,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       scoring_type: editForm.scoring_type,
       rounds: editForm.rounds,
       start_date: editForm.start_date || null,
+      is_public: editForm.is_public,
     }).eq('id', id);
     setEditSaving(false);
     if (!error) {
@@ -505,6 +509,16 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
     if (!error) {
       setPlayers(prev => prev.filter(p => p.id !== playerId));
       if (editingPlayerId === playerId) setEditingPlayerId(null);
+    }
+  };
+
+  const anonymizePlayer = async (playerId: string) => {
+    setPlayerAnonymizingId(playerId);
+    const placeholder = `Speler ${playerId.substring(0, 8)}`;
+    const { error } = await supabase.from('tournament_players').update({ name: placeholder }).eq('id', playerId);
+    setPlayerAnonymizingId(null);
+    if (!error) {
+      setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, name: placeholder } : p));
     }
   };
 
@@ -1304,6 +1318,29 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                     </select>
                   </div>
                 </div>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <label className="text-sm font-medium text-content">Publiek toernooi</label>
+                    <p className="text-xs text-content-muted mt-0.5">
+                      {editForm.is_public
+                        ? 'Leaderboard is zichtbaar voor iedereen met de link'
+                        : 'Alleen organisatoren en scorers kunnen het toernooi zien'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={editForm.is_public}
+                    onClick={() => setEditForm(f => ({ ...f, is_public: !f.is_public }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-surface-2 ${
+                      editForm.is_public ? 'bg-green-700' : 'bg-surface-4'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                      editForm.is_public ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
                 <button
                   onClick={saveEdit}
                   disabled={editSaving || !editForm.name.trim()}
@@ -1574,17 +1611,30 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
 
                           {/* Acties */}
                           <div className="flex items-center justify-between pt-2 border-t border-border">
-                            <button
-                              onClick={() => {
-                                if (confirm(`Weet je zeker dat je ${p.name} wilt verwijderen?`)) {
-                                  deletePlayer(p.id);
-                                }
-                              }}
-                              disabled={playerDeletingId === p.id}
-                              className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50 px-3 py-2"
-                            >
-                              {playerDeletingId === p.id ? 'Verwijderen...' : '🗑 Speler verwijderen'}
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Weet je zeker dat je ${p.name} wilt verwijderen?`)) {
+                                    deletePlayer(p.id);
+                                  }
+                                }}
+                                disabled={playerDeletingId === p.id}
+                                className="text-sm text-red-400 hover:text-red-300 disabled:opacity-50 px-3 py-2"
+                              >
+                                {playerDeletingId === p.id ? 'Verwijderen...' : '🗑 Verwijderen'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Weet je zeker dat je ${p.name} wilt anonimiseren? Dit vervangt de naam door "Speler [ID]" en kan niet ongedaan worden gemaakt.`)) {
+                                    anonymizePlayer(p.id);
+                                  }
+                                }}
+                                disabled={playerAnonymizingId === p.id}
+                                className="text-sm text-yellow-400 hover:text-yellow-300 disabled:opacity-50 px-3 py-2"
+                              >
+                                {playerAnonymizingId === p.id ? 'Bezig...' : '🙈 Anonimiseer'}
+                              </button>
+                            </div>
                             <div className="flex gap-2">
                               <button
                                 onClick={closePlayerEdit}
