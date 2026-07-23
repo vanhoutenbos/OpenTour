@@ -15,7 +15,7 @@ export function LadderPyramidView({ tournamentId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [movedPlayerIds, setMovedPlayerIds] = useState<Set<string>>(new Set());
   const prevRungRef = useRef<Map<string, number>>(new Map());
-  const pollRef = useRef<ReturnType<typeof setInterval>>();
+  const pollRef = useRef<ReturnType<typeof setInterval>>(null);
 
   useEffect(() => {
     let cancelled = false;

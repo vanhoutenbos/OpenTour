@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useFormatter } from 'next-intl';
@@ -126,7 +126,8 @@ function InputField({ label, value, onChange, type = 'text' }: { label: string; 
   );
 }
 
-export default function ManageTournamentPage({ params }: { params: { id: string; locale: string } }) {
+export default function ManageTournamentPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id, locale } = use(params);
   const router = useRouter();
   const format = useFormatter();
   const supabase = getSupabaseBrowser();
@@ -228,7 +229,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: t } = await supabase
       .from('tournaments')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('created_by', session.user.id)
       .single();
 
@@ -255,7 +256,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: p } = await supabase
       .from('tournament_players')
       .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('name');
     const playerRows = (p as Player[]) ?? [];
     setPlayers(playerRows);
@@ -263,7 +264,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: pairingRows } = await supabase
       .from('matchplay_pairings')
       .select('id, player_a_id, player_b_id, round_number')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('created_at');
     const playerNameMap = new Map(playerRows.map((player) => [player.id, player.name]));
     setMatchplayPairings((pairingRows ?? []).map((pairing: { id: string; player_a_id: string; player_b_id: string; round_number: number | null }) => ({
@@ -278,7 +279,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: standingsRows } = await supabase
       .from('matchplay_standings')
       .select('tournament_id, round_number, player_a_id, player_a_name, player_b_id, player_b_name, holes_won_a, holes_won_b, holes_halved, standing, holes_played, standing_text, hole_results')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('round_number');
     setMatchplayMatches((standingsRows as MatchplayMatch[]) ?? []);
 
@@ -288,7 +289,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: c } = await supabase
       .from('access_codes')
       .select('id, code, expires_at, is_active')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('created_at', { ascending: false });
     setCodes((c as AccessCode[]) ?? []);
 
@@ -301,21 +302,21 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { data: cat } = await supabase
       .from('tournament_categories')
       .select('*')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('sort_order');
     setCategories((cat as TournamentCategory[]) ?? []);
 
     const { data: f } = await supabase
       .from('flights')
       .select('id, name, start_time, tee_number, category_id, max_players, sort_order')
-      .eq('tournament_id', params.id)
+      .eq('tournament_id', id)
       .order('start_time');
     setFlights((f as Flight[]) ?? []);
 
     const { count } = await supabase
       .from('scores')
       .select('*', { count: 'exact', head: true })
-      .eq('tournament_id', params.id);
+      .eq('tournament_id', id);
     setHasScores((count ?? 0) > 0);
 
     if (t.course_id) {
@@ -323,7 +324,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
         supabase.from('tees').select('id, name, color').eq('course_id', t.course_id).order('name'),
         // Scorecorrecties werken op de bevroren tournament_holes-snapshot (bestaat pas na activatie),
         // niet op de live `holes`-tabel — anders zou een latere baanwijziging oude scores laten mismatchen.
-        supabase.from('tournament_holes').select('id, number, par, stroke_index').eq('tournament_id', params.id).order('number'),
+        supabase.from('tournament_holes').select('id, number, par, stroke_index').eq('tournament_id', id).order('number'),
       ]);
       setTees((teeData.data as Tee[]) ?? []);
       setHoles((holeData.data as Hole[]) ?? []);
@@ -336,7 +337,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     setLoading(false);
   };
 
-  useEffect(() => { loadData(); }, [params.id]);
+  useEffect(() => { loadData(); }, [id]);
 
   // ---- Tournament edit ----
   const saveEdit = async () => {
@@ -350,7 +351,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       scoring_type: editForm.scoring_type,
       rounds: editForm.rounds,
       start_date: editForm.start_date || null,
-    }).eq('id', params.id);
+    }).eq('id', id);
     setEditSaving(false);
     if (!error) {
       setEditSuccess(true);
@@ -360,7 +361,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   };
 
   const updateStatus = async (status: string, extra: Record<string, unknown> = {}) => {
-    await supabase.from('tournaments').update({ status, ...extra }).eq('id', params.id);
+    await supabase.from('tournaments').update({ status, ...extra }).eq('id', id);
     await loadData();
   };
 
@@ -370,7 +371,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { error, count } = await supabase
       .from('tournaments')
       .delete({ count: 'exact' })
-      .eq('id', params.id);
+      .eq('id', id);
     setTournamentDeleting(false);
     if (error) {
       setTournamentDeleteError(userError(error, 'Kon het toernooi niet verwijderen.'));
@@ -387,7 +388,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const addPlayer = async () => {
     if (!playerForm.name.trim()) return;
     const { data: inserted } = await supabase.from('tournament_players').insert({
-      tournament_id: params.id,
+      tournament_id: id,
       name: playerForm.name.trim(),
       handicap: playerForm.handicap ? parseFloat(playerForm.handicap) : null,
       gender: playerForm.gender || null,
@@ -529,7 +530,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const saveCategory = async () => {
     setCategorySaving(true);
     const payload = {
-      tournament_id: params.id,
+      tournament_id: id,
       name: categoryForm.name,
       description: categoryForm.description || null,
       gender: categoryForm.gender || null,
@@ -569,14 +570,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { error: updateErr } = await supabase
       .from('tournament_players')
       .update({ flight_id: null })
-      .eq('tournament_id', params.id);
+      .eq('tournament_id', id);
     if (updateErr) { setFlightError(userError(updateErr, 'Kon spelers niet ontkoppelen van bestaande flights.')); setFlightGenerating(false); return; }
 
     // Stap 2: Verwijder alle bestaande flights (nu veilig, FK is ontkoppeld)
     const { error: deleteErr } = await supabase
       .from('flights')
       .delete()
-      .eq('tournament_id', params.id);
+      .eq('tournament_id', id);
     if (deleteErr) { setFlightError(userError(deleteErr, 'Kon bestaande flights niet verwijderen.')); setFlightGenerating(false); return; }
 
     // Stap 3: Ken categorieën toe als er op categorie gesplitst wordt
@@ -594,7 +595,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
     // Stap 4: Genereer nieuwe flights via RPC
     const { error } = await supabase.rpc('generate_flights', {
-      p_tournament_id: params.id,
+      p_tournament_id: id,
       p_start_time: new Date(flightForm.start_time).toISOString(),
       p_start_holes: flightForm.start_holes,
       p_interval_minutes: safeIntervalMinutes,
@@ -614,14 +615,14 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const { error: updateErr } = await supabase
       .from('tournament_players')
       .update({ flight_id: null })
-      .eq('tournament_id', params.id);
+      .eq('tournament_id', id);
     console.log('[deleteAllFlights] update tournament_players:', updateErr);
     if (updateErr) { setFlightError(userError(updateErr, 'Kon spelers niet ontkoppelen van flights.')); return; }
 
     const { error: deleteErr, count } = await supabase
       .from('flights')
       .delete({ count: 'exact' })
-      .eq('tournament_id', params.id);
+      .eq('tournament_id', id);
     console.log('[deleteAllFlights] delete flights:', deleteErr, 'count:', count);
     if (deleteErr) { setFlightError(userError(deleteErr, 'Kon flights niet verwijderen.')); return; }
 
@@ -701,7 +702,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       const playersForPairings = sortedPlayers.filter((player) => !['withdrawn', 'dns', 'dnf', 'dsq'].includes(player.status));
       for (let index = 0; index < playersForPairings.length - (playersForPairings.length % 2); index += 2) {
         pairings.push({
-          tournament_id: params.id,
+          tournament_id: id,
           player_a_id: playersForPairings[index]!.id,
           player_b_id: playersForPairings[index + 1]!.id,
           flight_id: playersForPairings[index]!.flight_id ?? null,
@@ -710,7 +711,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
       }
     });
 
-    await supabase.from('matchplay_pairings').delete().eq('tournament_id', params.id);
+    await supabase.from('matchplay_pairings').delete().eq('tournament_id', id);
     if (pairings.length > 0) {
       await supabase.from('matchplay_pairings').insert(pairings);
     }
@@ -721,7 +722,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
   const clearMatchplayPairings = async () => {
     setMatchplayBusy(true);
-    await supabase.from('matchplay_pairings').delete().eq('tournament_id', params.id);
+    await supabase.from('matchplay_pairings').delete().eq('tournament_id', id);
     await loadData();
     setMatchplayBusy(false);
   };
@@ -735,7 +736,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   const updateActiveMatchplayRound = async (nextRound: number) => {
     const safeRound = normalizeActiveRound(nextRound, tournament?.rounds ?? 1);
     setActiveMatchplayRound(safeRound);
-    await supabase.from('tournaments').update({ rounds: tournament?.rounds ?? safeRound }).eq('id', params.id);
+    await supabase.from('tournaments').update({ rounds: tournament?.rounds ?? safeRound }).eq('id', id);
     await loadData();
   };
 
@@ -755,7 +756,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
     const code = codeData as string;
     await supabase.from('access_codes').insert({
       code,
-      tournament_id: params.id,
+      tournament_id: id,
       created_by: userData.user.id,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
@@ -774,7 +775,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
   };
 
   const leaderboardUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/nl/tournament/${params.id}`
+    ? `${window.location.origin}/nl/tournament/${id}`
     : '';
 
   const statusConfig: Record<string, { label: string; className: string }> = {
@@ -928,7 +929,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
             </button>
           )}
           <Link
-            href={`/nl/tournament/${params.id}`}
+            href={`/nl/tournament/${id}`}
             target="_blank"
             className="px-4 py-2 bg-surface-3 hover:bg-surface-4 text-content text-sm font-medium rounded-lg"
           >
@@ -1106,7 +1107,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                       {tournament.status === 'active' && <LiveBadge />}
                     </div>
                     <LeaderboardClient
-                      tournamentId={params.id}
+                      tournamentId={id}
                       tournamentName={tournament.name}
                       activeMatchplayRound={activeMatchplayRound}
                       format={tournament.format}
@@ -1120,7 +1121,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                     />
                     <div className="mt-4 text-center">
                       <Link
-                        href={`/nl/tournament/${params.id}`}
+                        href={`/nl/tournament/${id}`}
                         target="_blank"
                         className="text-sm text-green-500 hover:text-green-400 transition-colors"
                       >
@@ -1184,7 +1185,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                   {tournament.status === 'active' && <LiveBadge />}
                 </div>
                 <LeaderboardClient
-                  tournamentId={params.id}
+                  tournamentId={id}
                   tournamentName={tournament.name}
                   activeMatchplayRound={activeMatchplayRound}
                   format={tournament.format}
@@ -1207,7 +1208,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
                 )}
                 <div className="mt-4 text-center">
                   <Link
-                    href={`/nl/tournament/${params.id}`}
+                    href={`/nl/tournament/${id}`}
                     target="_blank"
                     className="text-sm text-green-500 hover:text-green-400 transition-colors"
                   >
@@ -1762,7 +1763,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
 
         {/* ===== TAB: Ladder (piramide) ===== */}
         {activeTab === 'ladder' && tournament.competition_type === 'ladder' && (
-          <LadderManagementPanel tournamentId={params.id} />
+          <LadderManagementPanel tournamentId={id} />
         )}
 
         {/* ===== TAB: Flights ===== */}
@@ -2249,7 +2250,7 @@ export default function ManageTournamentPage({ params }: { params: { id: string;
               </div>
             ) : (
               <ScoreGrid
-                tournamentId={params.id}
+                tournamentId={id}
                 players={players as any}
                 holes={holes}
                 tournamentFormat={tournament.format as 'strokeplay' | 'stableford' | 'matchplay'}

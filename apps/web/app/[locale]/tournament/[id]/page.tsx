@@ -4,7 +4,7 @@ import { LeaderboardClient } from '@/components/leaderboard/LeaderboardClient';
 import { SponsorBanner } from '@/components/leaderboard/SponsorBanner';
 
 interface Props {
-  params: { locale: string; id: string };
+  params: Promise<{ locale: string; id: string }>;
 }
 
 interface TournamentRow {
@@ -143,7 +143,8 @@ async function getFlightsWithPlayers(tournamentId: string) {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const tournament = await getTournament(params.id);
+  const { id, locale } = await params;
+  const tournament = await getTournament(id);
   return {
     title: tournament ? `${tournament.name} — OpenTour` : 'Leaderboard — OpenTour',
     description: tournament?.description ?? 'Live golf leaderboard',
@@ -151,12 +152,13 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function LeaderboardPage({ params }: Props) {
-  const tournament = await getTournament(params.id);
+  const { id, locale } = await params;
+  const tournament = await getTournament(id);
   if (!tournament) notFound();
 
   const [courseName, flights] = await Promise.all([
     getCourseName(tournament.course_id),
-    getFlightsWithPlayers(params.id),
+    getFlightsWithPlayers(id),
   ]);
 
   return (
@@ -177,7 +179,7 @@ export default async function LeaderboardPage({ params }: Props) {
       {/* Main leaderboard */}
       <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardClient
-          tournamentId={params.id}
+          tournamentId={id}
           tournamentName={tournament.name}
           tournamentDescription={tournament.description}
           format={tournament.format}

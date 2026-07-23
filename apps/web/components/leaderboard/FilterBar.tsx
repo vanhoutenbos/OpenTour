@@ -34,7 +34,7 @@ export function FilterBar({
 }: Props) {
   const t = useTranslations('leaderboard');
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     return () => {

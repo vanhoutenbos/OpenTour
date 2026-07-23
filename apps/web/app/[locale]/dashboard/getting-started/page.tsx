@@ -3,10 +3,11 @@ import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'dashboard.gettingStarted' });
   return {
     title: t('title'),
@@ -15,7 +16,8 @@ export async function generateMetadata({ params: { locale } }: Props): Promise<M
 
 const STEP_NUMBERS = ['course', 'tournament', 'accessCodes', 'activate'] as const;
 
-export default async function GettingStartedPage({ params: { locale } }: Props) {
+export default async function GettingStartedPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'dashboard.gettingStarted' });
 
   const stepLinks: Record<(typeof STEP_NUMBERS)[number], string | null> = {

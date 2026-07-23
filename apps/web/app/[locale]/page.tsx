@@ -10,12 +10,12 @@ import { FinalCtaSection } from '@/components/home/FinalCtaSection';
 import { HomeFooter } from '@/components/home/HomeFooter';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 async function getIsLoggedIn(): Promise<boolean> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -37,7 +37,7 @@ async function getIsLoggedIn(): Promise<boolean> {
 }
 
 export default async function HomePage({ params }: Props) {
-  const { locale } = params;
+  const { locale } = await params;
   const isLoggedIn = await getIsLoggedIn();
 
   return (

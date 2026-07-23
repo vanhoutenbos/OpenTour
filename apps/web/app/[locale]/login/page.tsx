@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const IS_DEV = process.env.NEXT_PUBLIC_ENABLE_DEV_MAGIC_LINK === 'true';
 
-export default function LoginPage({ params: { locale } }: { params: { locale: string } }) {
+export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);

@@ -76,7 +76,7 @@ export function LeaderboardClient({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const pollRef = useRef<ReturnType<typeof setInterval>>();
+  const pollRef = useRef<ReturnType<typeof setInterval>>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFlight, setSelectedFlight] = useState('');
