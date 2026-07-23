@@ -9,7 +9,7 @@
     "gen-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/database.types.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.43.0"
+    "@supabase/supabase-js": "^2.110.8"
   },
   "devDependencies": {
     "typescript": "^5.4.0"
