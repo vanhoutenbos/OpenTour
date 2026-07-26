@@ -181,6 +181,26 @@ export function FlightHoleView({ tournamentId, players, holes, onBack, onComplet
         </span>
       </div>
 
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          onClick={() => setCurrentHoleIndex((prev) => Math.max(0, prev - 1))}
+          disabled={currentHoleIndex <= 0}
+          className="px-3 py-1.5 bg-surface-3 hover:bg-border-strong disabled:opacity-30 text-content text-sm rounded-lg transition-colors"
+        >
+          ← Vorige
+        </button>
+        <span className="text-xs text-content-muted flex-1 text-center">
+          Hole {currentHole.number}/{sortedHoles.length}
+        </span>
+        <button
+          onClick={() => setCurrentHoleIndex((prev) => Math.min(sortedHoles.length - 1, prev + 1))}
+          disabled={currentHoleIndex >= sortedHoles.length - 1}
+          className="px-3 py-1.5 bg-surface-3 hover:bg-border-strong disabled:opacity-30 text-content text-sm rounded-lg transition-colors"
+        >
+          Volgende →
+        </button>
+      </div>
+
       <HoleNavigator
         holes={sortedHoles}
         holeStatus={holeStatus}

@@ -80,6 +80,11 @@ export function HomeFooter({ locale }: Props) {
                 </Link>
               </li>
               <li>
+                <Link href={`/${locale}/cookie-policy`} className="hover:text-green-400 transition-colors">
+                  {isNl ? 'Cookiebeleid' : 'Cookie policy'}
+                </Link>
+              </li>
+              <li>
                 <span className="text-content-muted">
                   {isNl ? 'Geen tracking cookies' : 'No tracking cookies'}
                 </span>

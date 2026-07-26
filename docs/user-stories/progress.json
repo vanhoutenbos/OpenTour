@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/anomalyco/opencode/main/docs/user-stories/progress-schema.json",
   "description": "Status tracking voor alle OpenTour user stories. release = 1.0 (MVP), Na 1.0 (Later), of Na 1.0 (premium) (Premium). Werk bij na implementatie.",
-  "last_updated": "2026-07-08",
+  "last_updated": "2026-07-26",
   "stories": {
     "01-vision-and-scope.md": {
       "epic": "Visie en scope",
@@ -35,7 +35,7 @@
         "ORG-13a": { "title": "Aantal rondes instellen bij aanmaken", "fase": "MVP", "status": "done", "release": "1.0", "notes": "multi_rounds toggle + rounds-veld in de wizard (tournament/new/page.tsx)" },
         "ORG-13b": { "title": "Scores per ronde bijhouden", "fase": "MVP", "status": "done", "release": "1.0", "notes": "round_number op scores, per ronde conditionele upsert" },
         "ORG-13c": { "title": "Leaderboard met subtotalen per ronde", "fase": "MVP", "status": "done", "release": "1.0", "notes": "round_scores, round_to_par en today_score in tournament_leaderboard view (leaderboard_v2 migratie), RoundSelector component" },
-        "ORG-14": { "title": "Spelerslijst filteren en doorzoeken", "fase": "Later", "status": "todo", "release": "Na 1.0" },
+        "ORG-14": { "title": "Spelerslijst filteren en doorzoeken", "fase": "MVP", "status": "done", "release": "1.0" },
         "ORG-15a": { "title": "Toernooi opslaan als sjabloon", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "ORG-15b": { "title": "Toernooi aanmaken via sjabloon", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "ORG-15c": { "title": "Sjablonen beheren", "fase": "Later", "status": "todo", "release": "Na 1.0" },
@@ -58,7 +58,7 @@
         "ORG-20a": { "title": "Starttijden exporteren naar Teecontrol", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "ORG-20b": { "title": "Synchronisatie bij wijzigen of annuleren", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "ORG-21": { "title": "Categorieën per handicap/geslacht beheren", "fase": "MVP", "status": "done", "release": "1.0", "notes": "tournament_categories tabel, volledige CRUD in de Categorieën-tab, categorie wordt toegewezen bij automatisch flights genereren op categorie" },
-        "ORG-22": { "title": "Toernooi na aanmaken alsnog privé maken", "fase": "MVP", "status": "todo", "release": "1.0", "notes": "GAP gevonden bij documentatie-audit (2026-07-08): is_public staat hardcoded op true bij aanmaken (tournament/new/page.tsx), er is geen toggle in manage om dit later te wijzigen. Zie ook memory-notitie 'is_public toggle op manage page'." },
+        "ORG-22": { "title": "Toernooi na aanmaken alsnog privé maken", "fase": "MVP", "status": "done", "release": "1.0", "notes": "is_public toggle aanwezig in beheerpagina (edit tab)" },
         "ORG-23": { "title": "Uitgebreide spelergegevens (NGF-nummer, adres, geboortedatum)", "fase": "MVP", "status": "done", "release": "1.0", "notes": "migratie 009 (uitgebreide spelervelden): gender, initials, call_name, prefix, last_name, date_of_birth, adres, phone, ngf_number. Volledige formuliervelden in players tab, zowel toevoegen als bewerken." },
         "ORG-24": { "title": "Matchplay pairings genereren", "fase": "MVP", "status": "done", "release": "1.0", "notes": "generateMatchplayPairings in manage page, matchplay_pairings tabel met round_number" }
       }
@@ -72,7 +72,7 @@
         "SCR-04": { "title": "Offline scores opslaan", "fase": "MVP", "status": "done", "release": "1.0", "notes": "offline-db.ts met Dexie.js" },
         "SCR-05": { "title": "Synchronisatiestatus zien", "fase": "MVP", "status": "done", "release": "1.0", "notes": "SyncStatusBar component" },
         "SCR-06": { "title": "Automatische synchronisatie", "fase": "MVP", "status": "done", "release": "1.0", "notes": "upsert_score_if_newer + offline-db.ts" },
-        "SCR-07": { "title": "Terug naar vorige hole om te corrigeren", "fase": "MVP", "status": "todo", "release": "1.0", "notes": "ScoreGrid overlay view, dedicated UX ontbreekt" },
+        "SCR-07": { "title": "Terug naar vorige hole om te corrigeren", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Vorige/Volgende knoppen toegevoegd aan FlightHoleView" },
         "SCR-08": { "title": "Auto-advance naar volgende hole", "fase": "MVP", "status": "done", "release": "1.0", "notes": "FlightHoleView component (mode 'follow') met auto-advance na save, hole 18 triggert bevestiging. Losstaande HoleByHoleView.tsx bestaat nog in de repo maar wordt nergens meer geïmporteerd — kandidaat om op te ruimen." },
         "SCR-09": { "title": "Holes-per-flight modus", "fase": "MVP", "status": "done", "release": "1.0", "notes": "ScoringModeSelector + HolePerFlightView (mode 'holes_per_flight'), volledig geïntegreerd op de flight-pagina" },
         "SCR-10": { "title": "Bevestigingsstap definitief indienen", "fase": "MVP", "status": "done", "release": "1.0", "notes": "scorer/[id]/[flightId] met confirm-dialog" },
@@ -136,10 +136,10 @@
       "stories": {
         "PRI-01": { "title": "Minimale dataverzameling", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Alleen naam + optionele handicap" },
         "PRI-02": { "title": "Naam zichtbaarheid beheren", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Naam op leaderboard, geen adres/email" },
-        "PRI-03": { "title": "Spelergegevens anonimiseren", "fase": "MVP", "status": "todo", "release": "1.0", "notes": "Anonymize UI ontbreekt nog" },
+        "PRI-03": { "title": "Spelergegevens anonimiseren", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Anonymize knop per speler in beheerpagina" },
         "PRI-04": { "title": "Account verwijderen", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "PRI-05": { "title": "CSV export", "fase": "Later", "status": "todo", "release": "Na 1.0" },
-        "PRI-06": { "title": "Privacyverklaring", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Verwijzing op site" },
+        "PRI-06": { "title": "Privacyverklaring", "fase": "MVP", "status": "done", "release": "1.0", "notes": "Privacyverklaring pagina aangemaakt met accurate inhoud" },
         "PRI-07": { "title": "JSON export via REST API", "fase": "MVP", "status": "in_progress", "release": "1.0", "notes": "Leaderboard data beschikbaar, export-endpoint moet nog" },
         "PRI-08": { "title": "Bewaartermijn instellen", "fase": "Later", "status": "todo", "release": "Na 1.0" },
         "PRI-09": { "title": "Cookie-toestemming", "fase": "Later", "status": "todo", "release": "Na 1.0" }

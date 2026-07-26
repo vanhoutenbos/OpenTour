@@ -151,6 +151,8 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
   const [matchplayMatches, setMatchplayMatches] = useState<MatchplayMatch[]>([]);
   const [matchplayBusy, setMatchplayBusy] = useState(false);
   const [activeMatchplayRound, setActiveMatchplayRound] = useState(1);
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [playerStatusFilter, setPlayerStatusFilter] = useState<string>('all');
 
   // Edit form
   const [editForm, setEditForm] = useState({
@@ -1497,11 +1499,41 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
               )}
             </div>
 
+            {/* Filter en zoek */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <input
+                type="text"
+                value={playerSearch}
+                onChange={e => setPlayerSearch(e.target.value)}
+                placeholder="Zoek op naam..."
+                className="flex-1 min-w-[140px] px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content placeholder-content-muted text-sm focus:outline-none focus:border-green-600"
+              />
+              <select
+                value={playerStatusFilter}
+                onChange={e => setPlayerStatusFilter(e.target.value)}
+                className="px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
+              >
+                <option value="all">Alle statussen</option>
+                <option value="registered">Aangemeld</option>
+                <option value="confirmed">Bevestigd</option>
+                <option value="dns">DNS</option>
+                <option value="dnf">DNF</option>
+                <option value="dsq">DSQ</option>
+                <option value="withdrawn">Teruggetrokken</option>
+              </select>
+            </div>
+
             {players.length === 0 ? (
               <p className="text-center text-content-muted py-8">Nog geen spelers toegevoegd.</p>
             ) : (
               <div className="space-y-2">
-                {players.map((p) => {
+                {players
+                  .filter(p => {
+                    const matchesSearch = p.name.toLowerCase().includes(playerSearch.toLowerCase());
+                    const matchesStatus = playerStatusFilter === 'all' || p.status === playerStatusFilter;
+                    return matchesSearch && matchesStatus;
+                  })
+                  .map((p) => {
                   const isEditing = editingPlayerId === p.id;
                   const statusConfig: Record<string, { label: string; color: string }> = {
                     registered: { label: 'Aangemeld',    color: 'bg-surface-3 text-content-secondary' },
