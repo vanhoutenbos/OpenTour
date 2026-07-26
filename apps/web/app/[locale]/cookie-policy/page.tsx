@@ -1,12 +1,11 @@
-'use client';
-
 import Link from 'next/link';
 
-interface CookiePolicyPageProps {
-  locale: string;
+interface PageProps {
+  params: Promise<{ locale: string }>;
 }
 
-export default function CookiePolicyPage({ locale }: CookiePolicyPageProps) {
+export default async function CookiePolicyPage({ params }: PageProps) {
+  const { locale } = await params;
   const isNl = locale === 'nl';
 
   return (

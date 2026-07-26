@@ -1,12 +1,11 @@
-'use client';
-
 import Link from 'next/link';
 
-interface PrivacyPageProps {
-  locale: string;
+interface PageProps {
+  params: Promise<{ locale: string }>;
 }
 
-export default function PrivacyPage({ locale }: PrivacyPageProps) {
+export default async function PrivacyPage({ params }: PageProps) {
+  const { locale } = await params;
   const isNl = locale === 'nl';
 
   return (
