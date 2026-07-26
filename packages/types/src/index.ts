@@ -210,6 +210,8 @@ export interface TournamentPlayer {
   email?: string;
   handicap?: number;
   gender?: GenderBinary;
+  display_name?: string;
+  display_name_alias?: string;
   created_at: string;
 }
 

@@ -32,6 +32,7 @@ interface TournamentInfo {
   format: 'strokeplay' | 'stableford' | 'matchplay';
   scoring_type: 'gross' | 'net';
   rounds: number;
+  status: string;
 }
 
 export default function FlightScorePage() {
@@ -56,6 +57,7 @@ export default function FlightScorePage() {
   const [submitting, setSubmitting] = useState(false);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [scoringMode, setScoringMode] = useState<ScoringMode | null>(null);
+  const [tournamentStatus, setTournamentStatus] = useState<string>('');
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -77,7 +79,7 @@ export default function FlightScorePage() {
         const [tournamentRes, playersRes, flightRes] = await Promise.all([
           supabase
             .from('tournaments')
-            .select('name, format, scoring_type, rounds')
+            .select('name, format, scoring_type, rounds, status')
             .eq('id', tournamentId)
             .single(),
           supabase
@@ -97,6 +99,7 @@ export default function FlightScorePage() {
 
         const tInfo = tournamentRes.data as TournamentInfo;
         setTournament(tInfo);
+        setTournamentStatus(tInfo.status);
 
         // Scores verwijzen naar tournament_holes (bevroren bij activatie van het toernooi),
         // niet naar de live holes-tabel — zo blijft par/SI kloppen ook als de baan later wijzigt.
@@ -161,6 +164,10 @@ export default function FlightScorePage() {
     let cancelled = false;
 
     const syncPending = async () => {
+      if (tournamentStatus === 'finished') {
+        if (!cancelled) setSyncStatus('error');
+        return;
+      }
       setSyncStatus('syncing');
       try {
         const pending = await getPendingScores();
@@ -259,6 +266,14 @@ export default function FlightScorePage() {
     <main className="min-h-screen bg-surface">
       <SyncStatusBar status={syncStatus} pendingCount={pendingCount} />
 
+      {tournamentStatus === 'finished' && (
+        <div className="bg-red-900/40 border-b border-red-800 px-4 py-3 text-center">
+          <p className="text-red-300 text-sm font-medium">
+            Dit toernooi is al voltooid en kan niet meer gesynchroniseerd worden.
+          </p>
+        </div>
+      )}
+
       <div className="bg-surface-2 border-b border-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
@@ -294,6 +309,7 @@ export default function FlightScorePage() {
             tournamentId={tournamentId}
             players={players}
             holes={holes}
+            tournamentStatus={tournamentStatus}
             onBack={() => setScoringMode(null)}
             onComplete={() => setShowConfirm(true)}
           />
@@ -306,6 +322,7 @@ export default function FlightScorePage() {
             holes={holes}
             tournamentFormat={tournament.format}
             scoringType={tournament.scoring_type}
+            tournamentStatus={tournamentStatus}
             onBack={() => setScoringMode(null)}
           />
         )}
@@ -317,6 +334,7 @@ export default function FlightScorePage() {
             holes={holes}
             tournamentFormat={tournament.format}
             roundNumber={1}
+            tournamentStatus={tournamentStatus}
             onBack={() => setScoringMode(null)}
           />
         )}

@@ -35,6 +35,8 @@ interface Player {
   name: string;
   handicap: number | null;
   gender: string | null;
+  display_name: string;
+  display_name_alias: string | null;
   initials: string | null;
   call_name: string | null;
   prefix: string | null;
@@ -174,7 +176,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
 
   // Add player
   const [playerForm, setPlayerForm] = useState({
-    name: '', handicap: '', gender: '',
+    name: '', handicap: '', gender: '', displayName: 'full', displayNameAlias: '',
     initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
     street: '', houseNumber: '', houseNumberAddition: '',
     postalCode: '', city: '', country: 'Nederland',
@@ -185,7 +187,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
   // Speler bewerken
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editPlayerForm, setEditPlayerForm] = useState({
-    name: '', handicap: '', gender: '',
+    name: '', handicap: '', gender: '', displayName: 'full', displayNameAlias: '',
     initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
     street: '', houseNumber: '', houseNumberAddition: '',
     postalCode: '', city: '', country: '',
@@ -260,7 +262,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
 
     const { data: p } = await supabase
       .from('tournament_players')
-      .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id')
+      .select('id, name, handicap, gender, initials, call_name, prefix, last_name, date_of_birth, street, house_number, house_number_addition, postal_code, city, country, email, phone, ngf_number, status, flight_id, category_id, display_name, display_name_alias')
       .eq('tournament_id', id)
       .order('name');
     const playerRows = (p as Player[]) ?? [];
@@ -398,6 +400,8 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       name: playerForm.name.trim(),
       handicap: playerForm.handicap ? parseFloat(playerForm.handicap) : null,
       gender: playerForm.gender || null,
+      display_name: playerForm.displayName || 'full',
+      display_name_alias: playerForm.displayName === 'alias' ? playerForm.displayNameAlias || null : null,
       initials: playerForm.initials || null,
       call_name: playerForm.callName || null,
       prefix: playerForm.prefix || null,
@@ -425,7 +429,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
     }
 
     setPlayerForm({
-      name: '', handicap: '', gender: '',
+      name: '', handicap: '', gender: '', displayName: 'full', displayNameAlias: '',
       initials: '', callName: '', prefix: '', lastName: '', dateOfBirth: '',
       street: '', houseNumber: '', houseNumberAddition: '',
       postalCode: '', city: '', country: 'Nederland',
@@ -442,6 +446,8 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       name: p.name,
       handicap: p.handicap?.toString() ?? '',
       gender: p.gender ?? '',
+      displayName: p.display_name ?? 'full',
+      displayNameAlias: p.display_name_alias ?? '',
       initials: p.initials ?? '',
       callName: p.call_name ?? '',
       prefix: p.prefix ?? '',
@@ -469,6 +475,8 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       name: editPlayerForm.name.trim(),
       handicap: editPlayerForm.handicap ? parseFloat(editPlayerForm.handicap) : null,
       gender: editPlayerForm.gender || null,
+      display_name: editPlayerForm.displayName || 'full',
+      display_name_alias: editPlayerForm.displayName === 'alias' ? editPlayerForm.displayNameAlias || null : null,
       initials: editPlayerForm.initials || null,
       call_name: editPlayerForm.callName || null,
       prefix: editPlayerForm.prefix || null,
@@ -1484,6 +1492,21 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                     <InputField label="Mobiel" value={playerForm.phone} onChange={v => setPlayerForm(f => ({ ...f, phone: v }))} />
                     <InputField label="NGF nummer" value={playerForm.ngfNumber} onChange={v => setPlayerForm(f => ({ ...f, ngfNumber: v }))} />
                   </div>
+                  <div>
+                    <label className="block text-xs text-content-muted mb-1">Weergave naam</label>
+                    <select
+                      value={playerForm.displayName}
+                      onChange={e => setPlayerForm(f => ({ ...f, displayName: e.target.value }))}
+                      className="w-full px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
+                    >
+                      <option value="full">Volledige naam</option>
+                      <option value="initials">Initialen</option>
+                      <option value="alias">Alias</option>
+                    </select>
+                    {playerForm.displayName === 'alias' && (
+                      <InputField label="Alias" value={playerForm.displayNameAlias} onChange={v => setPlayerForm(f => ({ ...f, displayNameAlias: v }))} />
+                    )}
+                  </div>
                   <div className="border-t border-border pt-4">
                     <h4 className="text-xs font-medium text-content-muted uppercase tracking-wider mb-3">Adres</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1626,6 +1649,23 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                             <InputField label="E-mailadres" type="email" value={editPlayerForm.email} onChange={v => setEditPlayerForm(f => ({ ...f, email: v }))} />
                             <InputField label="Mobiel" value={editPlayerForm.phone} onChange={v => setEditPlayerForm(f => ({ ...f, phone: v }))} />
                             <InputField label="NGF nummer" value={editPlayerForm.ngfNumber} onChange={v => setEditPlayerForm(f => ({ ...f, ngfNumber: v }))} />
+                          </div>
+
+                          {/* Weergave naam */}
+                          <div>
+                            <label className="block text-xs text-content-muted mb-1">Weergave naam</label>
+                            <select
+                              value={editPlayerForm.displayName}
+                              onChange={e => setEditPlayerForm(f => ({ ...f, displayName: e.target.value }))}
+                              className="w-full px-3 py-2 bg-surface-3 border border-border-strong rounded-lg text-content text-sm focus:outline-none focus:border-green-600"
+                            >
+                              <option value="full">Volledige naam</option>
+                              <option value="initials">Initialen</option>
+                              <option value="alias">Alias</option>
+                            </select>
+                            {editPlayerForm.displayName === 'alias' && (
+                              <InputField label="Alias" value={editPlayerForm.displayNameAlias} onChange={v => setEditPlayerForm(f => ({ ...f, displayNameAlias: v }))} />
+                            )}
                           </div>
 
                           {/* Adres */}

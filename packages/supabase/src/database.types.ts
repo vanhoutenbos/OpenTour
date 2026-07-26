@@ -214,6 +214,8 @@ export interface Database {
           email: string | null;
           handicap: number | null;
           gender: Database['public']['Enums']['gender_binary'] | null;
+          display_name: string;
+          display_name_alias: string | null;
           status: Database['public']['Enums']['player_status'];
           created_at: string;
         };

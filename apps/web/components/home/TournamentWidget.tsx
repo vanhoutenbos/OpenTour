@@ -26,7 +26,9 @@ async function fetchTournaments(
   const filter =
     statusFilter === 'active'
       ? `status=eq.${statusFilter}&is_public=eq.true`
-      : `is_public=eq.true&or=(status.eq.draft,and(status.eq.active,start_date.gt.now))`;
+      : statusFilter === 'finished'
+        ? `status=eq.finished&is_public=eq.true`
+        : `is_public=eq.true&or=(status.eq.draft,and(status.eq.active,start_date.gt.now))`;
 
   const url = `${urlBase}/rest/v1/tournaments?select=id,name,format,scoring_type,status,start_date,end_date,course:course_id(name,location)&${filter}&order=${order}`;
 
@@ -87,12 +89,13 @@ export async function TournamentWidget({ locale }: Props) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const [activeTournaments, upcomingTournaments] = await Promise.all([
+  const [activeTournaments, upcomingTournaments, finishedTournaments] = await Promise.all([
     fetchTournaments(supabaseUrl, anonKey, 'active', 'start_date.asc'),
     fetchTournaments(supabaseUrl, anonKey, 'upcoming', 'start_date.asc'),
+    fetchTournaments(supabaseUrl, anonKey, 'finished', 'start_date.desc'),
   ]);
 
-  const hasAny = activeTournaments.length > 0 || upcomingTournaments.length > 0;
+  const hasAny = activeTournaments.length > 0 || upcomingTournaments.length > 0 || finishedTournaments.length > 0;
 
   return (
     <section id="tournaments" className="py-20 bg-surface-2">
@@ -161,6 +164,23 @@ export async function TournamentWidget({ locale }: Props) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {upcomingTournaments.map((t) => (
+                    <TournamentCard key={t.id} tournament={t} locale={locale} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {finishedTournaments.length > 0 && (
+              <div>
+                <div className="flex items-center gap-3 mb-5">
+                  <svg className="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                  <h3 className="text-lg font-semibold text-blue-400 uppercase tracking-wider">
+                    {locale === 'nl' ? 'Afgerond' : 'Finished'}
+                  </h3>
+                  <span className="text-sm text-content-muted">({finishedTournaments.length})</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {finishedTournaments.map((t) => (
                     <TournamentCard key={t.id} tournament={t} locale={locale} />
                   ))}
                 </div>

@@ -66,6 +66,9 @@
       "paused": "Gepauzeerd",
       "finished": "Afgelopen"
     },
+    "finished": {
+      "banner": "Toernooi voltooid"
+    },
     "player_status": {
       "registered": "Aangemeld",
       "confirmed": "Bevestigd",
@@ -310,6 +313,7 @@
     "code_expired": "Je code is verlopen. Vraag een nieuwe code aan bij de wedstrijdcommissie.",
     "magic_link_expired": "Je link is verlopen. Vraag een nieuwe aan via de inlogpagina.",
     "tournament_finished": "Dit toernooi is afgesloten. Scores kunnen niet meer worden ingevoerd.",
+    "tournament_finished_sync": "Dit toernooi is al voltooid en kan niet meer gesynchroniseerd worden.",
     "tournament_paused": "Dit toernooi is tijdelijk gepauzeerd. Scores invoeren is geblokkeerd.",
     "leaderboard_unavailable": "Het leaderboard is tijdelijk niet beschikbaar door hoog bezoekersaantal. Probeer het over enkele minuten opnieuw.",
     "session_check_failed": "Kon je inlogstatus niet controleren door een technische storing. We proberen het opnieuw.",

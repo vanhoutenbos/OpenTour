@@ -40,6 +40,7 @@ interface Props {
   holes: Hole[];
   tournamentFormat: 'strokeplay' | 'stableford' | 'matchplay';
   roundNumber?: number;
+  tournamentStatus?: string | null;
   onBack: () => void;
 }
 
@@ -67,6 +68,7 @@ export function FlightScoreGrid({
   holes,
   tournamentFormat,
   roundNumber = 1,
+  tournamentStatus,
   onBack,
 }: Props) {
   const t = useTranslations('scorer');
@@ -147,6 +149,7 @@ export function FlightScoreGrid({
   }, []);
 
   const saveScores = async () => {
+    if (tournamentStatus === 'finished') return;
     if (!saveScheduled.current) return;
 
     const changes = { ...debouncedChanges.current };

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { PlayerScoreRow } from '@/components/scorer/PlayerScoreRow';
+import { saveScoreLocally } from '@/lib/offline-db';
 
 interface Player {
   id: string;
@@ -26,6 +27,7 @@ interface Props {
   holes: Hole[];
   tournamentFormat: 'strokeplay' | 'stableford' | 'matchplay';
   scoringType: 'gross' | 'net';
+  tournamentStatus?: string | null;
   onBack: () => void;
 }
 
@@ -39,6 +41,7 @@ export function HolePerFlightView({
   holes,
   tournamentFormat,
   scoringType,
+  tournamentStatus,
   onBack,
 }: Props) {
   const t = useTranslations('scorer');
@@ -110,6 +113,7 @@ export function HolePerFlightView({
   }, []);
 
   const handleSave = async () => {
+    if (tournamentStatus === 'finished') return;
     if (!currentHole) return;
 
     const threshold = HIGH_SCORE_THRESHOLD[currentHole.par] ?? 12;
@@ -125,23 +129,34 @@ export function HolePerFlightView({
 
     setViewState('saving');
 
+    const now = new Date().toISOString();
+
     try {
-      const scoreInserts = sortedPlayers.map((player) => ({
-        tournament_id: tournamentId,
-        player_id: player.id,
-        hole_id: currentHole.id,
-        round_number: 1,
-        strokes: playerScores[player.id] ?? currentHole.par,
-        recorded_by: '',
-        is_verified: false,
-      }));
+      for (const player of sortedPlayers) {
+        const strokes = playerScores[player.id] ?? currentHole.par;
 
-      const { error } = await supabase.from('scores').upsert(scoreInserts, {
-        onConflict: 'tournament_id, player_id, hole_id, round_number',
-        count: 'exact',
-      });
+        await saveScoreLocally({
+          tournament_id: tournamentId,
+          player_id: player.id,
+          hole_id: currentHole.id,
+          round_number: 1,
+          strokes,
+          updated_at: now,
+        });
 
-      if (error) throw error;
+        try {
+          await supabase.rpc('upsert_score_if_newer', {
+            p_tournament_id: tournamentId,
+            p_player_id: player.id,
+            p_hole_id: currentHole.id,
+            p_round_number: 1,
+            p_strokes: strokes,
+            p_updated_at: now,
+          });
+        } catch {
+          // Offline of netwerkfout — score staat al lokaal, sync-loop pakt dit later op.
+        }
+      }
 
       setSavedHoles((prev) => new Set(prev).add(currentHole.number));
       setHighScoreWarning(null);
@@ -258,7 +273,7 @@ export function HolePerFlightView({
               <>
                 <span
                   className="inline-block w-5 h-5 border-2 border-white/30 border-t-white
-                                 rounded-full animate-spin"
+                             rounded-full animate-spin"
                 />
                 Opslaan...
               </>

@@ -66,6 +66,9 @@
       "paused": "Paused",
       "finished": "Finished"
     },
+    "finished": {
+      "banner": "Tournament finished"
+    },
     "player_status": {
       "registered": "Registered",
       "confirmed": "Confirmed",
@@ -310,6 +313,7 @@
     "code_expired": "Your code has expired. Ask the tournament desk for a new code.",
     "magic_link_expired": "Your link has expired. Request a new one via the login page.",
     "tournament_finished": "This tournament has ended. No more scores can be entered.",
+    "tournament_finished_sync": "This tournament has already finished and can no longer be synced.",
     "tournament_paused": "This tournament is temporarily paused. Score entry is blocked.",
     "leaderboard_unavailable": "The leaderboard is temporarily unavailable due to high traffic. Please try again in a few minutes.",
     "session_check_failed": "Couldn't verify your login status due to a technical issue. We're trying again.",

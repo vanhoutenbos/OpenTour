@@ -18,12 +18,10 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
   useEffect(() => {
     const supabase = getSupabaseBrowser();
 
-    // Als er al een sessie is (bijv. na F5 op login pagina), direct doorsturen
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) router.replace(`/${locale}/dashboard`);
     });
 
-    // Vang SIGNED_IN op — vuurt na setSession() of na magic link callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         router.replace(`/${locale}/dashboard`);
@@ -32,6 +30,24 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
 
     return () => subscription.unsubscribe();
   }, [locale, router]);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+
+    const supabase = getSupabaseBrowser();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/auth/callback',
+      },
+    });
+
+    if (error) {
+      setError('Google login mislukt. Probeer het opnieuw.');
+    }
+    setLoading(false);
+  };
 
   const handleLogin = async () => {
     if (!email) return;
@@ -49,7 +65,7 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
 
     if (error) {
       setError(error.message.includes('rate limit')
-        ? 'Wow Dechambeau, iets rustiger oké? Probeer het over 5 minuten opnieuw.'
+        ? 'Wow Dechambeau, iets rustiger ok%C3%A9? Probeer het over 5 minuten opnieuw.'
         : 'Inloggen mislukt. Controleer je e-mailadres.');
     } else {
       setSent(true);
@@ -77,8 +93,6 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         return;
       }
 
-      // setSession() initialiseert de browser client sessie correct
-      // en triggert onAuthStateChange met SIGNED_IN → redirect naar dashboard
       const supabase = getSupabaseBrowser();
       const { error: sessionError } = await supabase.auth.setSession({
         access_token: data.access_token,
@@ -89,7 +103,6 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         setError(`Sessie instellen mislukt: ${sessionError.message}`);
         setDevLoading(false);
       }
-      // Bij succes: onAuthStateChange SIGNED_IN doet de redirect
     } catch {
       setError('Verbindingsfout — probeer opnieuw');
       setDevLoading(false);
@@ -146,6 +159,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
                   autoFocus
                 />
               </div>
+
+              <button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="w-full py-3 bg-[#4285F4] hover:bg-[#3367D6] disabled:opacity-50
+                           text-white font-semibold rounded-xl transition-colors"
+              >
+                Inloggen met Google
+              </button>
 
               {error && <p className="text-red-400 text-sm">{error}</p>}
 

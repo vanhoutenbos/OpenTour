@@ -38,13 +38,14 @@ interface Props {
   tournamentId: string;
   players: Player[];
   holes: Hole[];
+  tournamentStatus?: string | null;
   onBack: () => void;
   onComplete: () => void;
 }
 
 const HIGH_SCORE_THRESHOLD: Record<number, number> = { 3: 10, 4: 11, 5: 12 };
 
-export function FlightHoleView({ tournamentId, players, holes, onBack, onComplete }: Props) {
+export function FlightHoleView({ tournamentId, players, holes, tournamentStatus, onBack, onComplete }: Props) {
   const t = useTranslations('scorer');
 
   const sortedHoles = useMemo(() => [...holes].sort((a, b) => a.number - b.number), [holes]);
@@ -90,6 +91,7 @@ export function FlightHoleView({ tournamentId, players, holes, onBack, onComplet
   );
 
   const persistHole = useCallback(async () => {
+    if (tournamentStatus === 'finished') return;
     if (!currentHole) return;
     setSaving(true);
     const now = new Date().toISOString();
@@ -132,9 +134,10 @@ export function FlightHoleView({ tournamentId, players, holes, onBack, onComplet
     } finally {
       setSaving(false);
     }
-  }, [currentHole, currentScores, sortedPlayers, tournamentId, isLastHole, onComplete]);
+  }, [currentHole, currentScores, sortedPlayers, tournamentId, isLastHole, onComplete, tournamentStatus]);
 
   const handleSaveClick = () => {
+    if (tournamentStatus === 'finished') return;
     if (!currentHole) return;
     const threshold = HIGH_SCORE_THRESHOLD[currentHole.par] ?? 12;
 

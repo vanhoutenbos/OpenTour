@@ -190,7 +190,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke combinatie van kleur en geslacht mag maar 1 keer voorkomen.';
 
     for (const hole of holes) {
-      if (hole.par < 1 || hole.par > 9) return 'Par moet tussen 1 en 9 liggen.';
+      if (hole.par < 3 || hole.par > 5) return 'Par moet tussen 3 en 5 liggen.';
       if (hole.stroke_index < 1) return 'Stroke index moet een positief nummer zijn.';
       for (const teeKey of teeExternalIds) {
         const distance = hole.distance_meters_by_tee[teeKey];
@@ -559,8 +559,8 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
                 onChange={(event) => updateHole(index, { par: parseInt(event.target.value, 10) })}
                 className="px-3 py-2.5 bg-surface-3 border border-border-strong rounded-lg text-content text-sm"
               >
-                {Array.from({ length: 9 }).map((_, optionIndex) => (
-                  <option key={optionIndex + 1} value={optionIndex + 1}>Par {optionIndex + 1}</option>
+                {[3, 4, 5].map((parValue) => (
+                  <option key={parValue} value={parValue}>Par {parValue}</option>
                 ))}
               </select>
               <input

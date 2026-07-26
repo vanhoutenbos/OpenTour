@@ -46,6 +46,11 @@ export function TournamentCard({ tournament, locale }: Props) {
             <span className="text-[10px] font-bold text-green-400 tracking-wider">LIVE</span>
           </div>
         )}
+        {tournament.status === 'finished' && (
+          <div className="flex items-center bg-blue-900/40 border border-blue-700 px-2.5 py-1 rounded-full shrink-0 ml-3">
+            <span className="text-[10px] font-bold text-blue-400 tracking-wider">GEREED</span>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-content-muted">

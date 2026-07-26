@@ -176,6 +176,19 @@ export default async function LeaderboardPage({ params }: Props) {
         </div>
       )}
 
+      {/* Finished banner */}
+      {tournament.status === 'finished' && (
+        <div className="bg-blue-900/40 border-b border-blue-700 px-4 py-3">
+          <div className="max-w-[var(--leaderboard-max-width,1280px)] mx-auto flex items-center gap-3">
+            <span className="text-2xl">⚑</span>
+            <div>
+              <p className="font-semibold text-blue-300">Toernooi voltooid</p>
+              <p className="text-sm text-blue-200">Dit toernooi is afgesloten. De uitslag is definitief.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main leaderboard */}
       <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardClient

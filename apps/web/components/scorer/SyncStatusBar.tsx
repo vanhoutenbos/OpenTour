@@ -5,6 +5,7 @@ type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
 interface Props {
   status: SyncStatus;
   pendingCount?: number;
+  onRetry?: () => void;
 }
 
 const CONFIG: Record<SyncStatus, { icon: string; label: string; className: string }> = {
@@ -14,7 +15,7 @@ const CONFIG: Record<SyncStatus, { icon: string; label: string; className: strin
   error:   { icon: '❌', label: 'Fout bij sync — probeer opnieuw', className: 'bg-red-900/40 text-red-300 border-red-800' },
 };
 
-export function SyncStatusBar({ status, pendingCount }: Props) {
+export function SyncStatusBar({ status, pendingCount, onRetry }: Props) {
   const config = CONFIG[status];
   return (
     <div className={`flex items-center gap-2 px-4 py-2 border-b text-sm ${config.className}`}>
@@ -22,6 +23,14 @@ export function SyncStatusBar({ status, pendingCount }: Props) {
       <span>{config.label}</span>
       {pendingCount !== undefined && pendingCount > 0 && (
         <span className="ml-auto text-xs opacity-75">{pendingCount} wachtend</span>
+      )}
+      {status === 'error' && onRetry && (
+        <button
+          onClick={onRetry}
+          className="ml-auto bg-red-700 hover:bg-red-600 text-white text-xs font-medium rounded px-3 py-1 min-h-[32px]"
+        >
+          Opnieuw proberen
+        </button>
       )}
     </div>
   );
