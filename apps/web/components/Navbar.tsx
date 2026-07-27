@@ -21,8 +21,6 @@ export function Navbar() {
   const params = useParams();
   const locale = (params.locale as string) || 'nl';
 
-  // Server-geverifieerde login-status (/api/auth/session) i.p.v. lokale
-  // getSession()/onAuthStateChange — zie useAuthSession voor de reden.
   const { user: sessionUser, degraded, refresh } = useAuthSession();
   const user = sessionUser
     ? { email: sessionUser.email ?? '', display_name: sessionUser.display_name }
@@ -31,7 +29,6 @@ export function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close profile dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -50,18 +47,18 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-surface-2/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav className="sticky top-0 z-50 bg-surface border-b border-border">
+      <div className="max-w-admin mx-auto px-6 h-16">
+        <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link
             href={`/${locale}`}
-            className="flex items-center gap-2 shrink-0"
+            className="flex items-center gap-2.5 shrink-0"
           >
-            <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-green-900/50">
+            <span className="w-8 h-8 rounded-lg bg-brand-primary flex items-center justify-center text-sm font-bold text-content-inverse">
               OT
             </span>
-            <span className="text-lg font-bold text-content hidden sm:inline">
+            <span className="text-lg font-serif font-semibold text-content tracking-tight hidden sm:inline">
               OpenTour
             </span>
           </Link>
@@ -72,10 +69,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? 'text-green-400 bg-green-900/30'
-                    : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                    ? 'text-brand-primary bg-surface-3'
+                    : 'text-content-muted hover:text-content hover:bg-surface-3'
                 }`}
               >
                 {link.label}
@@ -86,10 +83,10 @@ export function Navbar() {
               <>
                 <Link
                   href={`/${locale}/dashboard`}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive(`/${locale}/dashboard`)
-                      ? 'text-green-400 bg-green-900/30'
-                      : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                      ? 'text-brand-primary bg-surface-3'
+                      : 'text-content-muted hover:text-content hover:bg-surface-3'
                   }`}
                 >
                   {t('dashboard')}
@@ -97,10 +94,10 @@ export function Navbar() {
 
                 <Link
                   href={`/${locale}/course`}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive(`/${locale}/course`)
-                      ? 'text-green-400 bg-green-900/30'
-                      : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                      ? 'text-brand-primary bg-surface-3'
+                      : 'text-content-muted hover:text-content hover:bg-surface-3'
                   }`}
                 >
                   {t('create_course')}
@@ -128,7 +125,7 @@ export function Navbar() {
             {!user && (
               <Link
                 href={`/${locale}/login`}
-                className="hidden md:inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-green-700 hover:bg-green-600 text-white transition-all hover:shadow-lg hover:shadow-green-900/50"
+                className="hidden md:inline-flex items-center px-5 py-2 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold transition-colors"
               >
                 {t('login')}
               </Link>
@@ -139,7 +136,7 @@ export function Navbar() {
               <div ref={profileRef} className="relative hidden md:block">
                 <button
                   onClick={() => setProfileOpen((v) => !v)}
-                  className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-surface transition-all"
                   aria-label="Open profile menu"
                   aria-expanded={profileOpen}
                   aria-haspopup="true"
@@ -148,7 +145,7 @@ export function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-surface-2 border border-border-strong/60 shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-3 w-64 rounded-card bg-surface border border-border shadow-card dark:shadow-card-dark z-50 overflow-hidden">
                     {/* User info header */}
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-sm font-semibold text-content truncate">
@@ -161,7 +158,7 @@ export function Navbar() {
 
                     {/* Language */}
                     <div className="px-2 py-2 border-b border-border">
-                      <p className="px-2 py-1 text-xs font-semibold text-content-muted uppercase tracking-wider">
+                      <p className="px-2 py-1 text-xs font-semibold text-content-muted uppercase tracking-section">
                         {t('language')}
                       </p>
                       {locales.map((l) => (
@@ -177,7 +174,7 @@ export function Navbar() {
                         >
                           {l.code === 'nl' ? 'Nederlands' : 'English'}
                           {locale === l.code && (
-                            <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-4 h-4 text-brand-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -198,7 +195,7 @@ export function Navbar() {
                           await getSupabaseBrowser().auth.signOut();
                           await refresh();
                         }}
-                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"
+                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-content-muted hover:text-content hover:bg-surface-3 transition-colors"
                       >
                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -231,12 +228,9 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Storingsbanner: alleen zichtbaar als de sessie-check herhaaldelijk
-          faalt door een technische storing. Laatst bekende ingelogde staat
-          (user/Avatar hierboven) blijft intussen gewoon staan — dit is puur
-          een melding, geen uitlog-actie. */}
+      {/* Storingsbanner */}
       {degraded && (
-        <div className="px-4 py-2 text-sm text-center bg-amber-900/40 text-amber-200 border-t border-amber-800/60">
+        <div className="px-4 py-2 text-sm text-center bg-brand-danger/10 text-brand-danger border-t border-border">
           {tErrors('session_check_failed')}
         </div>
       )}
@@ -267,8 +261,8 @@ export function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? 'text-green-400 bg-green-900/30'
-                    : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                    ? 'text-brand-primary bg-surface-3'
+                    : 'text-content-muted hover:text-content hover:bg-surface-3'
                 }`}
               >
                 {link.label}
@@ -291,7 +285,7 @@ export function Navbar() {
 
             <div className="border-t border-border pt-1">
               {/* Language switcher */}
-              <p className="px-3 pt-2 pb-1 text-xs font-semibold text-content-muted uppercase tracking-wider">
+              <p className="px-3 pt-2 pb-1 text-xs font-semibold text-content-muted uppercase tracking-section">
                 {t('language')}
               </p>
               {locales.map((l) => (
@@ -307,7 +301,7 @@ export function Navbar() {
                 >
                   {l.code === 'nl' ? 'Nederlands' : 'English'}
                   {locale === l.code && (
-                    <svg className="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-brand-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   )}
@@ -326,8 +320,8 @@ export function Navbar() {
                       onClick={() => setMenuOpen(false)}
                       className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive(`/${locale}/dashboard`)
-                          ? 'text-green-400 bg-green-900/30'
-                          : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                          ? 'text-brand-primary bg-surface-3'
+                          : 'text-content-muted hover:text-content hover:bg-surface-3'
                       }`}
                     >
                       {t('dashboard')}
@@ -337,8 +331,8 @@ export function Navbar() {
                       onClick={() => setMenuOpen(false)}
                       className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive(`/${locale}/course`)
-                          ? 'text-green-400 bg-green-900/30'
-                          : 'text-content-secondary hover:text-content hover:bg-surface-3'
+                          ? 'text-brand-primary bg-surface-3'
+                          : 'text-content-muted hover:text-content hover:bg-surface-3'
                       }`}
                     >
                       {t('create_course')}
@@ -349,7 +343,7 @@ export function Navbar() {
                         await refresh();
                         setMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-content-secondary hover:text-content hover:bg-surface-3 transition-colors"
+                      className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-content-muted hover:text-content hover:bg-surface-3 transition-colors"
                     >
                       <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -361,7 +355,7 @@ export function Navbar() {
                   <Link
                     href={`/${locale}/login`}
                     onClick={() => setMenuOpen(false)}
-                    className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-center bg-green-700 hover:bg-green-600 text-white transition-colors"
+                    className="block px-3 py-2.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold text-center transition-colors"
                   >
                     {t('login')}
                   </Link>

@@ -1,99 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /*
- * Theming: light mode is the :root default, dark mode overrides via .dark
- * (toggled on <html> by next-themes). Score and brand colors are
- * intentionally identical in both modes — they are functional
- * (score meaning, brand identity), not decorative.
+ * OpenTour Design System — Premium Golf Aesthetic
+ * Minimalistisch, warm, luxe. Geen felle kleuren, geen gradients, geen glas.
  */
+
 :root {
   /* Base */
-  --foreground: 15 23 42;            /* slate-900 */
-  --background: 255 255 255;        /* white */
+  --foreground: 30 30 30;
+  --background: 248 246 241;
 
-  /* Semantic surface tokens (page/card/nested-card backgrounds) */
-  --surface: 255 255 255;           /* white */
-  --surface-2: 249 250 251;         /* gray-50 */
-  --surface-3: 243 244 246;         /* gray-100 */
-  --surface-4: 229 231 235;         /* gray-200 — one step lighter, for hover states on surface-3 */
+  /* Semantic surface tokens */
+  --surface: 252 250 247;
+  --surface-2: 250 248 244;
+  --surface-3: 245 242 237;
+  --surface-4: 240 237 232;
 
   /* Semantic border tokens */
-  --border-default: 229 231 235;    /* gray-200 */
-  --border-strong: 209 213 219;     /* gray-300 */
+  --border: 230 227 222;
+  --border-strong: 215 210 204;
 
   /* Semantic content (text) tokens */
-  --content-primary: 17 24 39;      /* gray-900 */
-  --content-secondary: 55 65 81;    /* gray-700 */
-  --content-muted: 107 114 128;     /* gray-500 */
-  --content-inverse: 255 255 255;   /* white */
+  --content-primary: 30 30 30;
+  --content-body: 102 102 102;
+  --content-muted: 155 155 155;
+  --content-inverse: 252 250 247;
 
-  /* Brand colors — overschrijfbaar per tenant via white-labeling.
-     Identiek in light en dark: functioneel, niet decoratief. */
-  --brand-primary: 34 197 94;        /* green-500 */
-  --brand-primary-dark: 22 163 74;   /* green-600 */
-  --brand-primary-light: 74 222 128; /* green-400 */
-  --brand-accent: 245 158 11;        /* amber-500 */
-  --brand-danger: 248 113 113;       /* red-400 */
+  /* Brand */
+  --brand-primary: 35 75 57;
+  --brand-primary-hover: 26 58 42;
+  --brand-primary-light: 197 169 106;
+  --brand-accent: 197 169 106;
+  --brand-danger: 180 80 70;
 
   /* Layout */
-  --leaderboard-max-width: 1280px;
-  --header-bg: 255 255 255;         /* white */
-  --header-border: 229 231 235;     /* gray-200 */
-  --card-bg: 255 255 255;           /* white */
-  --card-border: 229 231 235;       /* gray-200 */
+  --header-bg: 252 250 247;
+  --header-border: 230 227 222;
+  --card-bg: 252 250 247;
+  --card-border: 230 227 222;
 
   /* Favorites */
-  --favorite-color: 202 138 4;      /* yellow-600 — darker for contrast on light bg */
-  --favorite-bg: 250 204 21 / 0.08; /* yellow-400/8 */
+  --favorite-color: 180 130 40;
+  --favorite-bg: 197 169 106 / 0.12;
 
-  /* Score colors — identiek in light en dark (functioneel, niet decoratief) */
-  --score-under-par: 220 38 38;     /* red-600 — darker for AA contrast on white */
-  --score-even-par: 22 163 74;      /* green-600 — darker for AA contrast on white */
-  --score-over-par: 107 114 128;    /* gray-500 */
-  --score-muted: 156 163 175;       /* gray-400 */
+  /* Score colors — functioneel, aangepast voor contrast op warme achtergrond */
+  --score-under-par: 180 60 50;
+  --score-even-par: 35 100 65;
+  --score-over-par: 140 136 130;
+  --score-muted: 170 166 160;
 }
 
 .dark {
   /* Base */
-  --foreground: 255 255 255;
-  --background: 3 7 18;
+  --foreground: 235 233 229;
+  --background: 22 20 18;
 
   /* Semantic surface tokens */
-  --surface: 3 7 18;                /* gray-950 */
-  --surface-2: 17 24 39;            /* gray-900 */
-  --surface-3: 31 41 55;            /* gray-800 */
-  --surface-4: 55 65 81;            /* gray-700 — one step lighter, for hover states on surface-3 */
+  --surface: 30 28 25;
+  --surface-2: 38 35 32;
+  --surface-3: 45 42 38;
+  --surface-4: 52 49 45;
 
   /* Semantic border tokens */
-  --border-default: 31 41 55;       /* gray-800 */
-  --border-strong: 55 65 81;        /* gray-700 */
+  --border: 50 46 42;
+  --border-strong: 65 60 55;
 
   /* Semantic content (text) tokens */
-  --content-primary: 255 255 255;   /* white */
-  --content-secondary: 209 213 219; /* gray-300 */
-  --content-muted: 156 163 175;     /* gray-400 */
-  --content-inverse: 17 24 39;      /* gray-900 */
+  --content-primary: 235 233 229;
+  --content-body: 180 176 170;
+  --content-muted: 120 116 110;
+  --content-inverse: 22 20 18;
+
+  /* Brand */
+  --brand-primary: 140 190 160;
+  --brand-primary-hover: 160 210 175;
+  --brand-primary-light: 197 169 106;
+  --brand-accent: 197 169 106;
+  --brand-danger: 220 120 110;
 
   /* Layout */
-  --header-bg: 17 24 39;            /* gray-900 */
-  --header-border: 31 41 55;        /* gray-800 */
-  --card-bg: 17 24 39;              /* gray-900 */
-  --card-border: 31 41 55;          /* gray-800 */
+  --header-bg: 30 28 25;
+  --header-border: 50 46 42;
+  --card-bg: 30 28 25;
+  --card-border: 50 46 42;
 
   /* Favorites */
-  --favorite-color: 250 204 21;     /* yellow-400 */
-  --favorite-bg: 250 204 21 / 0.05; /* yellow-400/5 */
+  --favorite-color: 220 190 100;
+  --favorite-bg: 197 169 106 / 0.15;
 
-  /* Score colors — zelfde betekenis als light mode (rood/groen/grijs),
-     lichtere tint omdat deze op een donkere achtergrond staat */
-  --score-under-par: 248 113 113;   /* red-400 */
-  --score-even-par: 74 222 128;     /* green-400 */
-  --score-over-par: 156 163 175;    /* gray-400 */
-  --score-muted: 107 114 128;       /* gray-500 */
+  /* Score colors — aangepast voor contrast op donkere warme achtergrond */
+  --score-under-par: 240 110 100;
+  --score-even-par: 120 200 150;
+  --score-over-par: 140 136 130;
+  --score-muted: 100 96 90;
 }
 
+/* Base reset */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -106,15 +112,44 @@ body {
   overflow-x: hidden;
 }
 
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 button {
   min-height: 44px;
   touch-action: manipulation;
 }
 
-/* Leaderboard specifieke utilities
- * Ring-kleur (de functionele score-betekenis) is identiek in light/dark.
- * Achtergrondtint is per mode aangepast zodat hij leesbaar blijft
- * (donkere wash op dark surface, lichte wash op light surface). */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* Typography utilities */
+@layer utilities {
+  .font-serif {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .tracking-section {
+    letter-spacing: 0.12em;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Leaderboard score utilities — functioneel, aangepast per theme */
 @layer utilities {
   .score-eagle {
     @apply ring-2 ring-yellow-500 dark:ring-yellow-400 bg-yellow-100/60 dark:bg-yellow-900/20 rounded-full;

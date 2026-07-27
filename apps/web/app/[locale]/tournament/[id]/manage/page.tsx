@@ -803,10 +803,10 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
     : '';
 
   const statusConfig: Record<string, { label: string; className: string }> = {
-    draft:    { label: 'Concept',    className: 'bg-surface-3 text-content-secondary' },
-    active:   { label: 'Actief',     className: 'bg-green-800 text-green-300' },
-    paused:   { label: 'Gepauzeerd', className: 'bg-yellow-800 text-yellow-300' },
-    finished: { label: 'Afgelopen',  className: 'bg-blue-900 text-blue-300' },
+    draft:    { label: 'Concept',    className: 'bg-surface-3 text-content-body' },
+    active:   { label: 'Actief',     className: 'bg-emerald-900/20 text-emerald-300' },
+    paused:   { label: 'Gepauzeerd', className: 'bg-amber-900/15 text-amber-300' },
+    finished: { label: 'Afgelopen',  className: 'bg-blue-900/15 text-blue-300' },
   };
 
   const genderLabel = (g: string | null) =>
@@ -859,22 +859,22 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
   return (
     <main className="min-h-screen bg-surface">
       {/* Header */}
-      <div className="bg-surface-2 border-b border-border px-4 py-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <Link href="/nl/dashboard" className="text-content-muted hover:text-content text-sm">
+      <div className="bg-surface-2 border-b border-border px-6 py-6">
+        <div className="max-w-admin mx-auto">
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/nl/dashboard" className="text-content-muted hover:text-brand-primary text-sm transition-colors">
               ← Dashboard
             </Link>
           </div>
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold text-content">{tournament.name}</h1>
-              <p className="text-sm text-content-muted">
+              <h1 className="text-heading font-serif text-content">{tournament.name}</h1>
+              <p className="text-caption text-content-muted mt-2">
                 {courseName} · {tournament.format} · {tournament.scoring_type === 'gross' ? 'Bruto' : 'Netto'}
                 {tournament.start_date && ` · ${format.dateTime(new Date(tournament.start_date), { day: 'numeric', month: 'short', year: 'numeric' })}`}
               </p>
             </div>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${sc.className}`}>
+            <span className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide shrink-0 ${sc.className}`}>
               {sc.label}
             </span>
           </div>
@@ -882,12 +882,12 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Status acties */}
-      <div className="bg-surface-2/50 border-b border-border px-4 py-3">
-        <div className="max-w-4xl mx-auto flex flex-wrap gap-2">
+      <div className="bg-surface-2/50 border-b border-border px-6 py-4">
+        <div className="max-w-admin mx-auto flex flex-wrap gap-2.5">
           {tournament.status === 'draft' && (
             <button
               onClick={() => updateStatus('active')}
-              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg"
+              className="px-5 py-2.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold transition-colors"
             >
               ▶ Toernooi starten
             </button>
@@ -896,13 +896,13 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
             <>
               <button
                 onClick={() => setShowPauseModal(true)}
-                className="px-4 py-2 bg-yellow-700 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg"
+                className="px-5 py-2.5 rounded-button bg-amber-800 hover:bg-amber-700 text-white text-sm font-semibold transition-colors"
               >
                 ⏸ Pauzeren
               </button>
               <button
                 onClick={() => updateStatus('finished')}
-                className="px-4 py-2 bg-blue-800 hover:bg-blue-700 text-white text-sm font-medium rounded-lg"
+                className="px-5 py-2.5 rounded-button bg-blue-900 hover:bg-blue-800 text-white text-sm font-semibold transition-colors"
               >
                 ✓ Afsluiten
               </button>
@@ -913,7 +913,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                       updateStatus('draft');
                     }
                   }}
-                  className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
+                  className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 text-content text-sm font-semibold transition-colors"
                   title="Alleen mogelijk zolang er nog geen scores zijn ingevoerd"
                 >
                   ↩ Terug naar concept
@@ -925,7 +925,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
             <>
               <button
                 onClick={() => updateStatus('active', { pause_reason: null })}
-                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg"
+                className="px-5 py-2.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold transition-colors"
               >
                 ▶ Hervatten
               </button>
@@ -936,7 +936,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                       updateStatus('draft', { pause_reason: null });
                     }
                   }}
-                  className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
+                  className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 text-content text-sm font-semibold transition-colors"
                   title="Alleen mogelijk zolang er nog geen scores zijn ingevoerd"
                 >
                   ↩ Terug naar concept
@@ -947,7 +947,7 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
           {tournament.status === 'finished' && (
             <button
               onClick={() => updateStatus('active')}
-              className="px-4 py-2 bg-surface-3 hover:bg-border-strong text-content text-sm font-medium rounded-lg"
+              className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 text-content text-sm font-semibold transition-colors"
             >
               ↩ Heropenen
             </button>
@@ -955,13 +955,13 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
           <Link
             href={`/nl/tournament/${id}`}
             target="_blank"
-            className="px-4 py-2 bg-surface-3 hover:bg-surface-4 text-content text-sm font-medium rounded-lg"
+            className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 text-content text-sm font-semibold transition-colors"
           >
             👁 Leaderboard
           </Link>
           <button
             onClick={() => copyToClipboard(leaderboardUrl, 'url')}
-            className="px-4 py-2 bg-surface-3 hover:bg-surface-4 text-content text-sm font-medium rounded-lg"
+            className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 text-content text-sm font-semibold transition-colors"
           >
             {copied === 'url' ? '✅ Gekopieerd!' : '🔗 Link kopiëren'}
           </button>
@@ -969,15 +969,15 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-border px-4 overflow-x-auto">
-        <div className="max-w-4xl mx-auto flex gap-4 min-w-max">
+      <div className="border-b border-border px-6 overflow-x-auto">
+        <div className="max-w-admin mx-auto flex gap-6 min-w-max">
           {tabs.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key
-                  ? 'border-green-500 text-content'
+                  ? 'border-brand-primary text-content'
                   : 'border-transparent text-content-muted hover:text-content'
               }`}
             >
@@ -987,21 +987,21 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-admin mx-auto px-6 py-10">
         {/* ===== TAB: Overzicht ===== */}
         {activeTab === 'overview' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: 'Spelers', value: players.length },
                 { label: 'Actief', value: players.filter(p => !['withdrawn','dns','dnf','dsq'].includes(p.status)).length },
                 { label: 'Categorieën', value: categories.length },
                 { label: 'Flights', value: flights.length },
               ].map(({ label, value }) => (
-                <div key={label} className="bg-surface-2 border border-border rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-content">{value}</p>
-                  <p className="text-xs text-content-muted mt-1">{label}</p>
+                <div key={label} className="bg-surface-2 border border-border rounded-card p-6 text-center">
+                  <p className="text-3xl font-bold text-content">{value}</p>
+                  <p className="text-xs text-content-muted mt-2 tracking-wide uppercase">{label}</p>
                 </div>
               ))}
             </div>
@@ -1012,33 +1012,33 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
             )}
 
             {tournament.format === 'matchplay' && (
-              <div className="bg-surface-2 border border-border rounded-2xl p-5 space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="bg-surface-2 border border-border rounded-card p-6 space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-bold text-content">Matchplay flow</h2>
-                    <p className="text-sm text-content-muted mt-1">
+                    <h2 className="text-subheading font-serif text-content">Matchplay flow</h2>
+                    <p className="text-body text-content-muted mt-2">
                       Genereer de eerste 1-op-1 paringen voor het toernooi. Zodra scores per hole zijn ingevoerd, verschijnt de stand direct op het publieke leaderboard.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2.5">
                     <button
                       onClick={generateMatchplayPairings}
                       disabled={matchplayBusy}
-                      className="px-4 py-2 bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg"
+                      className="px-5 py-2.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 text-content-inverse text-sm font-semibold transition-colors"
                     >
                       {matchplayBusy ? 'Bezig...' : 'Genereer paringen'}
                     </button>
                     <button
                       onClick={clearMatchplayPairings}
                       disabled={matchplayBusy}
-                      className="px-4 py-2 bg-surface-3 hover:bg-surface-4 disabled:opacity-50 text-content text-sm font-medium rounded-lg"
+                      className="px-5 py-2.5 rounded-button bg-surface-3 hover:bg-surface-4 disabled:opacity-50 text-content text-sm font-semibold transition-colors"
                     >
                       Wis paringen
                     </button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface/70 px-3 py-3">
+                <div className="flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface/70 px-4 py-3">
                   <label className="text-sm text-content-muted">Actieve ronde</label>
                   <input
                     type="number"
@@ -1046,17 +1046,17 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                     max={tournament.rounds}
                     value={activeMatchplayRound}
                     onChange={(event) => setActiveMatchplayRound(Number(event.target.value) || 1)}
-                    className="w-20 rounded-lg border border-border-strong bg-surface-2 px-3 py-2 text-sm text-content"
+                    className="w-20 rounded-button border border-border-strong bg-surface-2 px-3 py-2 text-sm text-content"
                   />
                   <button
                     onClick={() => updateActiveMatchplayRound(activeMatchplayRound)}
-                    className="rounded-lg bg-surface-3 px-3 py-2 text-sm text-content hover:bg-surface-4"
+                    className="rounded-button bg-surface-3 px-3 py-2 text-sm text-content hover:bg-surface-4 transition-colors"
                   >
                     Opslaan ronde
                   </button>
                   <button
                     onClick={advanceMatchplayRound}
-                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-content hover:bg-emerald-600"
+                    className="rounded-button bg-brand-primary hover:bg-brand-primary-hover px-3 py-2 text-sm text-content-inverse transition-colors"
                   >
                     Volgende ronde
                   </button>
@@ -1068,17 +1068,17 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                 ) : (
                   <div className="space-y-2">
                     {matchplayPairings.map((pairing, index) => (
-                      <div key={pairing.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface/70 px-3 py-2 text-sm">
+                      <div key={pairing.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface/70 px-4 py-3 text-sm">
                         <div>
-                          <p className="font-medium text-content">{index + 1}. {pairing.player_a_name} vs {pairing.player_b_name}</p>
-                          <p className="text-xs text-content-muted">live zodra scores binnenkomen</p>
+                          <p className="font-semibold text-content">{index + 1}. {pairing.player_a_name} vs {pairing.player_b_name}</p>
+                          <p className="text-xs text-content-muted mt-0.5">live zodra scores binnenkomen</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs text-content-muted">Ronde</label>
                           <select
                             value={pairing.round_number}
                             onChange={(event) => updateMatchplayPairingRound(pairing.id, Number(event.target.value) || 1)}
-                            className="rounded-lg border border-border-strong bg-surface-2 px-2.5 py-1.5 text-sm text-content"
+                            className="rounded-button border border-border-strong bg-surface-2 px-2.5 py-1.5 text-sm text-content"
                           >
                             {Array.from({ length: tournament.rounds }, (_, roundIndex) => roundIndex + 1).map((roundNumber) => (
                               <option key={roundNumber} value={roundNumber}>
@@ -1100,12 +1100,12 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
             {flights.length > 0 ? (
               <>
                 {/* Sub-tabs: Leaderboard / Startlijst */}
-                <div className="flex gap-1 border-b border-border">
+                <div className="flex gap-1 border-b border-border mt-6">
                   <button
                     onClick={() => setOverviewView('leaderboard')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                       overviewView === 'leaderboard'
-                        ? 'border-green-500 text-content'
+                        ? 'border-brand-primary text-content'
                         : 'border-transparent text-content-muted hover:text-content'
                     }`}
                   >
@@ -1113,9 +1113,9 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                   </button>
                   <button
                     onClick={() => setOverviewView('startlist')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                       overviewView === 'startlist'
-                        ? 'border-green-500 text-content'
+                        ? 'border-brand-primary text-content'
                         : 'border-transparent text-content-muted hover:text-content'
                     }`}
                   >
@@ -1125,9 +1125,9 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
 
                 {/* Leaderboard content */}
                 {overviewView === 'leaderboard' && (
-                  <div className="bg-surface-2 border border-border rounded-2xl p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold text-content">Leaderboard</h2>
+                  <div className="bg-surface-2 border border-border rounded-card p-6 mt-6">
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="text-subheading font-serif text-content">Leaderboard</h2>
                       {tournament.status === 'active' && <LiveBadge />}
                     </div>
                     <LeaderboardClient
@@ -1143,11 +1143,11 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                       flightCount={flights.length}
                       hideExtras
                     />
-                    <div className="mt-4 text-center">
+                    <div className="mt-5 text-center">
                       <Link
                         href={`/nl/tournament/${id}`}
                         target="_blank"
-                        className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                        className="text-sm text-brand-primary hover:text-brand-primary-hover transition-colors"
                       >
                         Volledig leaderboard bekijken →
                       </Link>
@@ -1157,32 +1157,32 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
 
                 {/* Startlijst content */}
                 {overviewView === 'startlist' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 mt-6">
                     {flights.map((f) => {
                       const catName = categories.find(c => c.id === f.category_id)?.name;
                       const playersInFlight = players.filter(p => p.flight_id === f.id);
                       return (
-                        <div key={f.id} className="bg-surface-2 border border-border rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-3">
+                        <div key={f.id} className="bg-surface-2 border border-border rounded-card p-5">
+                          <div className="flex items-center justify-between mb-4">
                             <div>
                               {f.name?.trim() && (
-                                <h4 className="text-content font-semibold text-sm">{f.name}</h4>
+                                <h4 className="text-content font-semibold text-base">{f.name}</h4>
                               )}
-                              <p className="text-xs text-content-muted mt-0.5">
+                              <p className="text-xs text-content-muted mt-1">
                                 {f.start_time && format.dateTime(new Date(f.start_time), { hour: '2-digit', minute: '2-digit' })}
                                 {f.tee_number && ` · Hole ${f.tee_number}`}
                                 {catName && ` · ${catName}`}
                               </p>
                             </div>
-                            <span className="text-xs text-content-muted">{playersInFlight.length} spelers</span>
+                            <span className="text-xs text-content-muted font-medium">{playersInFlight.length} spelers</span>
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             {playersInFlight.length === 0 ? (
                               <p className="text-xs text-content-muted italic">Geen spelers</p>
                             ) : (
                               playersInFlight.map(pl => (
-                                <div key={pl.id} className="bg-surface-3 rounded-lg px-3 py-2 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
+                                <div key={pl.id} className="bg-surface-3 rounded-button px-4 py-2.5 flex items-center justify-between">
+                                  <div className="flex items-center gap-2.5">
                                     <span className="text-sm text-content">{pl.name}</span>
                                     {pl.handicap !== null && (
                                       <span className="text-content-muted text-xs">HCP {pl.handicap}</span>
@@ -1203,9 +1203,9 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
               </>
             ) : (
               /* No flights: show leaderboard only */
-              <div className="bg-surface-2 border border-border rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-content">Leaderboard</h2>
+              <div className="bg-surface-2 border border-border rounded-card p-6 mt-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-subheading font-serif text-content">Leaderboard</h2>
                   {tournament.status === 'active' && <LiveBadge />}
                 </div>
                 <LeaderboardClient
@@ -1221,20 +1221,20 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                   hideExtras
                 />
                 {tournament.status === 'draft' && (
-                  <div className="mt-4 text-center">
+                  <div className="mt-5 text-center">
                     <button
                       onClick={() => setActiveTab('flights')}
-                      className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                      className="text-sm text-brand-primary hover:text-brand-primary-hover transition-colors"
                     >
                       Genereer flights om de startlijst te tonen →
                     </button>
                   </div>
                 )}
-                <div className="mt-4 text-center">
+                <div className="mt-5 text-center">
                   <Link
                     href={`/nl/tournament/${id}`}
                     target="_blank"
-                    className="text-sm text-green-500 hover:text-green-400 transition-colors"
+                    className="text-sm text-brand-primary hover:text-brand-primary-hover transition-colors"
                   >
                     Volledig leaderboard bekijken →
                   </Link>
