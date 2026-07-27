@@ -319,6 +319,21 @@
     "session_check_failed": "Kon je inlogstatus niet controleren door een technische storing. We proberen het opnieuw.",
     "supabase_outage": "Kan geen contact maken met de server door een technische storing. Probeer het over enkele minuten opnieuw."
   },
+  "home": {
+    "heroLabel": "Gratis · Open source · Live scoring",
+    "heroTitle": "Golf toernooien, zonder poespas.",
+    "heroSubtitle": "OpenTour is het platform voor live scoring, deelnemersbeheer en leaderboards. Voor clubs en vriendengroepen — van Dutch Open tot zaterdagochtend competitie.",
+    "heroCtaPrimary": "Maak je eerste toernooi",
+    "heroCtaDashboard": "Mijn dashboard",
+    "heroCtaSecondary": "Score invoeren",
+    "featuresTitle": "Alles wat je nodig hebt",
+    "featuresSubtitle": "Van aanmaken tot uitslag — OpenTour begeleidt je bij elke stap.",
+    "testimonialsTitle": "Wat gebruikers zeggen",
+    "finalCtaTitle": "Klaar om te beginnen?",
+    "finalCtaSubtitle": "Geen creditcard, geen abonnement, geen lock-in. Maak in 5 minuten je eerste toernooi aan.",
+    "finalCtaPrimary": "Start nu — gratis",
+    "finalCtaSecondary": "Al een account? Ga naar dashboard"
+  },
   "dashboard": {
     "title": "Mijn toernooien",
     "newTournament": "+ Nieuw toernooi",

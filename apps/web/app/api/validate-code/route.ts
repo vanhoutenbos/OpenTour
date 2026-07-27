@@ -7,8 +7,8 @@ const attempts = new Map<string, { count: number; resetAt: number }>();
 
 function getRateLimitKey(request: NextRequest): string {
   const xff = request.headers.get('x-forwarded-for');
-  const ipFromXff = xff ? xff.split(',')[0].trim() : null;
-  const ip = ipFromXff || request.ip || 'unknown';
+  const ipFromXff = typeof xff === 'string' ? xff.split(',')[0]?.trim() : null;
+  const ip = ipFromXff ?? 'unknown';
   return `rl:${ip}`;
 }
 

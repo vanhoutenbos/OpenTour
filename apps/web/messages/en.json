@@ -319,6 +319,21 @@
     "session_check_failed": "Couldn't verify your login status due to a technical issue. We're trying again.",
     "supabase_outage": "Can't reach the server due to a technical issue. Please try again in a few minutes."
   },
+  "home": {
+    "heroLabel": "Free · Open source · Live scoring",
+    "heroTitle": "Golf tournaments, without the fuss.",
+    "heroSubtitle": "OpenTour is the platform for live scoring, player management, and leaderboards. For clubs and friend groups — from Dutch Open to Saturday morning competition.",
+    "heroCtaPrimary": "Create your first tournament",
+    "heroCtaDashboard": "My dashboard",
+    "heroCtaSecondary": "Enter scores",
+    "featuresTitle": "Everything you need",
+    "featuresSubtitle": "From creation to results — OpenTour guides you through every step.",
+    "testimonialsTitle": "What users say",
+    "finalCtaTitle": "Ready to get started?",
+    "finalCtaSubtitle": "No credit card, no subscription, no lock-in. Create your first tournament in 5 minutes.",
+    "finalCtaPrimary": "Start now — free",
+    "finalCtaSecondary": "Already have an account? Go to dashboard"
+  },
   "dashboard": {
     "title": "My tournaments",
     "newTournament": "+ New tournament",
