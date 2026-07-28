@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const DEV_PASSWORD = process.env.DEV_MAGIC_LINK_PASSWORD
-  || (process.env.NODE_ENV === 'development'
-    ? (console.warn('DEV_MAGIC_LINK_PASSWORD is not set; using insecure development fallback password'), 'dev-password-opentour-2025')
-    : (() => { throw new Error('DEV_MAGIC_LINK_PASSWORD is not set and NODE_ENV is not development'); })());
+function getDevPassword(): string {
+  const password = process.env.DEV_MAGIC_LINK_PASSWORD;
+
+  if (password) {
+    return password;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('DEV_MAGIC_LINK_PASSWORD is not set; using insecure development fallback password');
+    return 'dev-password-opentour-2025';
+  }
+
+  throw new Error('DEV_MAGIC_LINK_PASSWORD is not set and NODE_ENV is not development');
+}
 
 export async function POST(request: NextRequest) {
   const devEnabled =
@@ -14,6 +24,8 @@ export async function POST(request: NextRequest) {
   if (!devEnabled) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
+
+  const DEV_PASSWORD = getDevPassword();
 
   let email: string;
   try {
@@ -51,8 +63,6 @@ export async function POST(request: NextRequest) {
       if (createError) throw new Error(`User aanmaken mislukt: ${createError.message}`);
     }
 
-    // Inloggen met wachtwoord — geef tokens terug aan de browser client
-    // zodat die setSession() kan aanroepen en de sessie correct initialiseert
     const anonSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
