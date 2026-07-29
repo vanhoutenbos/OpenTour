@@ -20,7 +20,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale}>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={['light','dark','system']}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem themes={['light','dark','system']}>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Navbar />
             {children}
