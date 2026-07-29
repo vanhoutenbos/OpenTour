@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
-
 export default function RootPage() {
-  redirect('/nl');
+  return <div>Root page</div>;
 }
