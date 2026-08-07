@@ -11,6 +11,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL('/nl', request.url));
+  }
+
   const response = NextResponse.next();
 
   // Sessie verversen op elke pagina
