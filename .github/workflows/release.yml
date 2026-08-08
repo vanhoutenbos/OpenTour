@@ -10,6 +10,7 @@ jobs:
   #   ...
 
   db-migrate:
+    if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && secrets.SUPABASE_DB_PASSWORD != '' }}
     name: Database Migraties
     runs-on: ubuntu-latest
     steps:
