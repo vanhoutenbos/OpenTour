@@ -87,7 +87,7 @@ export async function StatsSection({ locale }: Props) {
             <div key={i} className="text-center">
               <div className="text-3xl mb-2">{item.icon}</div>
               <div className="text-3xl font-bold text-content">{item.value}</div>
-              <div className="text-sm text-content-muted mt-1">{item.label}</div>
+              <div className="text-sm text-content-secondary mt-1">{item.label}</div>
             </div>
           ))}
         </div>

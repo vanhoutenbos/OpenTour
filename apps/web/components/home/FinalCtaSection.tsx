@@ -17,13 +17,13 @@ export function FinalCtaSection({ locale }: Props) {
           <h2 className="text-heading font-serif text-content mb-4">
             {t('finalCtaTitle')}
           </h2>
-          <p className="text-body text-content-muted mb-10 max-w-xl mx-auto">
+          <p className="text-body text-content-secondary mb-10 max-w-xl mx-auto">
             {t('finalCtaSubtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href={`/${locale}/login`}
-              className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse font-semibold transition-colors text-base"
+              className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold transition-colors text-base"
             >
               {t('finalCtaPrimary')} →
             </Link>

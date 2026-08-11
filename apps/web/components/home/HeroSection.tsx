@@ -26,7 +26,7 @@ export function HeroSection({ locale, isLoggedIn }: Props) {
       <div className="relative z-10 max-w-admin mx-auto px-6 w-full py-20">
         <div className="max-w-2xl">
           {/* Uppercase label */}
-          <p className="text-label text-content-inverse/80 mb-4 tracking-section">
+          <p className="text-label text-white/70 mb-4 tracking-section">
             {t('heroLabel')}
           </p>
 
@@ -36,7 +36,7 @@ export function HeroSection({ locale, isLoggedIn }: Props) {
           </h1>
 
           {/* Body copy */}
-          <p className="text-body text-content-inverse/75 mb-10 max-w-xl leading-relaxed">
+          <p className="text-body text-white/75 mb-10 max-w-xl leading-relaxed">
             {t('heroSubtitle')}
           </p>
 

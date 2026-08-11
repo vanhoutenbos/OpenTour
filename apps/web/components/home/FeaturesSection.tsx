@@ -82,7 +82,7 @@ export function FeaturesSection({ locale }: Props) {
           <h2 className="text-heading font-serif text-content mb-4">
             {locale === 'nl' ? 'Alles wat je nodig heeft' : 'Everything you need'}
           </h2>
-          <p className="text-body text-content-muted max-w-2xl mx-auto">
+          <p className="text-body text-content-secondary max-w-2xl mx-auto">
             {locale === 'nl'
               ? 'Van aanmaken tot uitslag — OpenTour begeleidt je bij elke stap.'
               : 'From creation to results — OpenTour guides you through every step.'}
@@ -100,7 +100,7 @@ export function FeaturesSection({ locale }: Props) {
                 {feature.icon}
               </div>
               <h3 className="text-lg font-semibold text-content mb-2">{feature.title}</h3>
-              <p className="text-body text-content-muted leading-relaxed">{feature.desc}</p>
+              <p className="text-body text-content-secondary leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>

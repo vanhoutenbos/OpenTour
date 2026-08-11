@@ -30,7 +30,7 @@ export function TestimonialsSection({ locale }: Props) {
       <div className="max-w-admin mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-14">
-          <p className="text-label text-content-muted mb-3 tracking-section">
+          <p className="text-label text-content-secondary mb-3 tracking-section">
             {locale === 'nl' ? 'GETUIGENISSEN' : 'TESTIMONIALS'}
           </p>
           <h2 className="text-heading font-serif text-content">
