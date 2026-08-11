@@ -31,7 +31,7 @@ export function HeroSection({ locale, isLoggedIn }: Props) {
           </p>
 
           {/* Serif headline */}
-          <h1 className="text-display font-serif text-content-inverse mb-6 text-balance">
+          <h1 className="text-display font-serif text-white mb-6 text-balance">
             {t('heroTitle')}
           </h1>
 
@@ -44,21 +44,21 @@ export function HeroSection({ locale, isLoggedIn }: Props) {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={`/${locale}/login`}
-              className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse font-semibold transition-colors text-base"
+              className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-white font-semibold transition-colors text-base"
             >
               {t('heroCtaPrimary')} →
             </Link>
             {isLoggedIn ? (
               <Link
                 href={`/${locale}/dashboard`}
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-content-inverse/10 hover:bg-content-inverse/20 text-content-inverse font-semibold transition-colors text-base backdrop-blur-sm"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors text-base backdrop-blur-sm"
               >
                 {t('heroCtaDashboard')} →
               </Link>
             ) : (
               <Link
                 href={`/${locale}/scorer`}
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-content-inverse/10 hover:bg-content-inverse/20 text-content-inverse font-semibold transition-colors text-base backdrop-blur-sm"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-button bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors text-base backdrop-blur-sm"
               >
                 {t('heroCtaSecondary')}
               </Link>
