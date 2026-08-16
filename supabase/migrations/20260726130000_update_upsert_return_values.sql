@@ -1,5 +1,7 @@
 -- OpenTour — Migratie: upsert_score_if_newer retourneert score_id + was_updated
 
+DROP FUNCTION IF EXISTS upsert_score_if_newer(UUID, UUID, UUID, INT, INT, TIMESTAMPTZ);
+
 CREATE OR REPLACE FUNCTION upsert_score_if_newer(
   p_tournament_id UUID,
   p_player_id     UUID,
