@@ -16,7 +16,7 @@
     "@opentour/supabase": "*",
     "@opentour/types": "*",
     "@supabase/ssr": "^0.12.3",
-    "@supabase/supabase-js": "^2.110.8",
+    "@supabase/supabase-js": "^2.112.3",
     "@vercel/speed-insights": "^2.0.0",
     "dexie": "^3.2.7",
     "next": "^16.0.0",
