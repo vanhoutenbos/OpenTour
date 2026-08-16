@@ -33,7 +33,7 @@ class OpenTourDB extends Dexie {
   constructor() {
     super('opentour');
     this.version(1).stores({
-      pending_scores: 'localId, tournament_id, player_id, hole_id, synced',
+      pending_scores: '++localId, tournament_id, player_id, hole_id, synced',
       local_tournaments: 'id',
       local_flights: 'id, tournament_id',
     });
@@ -49,13 +49,13 @@ export async function saveScoreLocally(score: Omit<PendingScore, 'localId' | 'sy
 }
 
 export async function getPendingScores(): Promise<PendingScore[]> {
-  return db.pending_scores.where('synced').equals(0).toArray();
+  return db.pending_scores.filter(s => s.synced === false).toArray();
 }
 
 export async function markScoreSynced(localId: string): Promise<void> {
-  await db.pending_scores.update(localId, { synced: true });
+  await db.pending_scores.where('localId').equals(localId).modify({ synced: true });
 }
 
 export async function markSyncError(localId: string, error: string): Promise<void> {
-  await db.pending_scores.update(localId, { sync_error: error });
+  await db.pending_scores.where('localId').equals(localId).modify({ sync_error: error });
 }

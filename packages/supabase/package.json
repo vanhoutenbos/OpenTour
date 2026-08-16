@@ -2,16 +2,22 @@
   "name": "@opentour/supabase",
   "version": "0.1.0",
   "private": true,
+  "description": "Supabase database functions and tests for OpenTour",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "gen-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/database.types.ts"
+    "gen-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/database.types.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8"
   },
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "@types/pg": "^8.11.6",
+    "pg": "^8.12.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }

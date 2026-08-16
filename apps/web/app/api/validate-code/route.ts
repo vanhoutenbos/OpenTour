@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_SECONDS = 60;
+const TEN_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 10;
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -105,12 +107,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session: RecorderSession = {
-      tournamentId: accessCode.tournament_id,
-      accessCodeId: accessCode.id,
-      expiresAt: accessCode.expires_at,
-    };
-
     const response = NextResponse.json(
       { valid: true, tournamentId: accessCode.tournament_id },
       {
@@ -120,6 +116,68 @@ export async function POST(request: NextRequest) {
         },
       }
     );
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, {
+                ...options,
+                path: '/',
+                sameSite: 'lax',
+                maxAge: options?.maxAge ?? TEN_YEARS_IN_SECONDS,
+              });
+            });
+          },
+        },
+      }
+    );
+
+    const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+
+    if (authError || !authData.user) {
+      return NextResponse.json(
+        { error: 'Aanmelding mislukt' },
+        { status: 500, headers: { 'Content-Type': 'application/json', 'X-RateLimit-Remaining': String(remaining) } }
+      );
+    }
+
+    const userId = authData.user.id;
+
+    const adminSupabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return [];
+          },
+          setAll() {},
+        },
+      }
+    );
+
+    await adminSupabase.from('recorder_sessions').upsert(
+      {
+        user_id: userId,
+        access_code_id: accessCode.id,
+        tournament_id: accessCode.tournament_id,
+        expires_at: accessCode.expires_at,
+      },
+      { onConflict: 'user_id,tournament_id' }
+    );
+
+    const session: RecorderSession = {
+      tournamentId: accessCode.tournament_id,
+      accessCodeId: accessCode.id,
+      expiresAt: accessCode.expires_at,
+    };
 
     response.cookies.set('recorder_session', JSON.stringify(session), {
       httpOnly: true,

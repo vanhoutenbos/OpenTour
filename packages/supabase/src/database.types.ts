@@ -407,7 +407,10 @@ export interface Database {
           p_strokes: number;
           p_updated_at: string;
         };
-        Returns: void;
+        Returns: {
+          score_id: string;
+          was_updated: boolean;
+        };
       };
       generate_access_code: {
         Args: Record<never, never>;
@@ -438,6 +441,13 @@ export interface Database {
           p_tournament_id: string;
           p_sort_by: string;
           p_split_by_category: boolean;
+        };
+        Returns: void;
+      };
+      ladder_seed_rungs: {
+        Args: {
+          p_tournament_id: string;
+          p_seeding_method: string;
         };
         Returns: void;
       };

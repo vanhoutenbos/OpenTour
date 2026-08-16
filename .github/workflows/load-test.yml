@@ -1,0 +1,45 @@
+name: Load Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    name: Leaderboard Load Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y k6
+      - name: Start dev server
+        run: |
+          npm install
+          npm run build
+          npm run start &
+          npx wait-on http://localhost:3000
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Run load test
+        run: |
+          k6 run \
+            --out json=loadtests/results.json \
+            --env BASE_URL=http://localhost:3000 \
+            --env TOURNAMENT_ID=${{ secrets.TEST_TOURNAMENT_ID }} \
+            loadtests/leaderboard.js
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results
+          path: loadtests/results.json

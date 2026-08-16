@@ -8,6 +8,7 @@ import { TeeManagerSection, type TeeRecord } from '@/components/course/TeeManage
 import { HoleManagerSection, type HoleRecord } from '@/components/course/HoleManagerSection';
 import { LoopManagerSection, type LoopRecord } from '@/components/course/LoopManagerSection';
 import { LoopRatingsSection, type LoopSummary, type LoopTeeRatingRecord } from '@/components/course/LoopRatingsSection';
+import { CourseEditTabs } from '@/components/CourseEditTabs';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface CourseHeader {
@@ -209,6 +210,8 @@ export default function EditCoursePage() {
 
 
 
+  const [activeTab, setActiveTab] = useState<'algemeen' | 'tees' | 'holes' | 'lussen'>('algemeen');
+
   return (
     <main className="min-h-screen bg-surface py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -250,83 +253,85 @@ export default function EditCoursePage() {
         )}
 
         {courseHeader && !loading && !error && (
-          <div className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6 space-y-5">
-            <div>
-              <h2 className="text-lg font-semibold text-content">Structuur in één oogopslag</h2>
-              <p className="text-sm text-content-muted mt-1">
-                Dit is de huidige indeling van de baan. Alleen de eigenaar kan deze gegevens aanpassen.
-              </p>
-            </div>
+          <CourseEditTabs>
+            {(tab) => (
+              <div className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6 space-y-5">
+                {tab === 'algemeen' && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-content">Algemeen</h2>
+                    <p className="text-sm text-content-muted mt-1">
+                      Dit is de huidige indeling van de baan. Alleen de eigenaar kan deze gegevens aanpassen.
+                    </p>
+                    <div className="rounded-xl border border-border bg-surface p-4 space-y-2 mt-4">
+                      <p className="text-sm font-medium text-content">Laatste status</p>
+                      <p className="text-sm text-content-muted">
+                        Submit/publicatie komt later. Voor nu is deze baan alleen zichtbaar en bewerkbaar voor de eigenaar.
+                      </p>
+                    </div>
+                    {initialData && (
+                      <CourseBuilderForm
+                        locale={locale}
+                        mode="edit"
+                        initialData={initialData}
+                        onCancel={() => window.history.back()}
+                        onSaved={() => {
+                          window.location.href = `/${locale}/course`;
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
 
-            <div className="rounded-xl border border-border bg-surface p-4 space-y-2">
-              <p className="text-sm font-medium text-content">Laatste status</p>
-              <p className="text-sm text-content-muted">
-                Submit/publicatie komt later. Voor nu is deze baan alleen zichtbaar en bewerkbaar voor de eigenaar.
-              </p>
-            </div>
+                {tab === 'tees' && (
+                  <TeeManagerSection
+                    courseId={courseId}
+                    initialTees={tees}
+                    onTeesChanged={(updated) => {
+                      setTees(updated);
+                      setTeeCount(updated.length);
+                    }}
+                  />
+                )}
 
-            <TeeManagerSection
-              courseId={courseId}
-              initialTees={tees}
-              onTeesChanged={(updated) => {
-                setTees(updated);
-                setTeeCount(updated.length);
-              }}
-            />
+                {tab === 'holes' && (
+                  <HoleManagerSection
+                    courseId={courseId}
+                    initialHoles={holes}
+                    onHolesChanged={(updated) => {
+                      setHoles(updated);
+                      setCourseHeader((prev) => (prev ? { ...prev, holes_count: updated.length } : prev));
+                    }}
+                  />
+                )}
 
-            <HoleManagerSection
-              courseId={courseId}
-              initialHoles={holes}
-              onHolesChanged={(updated) => {
-                setHoles(updated);
-                setCourseHeader((prev) => (prev ? { ...prev, holes_count: updated.length } : prev));
-              }}
-            />
-
-            <LoopManagerSection
-              courseId={courseId}
-              holes={holeRefs}
-              tees={tees.map((tee) => ({
-                id: tee.id,
-                label: [tee.color ?? tee.name ?? tee.external_id, tee.gender ? `(${tee.gender})` : null]
-                  .filter(Boolean)
-                  .join(' '),
-              }))}
-              initialLoops={loops}
-              onLoopsChanged={(updated) => {
-                setLoops(updated);
-                setLoopCount(updated.length);
-              }}
-            />
-
-            <LoopRatingsSection
-              loops={loopSummaries}
-              tees={tees}
-              initialRatings={loopTeeRatings}
-            />
-          </div>
+                {tab === 'lussen' && (
+                  <>
+                    <LoopManagerSection
+                      courseId={courseId}
+                      holes={holeRefs}
+                      tees={tees.map((tee) => ({
+                        id: tee.id,
+                        label: [tee.color ?? tee.name ?? tee.external_id, tee.gender ? `(${tee.gender})` : null]
+                          .filter(Boolean)
+                          .join(' '),
+                      }))}
+                      initialLoops={loops}
+                      onLoopsChanged={(updated) => {
+                        setLoops(updated);
+                        setLoopCount(updated.length);
+                      }}
+                    />
+                    <LoopRatingsSection
+                      loops={loopSummaries}
+                      tees={tees}
+                      initialRatings={loopTeeRatings}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+          </CourseEditTabs>
         )}
-
-        <div className="rounded-2xl border border-border bg-surface-2 p-5 md:p-6">
-          {loading ? (
-            <div className="flex items-center gap-2 text-content-muted text-sm">
-              <span className="w-4 h-4 border-2 border-border-strong border-t-transparent rounded-full animate-spin" />
-              Laden...
-            </div>
-          ) : error ? (
-            <p className="text-sm text-red-400">{error}</p>
-          ) : courseHeader && initialData ? (
-            <CourseBuilderForm
-              locale={locale}
-              mode="edit"
-              initialData={initialData}
-              onCancel={() => window.history.back()}
-              onSaved={() => {
-                window.location.href = `/${locale}/course`;
-              }}
-            />
-          ) : null}
-        </div>
       </div>
     </main>
   );

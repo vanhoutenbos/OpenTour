@@ -1,5 +1,10 @@
 const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: false,
+});
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ygewcjsrpewwhiqgcmyn.supabase.co';
 
@@ -37,4 +42,4 @@ const nextConfig = {
   transpilePackages: ['@opentour/types', '@opentour/supabase', '@opentour/i18n'],
 };
 
-module.exports = withNextIntl(nextConfig);
+module.exports = withPWA(withNextIntl(nextConfig));

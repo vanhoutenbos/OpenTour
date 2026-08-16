@@ -169,47 +169,50 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
     ]);
   };
 
-  const validate = (): string | null => {
-    if (!name.trim()) return 'Naam is verplicht.';
-    if (holes.length < 9) return 'Voeg minimaal 9 holes toe.';
-    if (tees.length === 0) return 'Voeg minimaal 1 teebox toe.';
-    if (loops.length === 0) return 'Voeg minimaal 1 lus toe.';
+   const validate = (): string | null => {
+     if (!name.trim()) return 'Naam is verplicht.';
+     if (holes.length < 9) return 'Voeg minimaal 9 holes toe.';
+     if (tees.length === 0) return 'Voeg minimaal 1 teebox toe.';
+     if (loops.length === 0) return 'Voeg minimaal 1 lus toe.';
 
-    const holeNumbers = holes.map((hole) => hole.number);
-    const strokeIndexes = holes.map((hole) => hole.stroke_index);
+     const holeNumbers = holes.map((hole) => hole.number);
+     const strokeIndexes = holes.map((hole) => hole.stroke_index);
 
-    if (!unique(holeNumbers)) return 'Hole nummers moeten uniek zijn.';
-    if (!unique(strokeIndexes)) return 'Stroke index moet uniek zijn binnen een baan.';
+     if (!unique(holeNumbers)) return 'Hole nummers moeten uniek zijn.';
+     if (!unique(strokeIndexes)) return 'Stroke index moet uniek zijn binnen een baan.';
 
-    for (const hole of holes) {
-      if (hole.number < 1) return 'Hole nummer moet groter dan 0 zijn.';
-    }
+     const maxHole = Math.max(...holeNumbers);
+     if (maxHole !== holes.length) return `Hole nummers moeten 1 tot ${holes.length} zijn (gevonden: ${maxHole}).`;
 
-    const teeExternalIds = tees.map((tee) => toExternalId(tee.color, tee.gender));
-    if (teeExternalIds.some((externalId) => !externalId)) return 'Elke teebox moet een kleur hebben.';
-    if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke combinatie van kleur en geslacht mag maar 1 keer voorkomen.';
+     for (const hole of holes) {
+       if (hole.number < 1) return 'Hole nummer moet groter dan 0 zijn.';
+     }
 
-    for (const hole of holes) {
-      if (hole.par < 3 || hole.par > 5) return 'Par moet tussen 3 en 5 liggen.';
-      if (hole.stroke_index < 1) return 'Stroke index moet een positief nummer zijn.';
-      for (const teeKey of teeExternalIds) {
-        const distance = hole.distance_meters_by_tee[teeKey];
-        if (distance && (parseInt(distance, 10) < 0 || parseInt(distance, 10) > 999)) {
-          return 'Meters per hole moeten tussen 0 en 999 liggen.';
-        }
-      }
-    }
+     const teeExternalIds = tees.map((tee) => toExternalId(tee.color, tee.gender));
+     if (teeExternalIds.some((externalId) => !externalId)) return 'Elke teebox moet een kleur hebben.';
+     if (new Set(teeExternalIds).size !== teeExternalIds.length) return 'Elke combinatie van kleur en geslacht mag maar 1 keer voorkomen.';
 
-    for (const loop of loops) {
-      if (!loop.name.trim()) return 'Elke lus moet een naam hebben.';
-      if (loop.hole_numbers.length === 0) return `Lus "${loop.name}" heeft geen geselecteerde holes.`;
-      if (!unique(loop.hole_numbers)) return `Lus "${loop.name}" bevat dubbele holes.`;
-      const unknownHole = loop.hole_numbers.find((holeNumber) => !holeNumbers.includes(holeNumber));
-      if (unknownHole) return `Lus "${loop.name}" verwijst naar onbekende hole ${unknownHole}.`;
-    }
+     for (const hole of holes) {
+       if (hole.par < 3 || hole.par > 5) return 'Par moet tussen 3 en 5 liggen.';
+       if (hole.stroke_index < 1) return 'Stroke index moet een positief nummer zijn.';
+       for (const teeKey of teeExternalIds) {
+         const distance = hole.distance_meters_by_tee[teeKey];
+         if (distance && (parseInt(distance, 10) < 0 || parseInt(distance, 10) > 999)) {
+           return 'Meters per hole moeten tussen 0 en 999 liggen.';
+         }
+       }
+     }
 
-    return null;
-  };
+     for (const loop of loops) {
+       if (!loop.name.trim()) return 'Elke lus moet een naam hebben.';
+       if (loop.hole_numbers.length === 0) return `Lus "${loop.name}" heeft geen geselecteerde holes.`;
+       if (!unique(loop.hole_numbers)) return `Lus "${loop.name}" bevat dubbele holes.`;
+       const unknownHole = loop.hole_numbers.find((holeNumber) => !holeNumbers.includes(holeNumber));
+       if (unknownHole) return `Lus "${loop.name}" verwijst naar onbekende hole ${unknownHole}.`;
+     }
+
+     return null;
+   };
 
   const handleSubmit = async () => {
     const validationError = validate();
