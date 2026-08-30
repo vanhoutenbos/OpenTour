@@ -1312,8 +1312,8 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                       className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     >
                       <option value="stableford">Stableford</option>
-                      <option value="stroke">Stroke play</option>
-                      <option value="match">Matchplay</option>
+                      <option value="strokeplay">Stroke play</option>
+                      <option value="matchplay">Matchplay</option>
                     </select>
                   </div>
                   <div>
