@@ -21,7 +21,6 @@ interface Loop {
   name: string;
   holes_count: number;
   loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
-  tee_id: string | null;
   is_default: boolean;
 }
 
@@ -90,13 +89,20 @@ export default function NewTournamentPage() {
     scoring_type: 'gross' as 'gross' | 'net',
     rounds: 1,
     multi_rounds: false,
-    // Laddercompetitie (beta, alleen zichtbaar voor info@vanhoutensolutions.nl —
-    // zie analyseplan §2 en de addendum over competition_type vs. format).
     competition_type: 'single' as 'single' | 'ladder',
     ladder_top_rung_winner_count: 1,
     ladder_handicap_allowance_pct: 100,
     ladder_response_deadline_days: 14,
     ladder_min_matches_per_period: 0,
+    registration_start_date: '',
+    registration_end_date: '',
+    registration_fee: '',
+    max_participants: '',
+    start_format: '',
+    competition_mode: 'individual' as 'individual' | 'team',
+    age_min: '',
+    age_max: '',
+    handicap_calculation: 'none' as 'none' | 'qualifying' | 'social',
   };
 
   const [form, setForm] = useState({ ...defaultForm });
@@ -234,6 +240,15 @@ export default function NewTournamentPage() {
         status: 'draft',
         is_public: true,
         created_by: userData.user.id,
+        registration_start: form.registration_start_date ? `${form.registration_start_date}T00:00:00` : null,
+        registration_end: form.registration_end_date ? `${form.registration_end_date}T00:00:00` : null,
+        registration_fee: form.registration_fee ? parseFloat(form.registration_fee) : null,
+        max_participants: form.max_participants ? parseInt(form.max_participants) : null,
+        start_format: form.start_format || null,
+        competition_mode: form.competition_mode,
+        age_min: form.age_min ? parseInt(form.age_min) : null,
+        age_max: form.age_max ? parseInt(form.age_max) : null,
+        handicap_calculation: form.handicap_calculation,
       })
       .select('id')
       .single();
@@ -497,7 +512,7 @@ export default function NewTournamentPage() {
                   {loops.map((loop) => (
                     <button
                       key={loop.id}
-                      onClick={() => updateForm({ loop_id: loop.id, tee_id: loop.tee_id || '' })}
+                      onClick={() => updateForm({ loop_id: loop.id })}
                       className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${
                         form.loop_id === loop.id ? 'bg-green-900/30 border-green-600 text-content' : 'bg-surface-3 border-border-strong text-content-secondary hover:border-border-strong'
                       }`}
@@ -879,6 +894,13 @@ export default function NewTournamentPage() {
                 { label: 'Format',    value: { stableford: 'Stableford', strokeplay: 'Stroke play', matchplay: 'Matchplay' }[form.format] },
                 { label: 'Scoring',   value: form.scoring_type === 'gross' ? 'Bruto' : 'Netto' },
                 { label: 'Rondes',    value: form.multi_rounds ? `${form.rounds} rondes` : '1 ronde' },
+                { label: 'Inschrijfperiode', value: form.registration_start_date && form.registration_end_date ? `${form.registration_start_date} tot ${form.registration_end_date}` : 'Niet ingesteld' },
+                { label: 'Inschrijftarief', value: form.registration_fee ? `€ ${parseFloat(form.registration_fee).toFixed(2)}` : 'Niet ingesteld' },
+                { label: 'Max deelnemers', value: form.max_participants || 'Niet ingesteld' },
+                { label: 'Startvorm', value: form.start_format || 'Niet ingesteld' },
+                { label: 'Modus', value: form.competition_mode === 'team' ? 'Team' : 'Individueel' },
+                { label: 'Leeftijd', value: form.age_min && form.age_max ? `van ${form.age_min} tot ${form.age_max}` : 'Niet ingesteld' },
+                { label: 'Handicapverrekening', value: form.handicap_calculation === 'qualifying' ? 'Qualifying (WHS)' : form.handicap_calculation === 'social' ? 'Social' : 'Geen' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between px-4 py-3">
                   <span className="text-content-muted text-sm">{label}</span>

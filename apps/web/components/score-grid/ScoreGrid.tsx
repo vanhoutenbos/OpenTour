@@ -222,7 +222,7 @@ export default function ScoreGrid({
     <div className="space-y-4">
       <div className="bg-surface-2 border border-border rounded-xl overflow-hidden">
         <div className="bg-surface-3 px-6 py-4 border-b border-border-strong">
-          <h3 className="text-lg font-semibold text-content">Score in Excel-stijl</h3>
+          <h3 className="text-lg font-semibold text-content">Score in tabel-stijl</h3>
           <p className="text-sm text-content-muted mt-1">
             {sortedPlayers.length} spelers × {sortedHoles.length} holes ronde {currentRound}
             {lastSaved && ` • Laatst opgeslagen: ${format.dateTime(lastSaved, { hour: '2-digit', minute: '2-digit' })}`}

@@ -354,6 +354,8 @@ export interface HoleStat {
   distance_meters?: number;
   stroke_index: number;
   average_score: number;
+  average_stableford_gross?: number;
+  average_stableford_net?: number;
   eagles: number;
   birdies: number;
   pars: number;

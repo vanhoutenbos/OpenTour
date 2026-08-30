@@ -10,7 +10,7 @@ const featuresNl = [
       </svg>
     ),
     title: 'Toernooimaker',
-    desc: 'Maak in 5 minuten een toernooi aan — kies baan, format (stroke/stableford/matchplay), flights en categorieën.',
+    desc: 'Maak in 5 minuten een toernooi aan — kies baan, format (strokeplay/stableford/matchplay), flights en categorieën.',
   },
   {
     icon: (
@@ -46,7 +46,7 @@ const featuresNl = [
       </svg>
     ),
     title: 'Offline-first',
-    desc: 'Geen bereik op de baan? Geen probleem. Scores worden offline opgeslagen en automatisch gesynchroniseerd.',
+    desc: 'Geen bereik op de baan? Geen probleem. Scores worden offline opgeslagen en automatisch gesynchroniseerd zodra er weer bereik is.',
   },
   {
     icon: (

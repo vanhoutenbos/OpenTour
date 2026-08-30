@@ -270,7 +270,11 @@ export function LeaderboardClient({
 
         {/* COURSE STATS */}
         {activeTab === 'coursestats' && (
-          <CourseStats tournamentId={tournamentId} />
+          <CourseStats
+            tournamentId={tournamentId}
+            tournamentFormat={scoringFormat}
+            scoringType={scoringType}
+          />
         )}
 
         {/* LEADERBOARD */}

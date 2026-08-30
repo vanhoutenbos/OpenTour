@@ -6,9 +6,11 @@ import { fetchCourseHoleStats } from '@/lib/fetchLeaderboard';
 
 interface Props {
   tournamentId: string;
+  tournamentFormat?: string;
+  scoringType?: string;
 }
 
-export function CourseStats({ tournamentId }: Props) {
+export function CourseStats({ tournamentId, tournamentFormat, scoringType }: Props) {
   const [stats, setStats] = useState<HoleStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +34,23 @@ export function CourseStats({ tournamentId }: Props) {
   const front = stats.filter((h) => h.hole_number <= 9);
   const back = stats.filter((h) => h.hole_number > 9);
 
+  const isStableford = tournamentFormat === 'stableford';
+
+  const holeScoreValue = (h: HoleStat): number => {
+    if (isStableford) {
+      const pts = scoringType === 'net' ? h.average_stableford_net : h.average_stableford_gross;
+      return pts ?? h.average_score;
+    }
+    return h.average_score;
+  };
+
   const summarize = (holes: HoleStat[]) => ({
     par: holes.reduce((s, h) => s + h.par, 0),
     yards: holes.some((h) => h.distance_meters)
       ? holes.reduce((s, h) => s + (h.distance_meters ?? 0), 0)
       : 0,
     avgScore: holes.length
-      ? holes.reduce((s, h) => s + h.average_score, 0)
+      ? holes.reduce((s, h) => s + holeScoreValue(h), 0)
       : 0,
     eagles: holes.reduce((s, h) => s + h.eagles, 0),
     birdies: holes.reduce((s, h) => s + h.birdies, 0),
@@ -83,7 +95,7 @@ export function CourseStats({ tournamentId }: Props) {
               <th className="py-2 text-center">M</th>
             )}
             <th className="py-2 text-center">SI</th>
-            <th className="py-2 text-center">Ø Score</th>
+            <th className="py-2 text-center">Ø {isStableford ? 'Pnt' : 'Score'}</th>
             <th className="py-2 text-center w-16 text-yellow-400/80">○ Eagle</th>
             <th className="py-2 text-center w-16 text-red-400/80">○ Birdie</th>
             <th className="py-2 text-center w-14">— Par</th>
@@ -101,7 +113,7 @@ export function CourseStats({ tournamentId }: Props) {
                 <td className="py-2 text-center font-mono text-content-muted">{h.distance_meters ?? '-'}</td>
               )}
               <td className="py-2 text-center font-mono text-content-muted">{h.stroke_index}</td>
-              <td className="py-2 text-center font-mono text-content font-bold">{h.average_score.toFixed(1)}</td>
+              <td className="py-2 text-center font-mono text-content font-bold">{holeScoreValue(h).toFixed(1)}</td>
               <td className="py-2 text-center font-mono text-yellow-400">{h.eagles || '-'}</td>
               <td className="py-2 text-center font-mono text-red-400">{h.birdies}</td>
               <td className="py-2 text-center font-mono text-content-secondary">{h.pars}</td>

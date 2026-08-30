@@ -33,7 +33,6 @@ interface LoopRow {
   id: string;
   name: string;
   loop_type: 'full_18' | 'front_9' | 'back_9' | 'custom';
-  tee_id: string | null;
   is_default: boolean | null;
 }
 
@@ -102,7 +101,7 @@ export default function EditCoursePage() {
           .order('number', { ascending: true }),
         supabase
           .from('loops')
-          .select('id, name, loop_type, tee_id, is_default')
+          .select('id, name, loop_type, is_default')
           .eq('course_id', courseId)
           .order('created_at', { ascending: true }),
         supabase
@@ -187,7 +186,6 @@ export default function EditCoursePage() {
           id: loop.id,
           name: loop.name,
           loop_type: loop.loop_type,
-          tee_id: loop.tee_id,
           is_default: loop.is_default ?? false,
           holeNumbers: holeNumbersForLoop,
         };
@@ -309,12 +307,6 @@ export default function EditCoursePage() {
                     <LoopManagerSection
                       courseId={courseId}
                       holes={holeRefs}
-                      tees={tees.map((tee) => ({
-                        id: tee.id,
-                        label: [tee.color ?? tee.name ?? tee.external_id, tee.gender ? `(${tee.gender})` : null]
-                          .filter(Boolean)
-                          .join(' '),
-                      }))}
                       initialLoops={loops}
                       onLoopsChanged={(updated) => {
                         setLoops(updated);

@@ -6,7 +6,7 @@ interface Props {
 
 const testimonialsNl = [
   {
-    quote: 'OpenTour heeft onze toernooien volledig getransformeerd. Wat eerder uren Excel-beheer kostte, is nu in minuten geregeld. De live scoring is een game-changer voor deelnemers.',
+    quote: 'OpenTour heeft onze toernooien volledig getransformeerd. Wat eerder uren Excel-beheer kostte, is nu in minuten geregeld. De live scoring is een game-changer voor deelnemers & toeschouwers.',
     name: 'Mark de Vries',
     role: 'Wedstrijdsecretaris, Golfclub De Eemnes',
     avatar: '/profile_page_maleEDIT.jpg',
@@ -15,7 +15,7 @@ const testimonialsNl = [
 
 const testimonialsEn = [
   {
-    quote: 'OpenTour has completely transformed our tournaments. What used to take hours of Excel management is now handled in minutes. The live scoring is a game-changer for participants.',
+    quote: 'OpenTour has completely transformed our tournaments. What used to take hours of Excel management is now handled in minutes. The live scoring is a game-changer for participants and .',
     name: 'Mark de Vries',
     role: 'Competition Secretary, Golfclub De Eemnes',
     avatar: '/profile_page_maleEDIT.jpg',
@@ -31,7 +31,7 @@ export function TestimonialsSection({ locale }: Props) {
         {/* Section header */}
         <div className="text-center mb-14">
           <p className="text-label text-content-secondary mb-3 tracking-section">
-            {locale === 'nl' ? 'GETUIGENISSEN' : 'TESTIMONIALS'}
+            {locale === 'nl' ? 'REVIEWS' : 'TESTIMONIALS'}
           </p>
           <h2 className="text-heading font-serif text-content">
             {locale === 'nl' ? 'Wat gebruikers zeggen' : 'What users say'}

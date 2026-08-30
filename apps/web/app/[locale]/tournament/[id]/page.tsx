@@ -25,6 +25,15 @@ interface TournamentRow {
   created_by: string;
   created_at: string;
   updated_at: string;
+  registration_start: string | null;
+  registration_end: string | null;
+  registration_fee: number | null;
+  max_participants: number | null;
+  start_format: string | null;
+  competition_mode: string | null;
+  age_min: number | null;
+  age_max: number | null;
+  handicap_calculation: string | null;
 }
 
 interface CourseRow {
@@ -206,6 +215,16 @@ export default async function LeaderboardPage({ params }: Props) {
           rounds={tournament.rounds}
           flights={flights}
           flightCount={flights.length}
+          registrationStart={tournament.registration_start}
+          registrationEnd={tournament.registration_end}
+          registrationFee={tournament.registration_fee}
+          maxParticipants={tournament.max_participants}
+          startFormat={tournament.start_format}
+          competitionMode={tournament.competition_mode}
+          ageMin={tournament.age_min}
+          ageMax={tournament.age_max}
+          handicapCalculation={tournament.handicap_calculation}
+          playerCount={flights.reduce((sum, f) => sum + f.players.length, 0)}
         />
       </Suspense>
     </main>

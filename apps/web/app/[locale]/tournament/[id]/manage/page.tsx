@@ -28,6 +28,15 @@ interface Tournament {
   pause_reason: string | null;
   is_public: boolean;
   created_by: string;
+  registration_start: string | null;
+  registration_end: string | null;
+  registration_fee: number | null;
+  max_participants: number | null;
+  start_format: string | null;
+  competition_mode: string | null;
+  age_min: number | null;
+  age_max: number | null;
+  handicap_calculation: string | null;
 }
 
 interface Player {
@@ -165,7 +174,17 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
     scoring_type: 'gross',
     rounds: 1,
     start_date: '',
+    start_time: '09:00',
     is_public: true,
+    registration_start_date: '',
+    registration_end_date: '',
+    registration_fee: '',
+    max_participants: '',
+    start_format: '',
+    competition_mode: 'individual',
+    age_min: '',
+    age_max: '',
+    handicap_calculation: 'none',
   });
   const [editSaving, setEditSaving] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -249,7 +268,17 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       scoring_type: t.scoring_type,
       rounds: t.rounds,
       start_date: t.start_date ? t.start_date.slice(0, 10) : '',
+      start_time: t.start_date ? new Date(t.start_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
       is_public: t.is_public,
+      registration_start_date: t.registration_start ? t.registration_start.slice(0, 10) : '',
+      registration_end_date: t.registration_end ? t.registration_end.slice(0, 10) : '',
+      registration_fee: t.registration_fee?.toString() ?? '',
+      max_participants: t.max_participants?.toString() ?? '',
+      start_format: t.start_format ?? '',
+      competition_mode: t.competition_mode ?? 'individual',
+      age_min: t.age_min?.toString() ?? '',
+      age_max: t.age_max?.toString() ?? '',
+      handicap_calculation: t.handicap_calculation ?? 'none',
     });
 
     // Vul de starttijd voor in het flight-formulier vanuit de toernooistart
@@ -350,6 +379,22 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
   const saveEdit = async () => {
     setEditSaving(true);
     setEditSuccess(false);
+    
+    let startDatetime: string | null = null;
+    if (editForm.start_date) {
+      const time = editForm.start_time || '09:00';
+      startDatetime = `${editForm.start_date}T${time}:00`;
+    }
+    
+    let registrationStart: string | null = null;
+    let registrationEnd: string | null = null;
+    if (editForm.registration_start_date) {
+      registrationStart = `${editForm.registration_start_date}T00:00:00`;
+    }
+    if (editForm.registration_end_date) {
+      registrationEnd = `${editForm.registration_end_date}T00:00:00`;
+    }
+    
     const { error } = await supabase.from('tournaments').update({
       name: editForm.name,
       description: editForm.description || null,
@@ -357,8 +402,17 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
       format: editForm.format,
       scoring_type: editForm.scoring_type,
       rounds: editForm.rounds,
-      start_date: editForm.start_date || null,
+      start_date: startDatetime,
       is_public: editForm.is_public,
+      registration_start: registrationStart,
+      registration_end: registrationEnd,
+      registration_fee: editForm.registration_fee ? parseFloat(editForm.registration_fee) : null,
+      max_participants: editForm.max_participants ? parseInt(editForm.max_participants) : null,
+      start_format: editForm.start_format || null,
+      competition_mode: editForm.competition_mode,
+      age_min: editForm.age_min ? parseInt(editForm.age_min) : null,
+      age_max: editForm.age_max ? parseInt(editForm.age_max) : null,
+      handicap_calculation: editForm.handicap_calculation,
     }).eq('id', id);
     setEditSaving(false);
     if (!error) {
@@ -1279,13 +1333,11 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-content-muted mb-1.5">Aantal rondes</label>
+                    <label className="block text-sm text-content-muted mb-1.5">Starttijd</label>
                     <input
-                      type="number"
-                      min={1}
-                      max={99}
-                      value={editForm.rounds}
-                      onChange={e => setEditForm(f => ({ ...f, rounds: parseInt(e.target.value) || 1 }))}
+                      type="time"
+                      value={editForm.start_time}
+                      onChange={e => setEditForm(f => ({ ...f, start_time: e.target.value }))}
                       className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
                     />
                   </div>
@@ -1327,6 +1379,100 @@ export default function ManageTournamentPage({ params }: { params: Promise<{ id:
                       <option value="net">Netto</option>
                     </select>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Inschrijfperiode van</label>
+                    <input
+                      type="date"
+                      value={editForm.registration_start_date}
+                      onChange={e => setEditForm(f => ({ ...f, registration_start_date: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Inschrijfperiode tot</label>
+                    <input
+                      type="date"
+                      value={editForm.registration_end_date}
+                      onChange={e => setEditForm(f => ({ ...f, registration_end_date: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Inschrijftarief (EUR)</label>
+                    <input
+                      type="number" step="0.01"
+                      value={editForm.registration_fee}
+                      onChange={e => setEditForm(f => ({ ...f, registration_fee: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Max deelnemers</label>
+                    <input
+                      type="number"
+                      value={editForm.max_participants}
+                      onChange={e => setEditForm(f => ({ ...f, max_participants: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Startvorm</label>
+                    <input
+                      type="text"
+                      value={editForm.start_format}
+                      onChange={e => setEditForm(f => ({ ...f, start_format: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Team of individueel</label>
+                    <select
+                      value={editForm.competition_mode}
+                      onChange={e => setEditForm(f => ({ ...f, competition_mode: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    >
+                      <option value="individual">Individueel</option>
+                      <option value="team">Team</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Leeftijd van</label>
+                    <input
+                      type="number"
+                      value={editForm.age_min}
+                      onChange={e => setEditForm(f => ({ ...f, age_min: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-content-muted mb-1.5">Leeftijd tot</label>
+                    <input
+                      type="number"
+                      value={editForm.age_max}
+                      onChange={e => setEditForm(f => ({ ...f, age_max: e.target.value }))}
+                      className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-content-muted mb-1.5">Handicapverrekening</label>
+                  <select
+                    value={editForm.handicap_calculation}
+                    onChange={e => setEditForm(f => ({ ...f, handicap_calculation: e.target.value }))}
+                    className="w-full px-4 py-3 bg-surface-3 border border-border-strong rounded-xl text-content focus:outline-none focus:border-green-600"
+                  >
+                    <option value="none">Geen</option>
+                    <option value="qualifying">Qualifying (WHS)</option>
+                    <option value="social">Social</option>
+                  </select>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <div>

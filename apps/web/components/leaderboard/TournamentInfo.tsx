@@ -12,6 +12,15 @@ interface Props {
   rounds: number;
   playerCount?: number | undefined;
   flightCount?: number | undefined;
+  registrationStart?: string | null | undefined;
+  registrationEnd?: string | null | undefined;
+  registrationFee?: number | null | undefined;
+  maxParticipants?: number | null | undefined;
+  startFormat?: string | null | undefined;
+  competitionMode?: string | null | undefined;
+  ageMin?: number | null | undefined;
+  ageMax?: number | null | undefined;
+  handicapCalculation?: string | null | undefined;
   onClose: () => void;
 }
 
@@ -27,6 +36,15 @@ export function TournamentInfo({
   rounds,
   playerCount,
   flightCount,
+  registrationStart,
+  registrationEnd,
+  registrationFee,
+  maxParticipants,
+  startFormat,
+  competitionMode,
+  ageMin,
+  ageMax,
+  handicapCalculation,
   onClose,
 }: Props) {
   const formatLabels: Record<string, string> = {
@@ -44,6 +62,11 @@ export function TournamentInfo({
     paused: 'Gepauzeerd',
     finished: 'Afgelopen',
   };
+  const handicapLabels: Record<string, string> = {
+    none: 'Geen',
+    qualifying: 'Qualifying (WHS)',
+    social: 'Social',
+  };
 
   const items = [
     { label: 'Format', value: formatLabels[format] ?? format },
@@ -55,7 +78,14 @@ export function TournamentInfo({
   if (courseName) items.push({ label: 'Baan', value: courseName });
   if (startDate) items.push({ label: 'Start', value: new Date(startDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) });
   if (endDate) items.push({ label: 'Einde', value: new Date(endDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) });
-  if (playerCount !== undefined) items.push({ label: 'Spelers', value: `${playerCount}` });
+  if (registrationStart && registrationEnd) items.push({ label: 'Inschrijfperiode', value: `${new Date(registrationStart).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })} tot ${new Date(registrationEnd).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}` });
+  if (registrationFee !== undefined && registrationFee !== null) items.push({ label: 'Inschrijftarief', value: `EUR ${registrationFee.toFixed(2)}` });
+  if (maxParticipants !== undefined && maxParticipants !== null) items.push({ label: 'Max deelnemers', value: `${maxParticipants}` });
+  if (startFormat) items.push({ label: 'Startvorm', value: startFormat });
+  if (competitionMode) items.push({ label: 'Modus', value: competitionMode === 'team' ? 'Team' : 'Individueel' });
+  if (ageMin !== undefined && ageMin !== null && ageMax !== undefined && ageMax !== null) items.push({ label: 'Leeftijd', value: `van ${ageMin} tot ${ageMax}` });
+  if (handicapCalculation) items.push({ label: 'Handicapverrekening', value: handicapLabels[handicapCalculation] ?? handicapCalculation });
+  if (playerCount !== undefined) items.push({ label: 'Aantal inschrijvingen', value: `${playerCount}` });
   if (flightCount !== undefined) items.push({ label: 'Flights', value: `${flightCount}` });
 
   return (

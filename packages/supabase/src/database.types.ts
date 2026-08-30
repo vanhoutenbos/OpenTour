@@ -371,6 +371,8 @@ export interface Database {
           distance_meters: number | null;
           stroke_index: number;
           average_score: number;
+          average_stableford_gross: number | null;
+          average_stableford_net: number | null;
           eagles: number;
           birdies: number;
           pars: number;

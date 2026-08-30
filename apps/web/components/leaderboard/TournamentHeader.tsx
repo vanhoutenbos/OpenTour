@@ -19,6 +19,15 @@ interface Props {
   onRoundChange: (round: number | null) => void;
   playerCount?: number;
   flightCount?: number;
+  registrationStart?: string | null | undefined;
+  registrationEnd?: string | null | undefined;
+  registrationFee?: number | null | undefined;
+  maxParticipants?: number | null | undefined;
+  startFormat?: string | null | undefined;
+  competitionMode?: string | null | undefined;
+  ageMin?: number | null | undefined;
+  ageMax?: number | null | undefined;
+  handicapCalculation?: string | null | undefined;
 }
 
 export function TournamentHeader({
@@ -35,6 +44,15 @@ export function TournamentHeader({
   onRoundChange,
   playerCount,
   flightCount,
+  registrationStart,
+  registrationEnd,
+  registrationFee,
+  maxParticipants,
+  startFormat,
+  competitionMode,
+  ageMin,
+  ageMax,
+  handicapCalculation,
 }: Props) {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -118,6 +136,15 @@ export function TournamentHeader({
           rounds={rounds}
           playerCount={playerCount}
           flightCount={flightCount}
+          registrationStart={registrationStart}
+          registrationEnd={registrationEnd}
+          registrationFee={registrationFee}
+          maxParticipants={maxParticipants}
+          startFormat={startFormat}
+          competitionMode={competitionMode}
+          ageMin={ageMin}
+          ageMax={ageMax}
+          handicapCalculation={handicapCalculation}
           onClose={() => setShowInfo(false)}
         />
       )}

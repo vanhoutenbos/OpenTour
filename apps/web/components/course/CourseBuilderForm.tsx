@@ -360,7 +360,6 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
             name: loop.name.trim(),
             holes_count: loop.hole_numbers.length,
             loop_type: deriveLoopType(loop.hole_numbers),
-            tee_id: null,
             is_default: loops[0] === loop,
             created_by: authData.user.id,
           })
@@ -378,9 +377,7 @@ export function CourseBuilderForm({ locale, mode = 'create', initialData, onCanc
           return {
             loop_id: loopRow.id,
             hole_id: holeId,
-            tee_id: null,
             position: index + 1,
-            distance_meters: null,
           };
         });
 

@@ -26,7 +26,6 @@ export interface LoopRecord {
   id: string;
   name: string;
   loop_type: LoopType;
-  tee_id: string | null;
   is_default: boolean;
   holeNumbers: number[];
 }
@@ -34,7 +33,6 @@ export interface LoopRecord {
 interface LoopManagerSectionProps {
   courseId: string;
   holes: LoopHoleRef[];
-  tees: LoopTeeRef[];
   initialLoops: LoopRecord[];
   onLoopsChanged?: (loops: LoopRecord[]) => void;
 }
@@ -42,7 +40,6 @@ interface LoopManagerSectionProps {
 interface RowDraft {
   id: string;
   name: string;
-  teeId: string | null;
   holeNumbers: number[];
   isDefault: boolean;
   expanded: boolean;
@@ -51,7 +48,6 @@ interface RowDraft {
 
 interface NewLoopDraft {
   name: string;
-  teeId: string | null;
   holeNumbers: number[];
 }
 
@@ -69,12 +65,11 @@ function toggleHole(holeNumbers: number[], holeNumber: number, checked: boolean)
     : holeNumbers.filter((value) => value !== holeNumber);
 }
 
-export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoopsChanged }: LoopManagerSectionProps) {
+export function LoopManagerSection({ courseId, holes, initialLoops, onLoopsChanged }: LoopManagerSectionProps) {
   const [rows, setRows] = useState<RowDraft[]>(
     initialLoops.map((loop) => ({
       id: loop.id,
       name: loop.name,
-      teeId: loop.tee_id,
       holeNumbers: loop.holeNumbers,
       isDefault: loop.is_default,
       expanded: false,
@@ -82,7 +77,7 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
     }))
   );
 
-  const [newLoop, setNewLoop] = useState<NewLoopDraft>({ name: '', teeId: null, holeNumbers: [] });
+  const [newLoop, setNewLoop] = useState<NewLoopDraft>({ name: '', holeNumbers: [] });
   const [addingOpen, setAddingOpen] = useState(false);
   const [saving, setSaving] = useState<string | null>(null); // row id, 'new', or 'delete-<id>'
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +93,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
         id: row.id,
         name: row.name,
         loop_type: deriveLoopType(row.holeNumbers),
-        tee_id: row.teeId,
         is_default: row.isDefault,
         holeNumbers: row.holeNumbers,
       }))
@@ -139,7 +133,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
         name: row.name.trim(),
         holes_count: row.holeNumbers.length,
         loop_type: loopType,
-        tee_id: row.teeId,
       })
       .eq('id', rowId);
 
@@ -162,7 +155,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
       return {
         loop_id: rowId,
         hole_id: holeId as string,
-        tee_id: null,
         position: index + 1,
       };
     });
@@ -235,7 +227,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
         name: newLoop.name.trim(),
         holes_count: newLoop.holeNumbers.length,
         loop_type: loopType,
-        tee_id: newLoop.teeId,
         is_default: rows.length === 0,
         created_by: authData.user.id,
       })
@@ -253,7 +244,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
       return {
         loop_id: loopRow.id,
         hole_id: holeId as string,
-        tee_id: null,
         position: index + 1,
       };
     });
@@ -275,7 +265,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
       {
         id: loopRow.id,
         name: addedName,
-        teeId: newLoop.teeId,
         holeNumbers: newLoop.holeNumbers,
         isDefault: rows.length === 0,
         expanded: false,
@@ -284,7 +273,7 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
     ];
 
     setRows(nextRows);
-    setNewLoop({ name: '', teeId: null, holeNumbers: [] });
+    setNewLoop({ name: '', holeNumbers: [] });
     setAddingOpen(false);
     setSuccess(`Lus "${addedName}" toegevoegd.`);
     notifyParent(nextRows);
@@ -403,23 +392,6 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
 
                 {row.expanded && (
                   <div className="pl-6 space-y-3">
-                    {tees.length > 0 && (
-                      <div className="space-y-1">
-                        <label className="text-xs text-content-muted">Teebox (optioneel)</label>
-                        <select
-                          value={row.teeId ?? ''}
-                          onChange={(e) => updateRow(row.id, { teeId: e.target.value || null })}
-                          className="w-full sm:w-64 rounded-lg border border-border bg-surface-3 px-3 py-2 text-sm text-content"
-                          disabled={isSavingRow || isDeleting}
-                        >
-                          <option value="">Geen specifieke teebox</option>
-                          {tees.map((tee) => (
-                            <option key={tee.id} value={tee.id}>{tee.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
                     <div className="rounded-lg border border-border bg-surface p-3">
                       <p className="text-xs uppercase tracking-wide text-content-muted mb-2">Kies holes</p>
                       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -462,48 +434,31 @@ export function LoopManagerSection({ courseId, holes, tees, initialLoops, onLoop
         <div className="pt-3 border-t border-border space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-content-muted uppercase tracking-wide">Nieuwe lus</p>
-            <button
-              type="button"
-              onClick={() => {
-                setAddingOpen(false);
-                setNewLoop({ name: '', teeId: null, holeNumbers: [] });
-                setError(null);
-              }}
+              <button
+                type="button"
+                onClick={() => {
+                  setAddingOpen(false);
+                  setNewLoop({ name: '', holeNumbers: [] });
+                  setError(null);
+                }}
               className="text-xs text-content-muted hover:text-content"
             >
               Annuleren
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-            <div className="space-y-1">
-              <label className="text-xs text-content-muted">Naam *</label>
-              <input
-                value={newLoop.name}
-                onChange={(e) => setNewLoop((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 bg-surface-2 border border-border-strong rounded-lg text-content text-sm"
-                placeholder="bijv. Eerste 9 (Oost)"
-                disabled={isSavingNew}
-              />
-            </div>
-
-            {tees.length > 0 && (
+            <div className="grid grid-cols-1 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-content-muted">Teebox (optioneel)</label>
-                <select
-                  value={newLoop.teeId ?? ''}
-                  onChange={(e) => setNewLoop((prev) => ({ ...prev, teeId: e.target.value || null }))}
-                  className="w-full sm:w-56 rounded-lg border border-border-strong bg-surface-2 px-3 py-2 text-sm text-content"
+                <label className="text-xs text-content-muted">Naam *</label>
+                <input
+                  value={newLoop.name}
+                  onChange={(e) => setNewLoop((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 bg-surface-2 border border-border-strong rounded-lg text-content text-sm"
+                  placeholder="bijv. Eerste 9 (Oost)"
                   disabled={isSavingNew}
-                >
-                  <option value="">Geen specifieke teebox</option>
-                  {tees.map((tee) => (
-                    <option key={tee.id} value={tee.id}>{tee.label}</option>
-                  ))}
-                </select>
+                />
               </div>
-            )}
-          </div>
+            </div>
 
           <div className="rounded-lg border border-border bg-surface-2 p-3">
             <p className="text-xs uppercase tracking-wide text-content-muted mb-2">Kies holes</p>
