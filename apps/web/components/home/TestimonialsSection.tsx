@@ -7,8 +7,8 @@ interface Props {
 const testimonialsNl = [
   {
     quote: 'OpenTour heeft onze toernooien volledig getransformeerd. Wat eerder uren Excel-beheer kostte, is nu in minuten geregeld. De live scoring is een game-changer voor deelnemers & toeschouwers.',
-    name: 'Mark de Vries',
-    role: 'Wedstrijdsecretaris, Golfclub De Eemnes',
+    name: 'Testpersoon',
+    role: 'Wedstrijdsecretaris, Golfclub De Test',
     avatar: '/profile_page_maleEDIT.jpg',
   },
 ];
@@ -16,8 +16,8 @@ const testimonialsNl = [
 const testimonialsEn = [
   {
     quote: 'OpenTour has completely transformed our tournaments. What used to take hours of Excel management is now handled in minutes. The live scoring is a game-changer for participants and .',
-    name: 'Mark de Vries',
-    role: 'Competition Secretary, Golfclub De Eemnes',
+    name: 'Testperson',
+    role: 'Competition Secretary, Golfclub De Test',
     avatar: '/profile_page_maleEDIT.jpg',
   },
 ];

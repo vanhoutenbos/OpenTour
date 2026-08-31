@@ -8,12 +8,8 @@ function getDevPassword(): string {
     return password;
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('DEV_MAGIC_LINK_PASSWORD is not set; using insecure development fallback password');
-    return 'dev-password-opentour-2025';
-  }
-
-  throw new Error('DEV_MAGIC_LINK_PASSWORD is not set and NODE_ENV is not development');
+  console.warn('DEV_MAGIC_LINK_PASSWORD is not set; using insecure development fallback password');
+  return 'dev-password-opentour-2025';
 }
 
 export async function POST(request: NextRequest) {
@@ -37,14 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email verplicht' }, { status: 400 });
   }
 
-  let DEV_PASSWORD: string;
-  try {
-    DEV_PASSWORD = getDevPassword();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Onbekende fout';
-    console.error('[dev-magic-link]', message);
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  const DEV_PASSWORD = getDevPassword();
 
   try {
     const adminSupabase = createClient(
