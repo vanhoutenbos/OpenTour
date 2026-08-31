@@ -50,6 +50,15 @@ interface Props {
   playerCount?: number;
   flightCount?: number;
   hideExtras?: boolean;
+  registrationStart?: string | null;
+  registrationEnd?: string | null;
+  registrationFee?: number | null;
+  maxParticipants?: number | null;
+  startFormat?: string | null;
+  competitionMode?: string | null;
+  ageMin?: number | null;
+  ageMax?: number | null;
+  handicapCalculation?: string | null;
 }
 
 export function LeaderboardClient({
@@ -70,6 +79,15 @@ export function LeaderboardClient({
   playerCount,
   flightCount,
   hideExtras: hideExtrasProp,
+  registrationStart,
+  registrationEnd,
+  registrationFee,
+  maxParticipants,
+  startFormat,
+  competitionMode,
+  ageMin,
+  ageMax,
+  handicapCalculation,
 }: Props) {
   const hideExtras = hideExtrasProp ?? false;
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -219,6 +237,15 @@ export function LeaderboardClient({
             onRoundChange={setSelectedRound}
             playerCount={playerCount ?? entries.length}
             flightCount={flightCount ?? uniqueFlights.length}
+            registrationStart={registrationStart}
+            registrationEnd={registrationEnd}
+            registrationFee={registrationFee}
+            maxParticipants={maxParticipants}
+            startFormat={startFormat}
+            competitionMode={competitionMode}
+            ageMin={ageMin}
+            ageMax={ageMax}
+            handicapCalculation={handicapCalculation}
           />
 
           {/* Sponsor mid-banner — tijdelijk verborgen, zie B21 in design doc */}
