@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Niet beschikbaar' }, { status: 403 });
   }
 
-  const DEV_PASSWORD = getDevPassword();
-
   let email: string;
   try {
     const body = await request.json();
@@ -37,6 +35,15 @@ export async function POST(request: NextRequest) {
 
   if (!email) {
     return NextResponse.json({ error: 'Email verplicht' }, { status: 400 });
+  }
+
+  let DEV_PASSWORD: string;
+  try {
+    DEV_PASSWORD = getDevPassword();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Onbekende fout';
+    console.error('[dev-magic-link]', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   try {

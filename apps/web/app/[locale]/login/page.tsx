@@ -86,10 +86,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') ?? '';
+      const data = contentType.includes('application/json')
+        ? await res.json()
+        : null;
 
-      if (!data.success) {
-        setError(data.error ?? 'Dev login mislukt');
+      if (!data || !data.success) {
+        const serverError = data?.error ?? `Serverfout (${res.status}) — probeer het later opnieuw`;
+        setError(serverError);
         setDevLoading(false);
         return;
       }
@@ -104,8 +108,8 @@ export default function LoginPage() {
         setError(`Sessie instellen mislukt: ${sessionError.message}`);
         setDevLoading(false);
       }
-    } catch {
-      setError('Verbindingsfout — probeer opnieuw');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verbindingsfout — probeer opnieuw');
       setDevLoading(false);
     }
   };
