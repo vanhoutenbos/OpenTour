@@ -8,6 +8,7 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuthSession } from '@/lib/useAuthSession';
 import { Avatar } from '@/components/Avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 
 const locales = [
   { code: 'nl', label: 'NL' },
@@ -121,14 +122,17 @@ export function Navbar() {
               </svg>
             </a>
 
-            {/* Login button (not logged in, desktop) */}
+            {/* Theme toggle + Login button (not logged in, desktop) */}
             {!user && (
-              <Link
-                href={`/${locale}/login`}
-                className="hidden md:inline-flex items-center px-5 py-2 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold transition-colors"
-              >
-                {t('login')}
-              </Link>
+              <>
+                <ThemeToggleButton />
+                <Link
+                  href={`/${locale}/login`}
+                  className="hidden md:inline-flex items-center px-5 py-2 rounded-button bg-brand-primary hover:bg-brand-primary-hover text-content-inverse text-sm font-semibold transition-colors"
+                >
+                  {t('login')}
+                </Link>
+              </>
             )}
 
             {/* Profile dropdown (logged in, desktop) */}
