@@ -146,7 +146,7 @@ export default function LoginPage() {
             <div className="space-y-4">
               {IS_DEV && (
                 <div className="px-3 py-2 bg-yellow-900/30 border border-yellow-700/50 rounded-xl">
-                  <p className="text-yellow-500 text-xs font-medium">⚠️ Development modus — geen e-mail nodig</p>
+                  <p className="text-yellow-500 text-xs font-medium">⚠️ Development modus — geen account nodig</p>
                 </div>
               )}
 
