@@ -21,9 +21,15 @@
 -- net voor scoring_type='net').
 -- ============================================================
 
-CREATE OR REPLACE VIEW course_hole_stats (tournament_id, hole_number, par, distance_meters, stroke_index, average_score, average_stableford_gross, average_stableford_net, eagles, birdies, pars, bogeys, double_bogeys, total_scores) AS
+CREATE OR REPLACE VIEW course_hole_stats AS
  SELECT t.id AS tournament_id, h.number AS hole_number, h.par, h.distance_meters, h.stroke_index,
    round(avg(s.strokes), 2) AS average_score,
+   count(*) FILTER (WHERE s.strokes <= h.par - 2) AS eagles,
+   count(*) FILTER (WHERE s.strokes = h.par - 1) AS birdies,
+   count(*) FILTER (WHERE s.strokes = h.par) AS pars,
+   count(*) FILTER (WHERE s.strokes = h.par + 1) AS bogeys,
+   count(*) FILTER (WHERE s.strokes >= h.par + 2) AS double_bogeys,
+   count(*) AS total_scores,
    round(avg(CASE WHEN s.strokes <= h.par - 2 THEN 4 WHEN s.strokes = h.par - 1 THEN 3 WHEN s.strokes = h.par THEN 2 WHEN s.strokes = h.par + 1 THEN 1 ELSE 0 END), 2) AS average_stableford_gross,
    round(avg(CASE
        WHEN (s.strokes - CASE WHEN h.stroke_index <= (round(COALESCE(tp.handicap, (0)::double precision)))::integer THEN 1 ELSE 0 END) <= h.par - 2 THEN 4
@@ -31,13 +37,7 @@ CREATE OR REPLACE VIEW course_hole_stats (tournament_id, hole_number, par, dista
        WHEN (s.strokes - CASE WHEN h.stroke_index <= (round(COALESCE(tp.handicap, (0)::double precision)))::integer THEN 1 ELSE 0 END) = h.par THEN 2
        WHEN (s.strokes - CASE WHEN h.stroke_index <= (round(COALESCE(tp.handicap, (0)::double precision)))::integer THEN 1 ELSE 0 END) = h.par + 1 THEN 1
        ELSE 0
-   END), 2) AS average_stableford_net,
-   count(*) FILTER (WHERE s.strokes <= h.par - 2) AS eagles,
-   count(*) FILTER (WHERE s.strokes = h.par - 1) AS birdies,
-   count(*) FILTER (WHERE s.strokes = h.par) AS pars,
-   count(*) FILTER (WHERE s.strokes = h.par + 1) AS bogeys,
-   count(*) FILTER (WHERE s.strokes >= h.par + 2) AS double_bogeys,
-   count(*) AS total_scores
+   END), 2) AS average_stableford_net
  FROM tournaments t
    JOIN scores s ON s.tournament_id = t.id
    JOIN tournament_holes h ON s.hole_id = h.id
