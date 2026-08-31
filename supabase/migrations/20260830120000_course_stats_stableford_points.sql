@@ -21,7 +21,7 @@
 -- net voor scoring_type='net').
 -- ============================================================
 
-CREATE OR REPLACE VIEW course_hole_stats AS
+CREATE OR REPLACE VIEW course_hole_stats (tournament_id, hole_number, par, distance_meters, stroke_index, average_score, average_stableford_gross, average_stableford_net, eagles, birdies, pars, bogeys, double_bogeys, total_scores) AS
  SELECT t.id AS tournament_id, h.number AS hole_number, h.par, h.distance_meters, h.stroke_index,
    round(avg(s.strokes), 2) AS average_score,
    round(avg(CASE WHEN s.strokes <= h.par - 2 THEN 4 WHEN s.strokes = h.par - 1 THEN 3 WHEN s.strokes = h.par THEN 2 WHEN s.strokes = h.par + 1 THEN 1 ELSE 0 END), 2) AS average_stableford_gross,
